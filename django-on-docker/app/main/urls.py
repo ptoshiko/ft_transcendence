@@ -9,19 +9,15 @@ from rest_framework_simplejwt.views import (
 
 urlpatterns = [
 	
-	# path('', views.test, name='test'),
-	# path('', views.room, name='room'),
+	path("", views.index, name="index"),
+	path("<str:room_name>/", views.room, name="room"),
 
 	path('api/register/', views.RegisterView.as_view()),   # registration: required display_name, email and username 
-
-	# path('auth/', include('rest_framework.urls')),
 
 	path('api/userslist/', views.CustomUserAPIList.as_view()), # returns info for every user in db
 	path('api/updateinfo/<int:pk>/', views.CustomUserAPIUpdate.as_view()), # updates info of owner
 	path('api/getinfo/<int:pk>/', views.CustomUserAPIRetrieve.as_view()), # returns info for particular user in db
 	path('api/userdetail/<int:pk>/', views.CuestomUserAPIDetailView.as_view()),
-
-
 
 	path('api/token/', TokenObtainPairView.as_view(), name='token_obtain_pair'), # get token pair: required pair email and password 
     path('api/token/refresh/', TokenRefreshView.as_view(), name='token_refresh'), # get token pair: required refresh token; body example {"refresh": "..."}

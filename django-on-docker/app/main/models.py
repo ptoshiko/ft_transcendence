@@ -2,15 +2,22 @@ from django.contrib.auth.models import AbstractBaseUser, PermissionsMixin
 from django.db import models
 from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
+from django.core.validators import RegexValidator
 
 from .managers import CustomUserManager
+
+def validate_display_name(value):
+    pattern = '^[a-zA-Z0-9_-]{3,50}$'
+    validator = RegexValidator(regex=pattern, message='Display name must contain between 3 and 50 alphanumeric characters, underscores, and hyphens.')
+    validator(value)
 
 class CustomUser(AbstractBaseUser, PermissionsMixin):
     email = models.EmailField(_("email address"), unique=True)
     is_staff = models.BooleanField(default=False)
     is_active = models.BooleanField(default=True)
     date_joined = models.DateTimeField(default=timezone.now)
-    display_name = models.CharField(max_length=100, unique=True)
+    display_name = models.CharField(_("display name"), unique=True, validators=[validate_display_name])
+    # avatar = models.ImageField(upload_to=files/avatars)
 
     USERNAME_FIELD = "email"
     REQUIRED_FIELDS = []

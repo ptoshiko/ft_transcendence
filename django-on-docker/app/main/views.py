@@ -1,17 +1,11 @@
-from .models import CustomUser, Friendship
+from .models import CustomUser, Friendship, Message
 from django.db import models
-
 from rest_framework.response import Response
-
 from .serializers import CustomUserSerializer, RegisterSerializer, UpdateSerializer, FriendshipSerializer, FriendshipRequestSerializer
-
 from rest_framework import generics, views, status
-
 from rest_framework.permissions import IsAuthenticated, AllowAny
-from .permissions import IsOwnerOrReadOnly
-
-# from django.shortcuts import render
-# from .models import Message
+from .permissions import IsOwnerOrReadOnly,  IsAdminOrReadnly
+from django.shortcuts import render
 
 # [POST]:registration  required display_name, email and username 
 class RegisterView(generics.CreateAPIView):
@@ -119,11 +113,12 @@ class ApproveFriendRequestView(views.APIView):
         serializer = FriendshipSerializer(friendship)
         return Response(serializer.data)
 
-# def test(request):
-#     return render(request, 'test.html')
+
+def index(request):
+    return render(request, "chat/index.html")
 
 
-# def room(request, room_name):
-#     username = request.GET.get('username', 'Anonymus')
-#     messages = Message.objects.filter(room=room_name)[0:25]
-#     return render(request, 'room.html', {'room_name': room_name, 'username': username, 'messages': messages})
+def room(request, room_name):
+    messages = Message.objects.filter(room=room_name)[0:25]
+    return render(request, "chat/room.html", {"room_name": room_name, 'messages': messages})
+

@@ -3,13 +3,15 @@ version: '3.8'
 services:
   web:
     build: ./app
-    command: python manage.py runserver_plus 0.0.0.0:8081 --cert-file localhost.crt
+    command: daphne -e ssl:8081:localhost.key:certKey=localhost.crt trans_django.asgi:application
     volumes:
       - ./app/:/usr/src/app/
     ports: 
       - 8081:8081
     env_file:
       - ./.env.dev
+    environment:
+      - DJANGO_SETTINGS_MODULE=trans_django.settings
 
   db:
       image: postgres:15
@@ -30,3 +32,8 @@ services:
 volumes:
   postgres_data:
   redis_data:
+
+
+
+    # command: python manage.py runserver_plus 0.0.0.0:8081 --cert-file localhost.crt
+    # command: python manage.py runserver 0.0.0.0:8081 
