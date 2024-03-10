@@ -8,21 +8,24 @@
     <textarea id="chat-log" cols="100" rows="20"></textarea><br>
     <input id="chat-message-input" type="text" size="100"><br>
     <input id="chat-message-submit" type="button" value="Send">
-    {{ room_name|json_script:"room-name" }}
+
+    <!-- Add hidden input fields to store room_name and username -->
+    <input type="hidden" id="room-name" value="{{ room_name }}">
+    <input type="hidden" id="username" value="{{ username }}">
+
     <script>
-        const roomName = JSON.parse(document.getElementById('room-name').textContent);
+        const roomName = document.getElementById('room-name').value;
+        const username = document.getElementById('username').value;
+        
+        const token = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNzEwMTE3NTg0LCJpYXQiOjE3MTAwNjg2OTQsImp0aSI6IjU3M2JiZGZmMWIyNTQ4YWM4MDllNDIzMTczZDYwMzAxIiwidXNlcl9pZCI6NH0.vP6R9HAReojiHv3mfe6QJ2DFlqOCnfhSBPMy0aVeZ2Q'
 
         const chatSocket = new WebSocket(
-            'wss://'
-            + window.location.host
-            + '/wss/chat/'
-            + roomName
-            + '/'
+            'wss://' + window.location.host + '/wss/chat/' + roomName + '/?token=' + token
         );
 
         chatSocket.onmessage = function(e) {
             const data = JSON.parse(e.data);
-            document.querySelector('#chat-log').value += (data.message + '\n');
+            document.querySelector('#chat-log').value += (data.username + ': ' + data.message + '\n'); // Display username along with the message
         };
 
         chatSocket.onclose = function(e) {
@@ -31,7 +34,7 @@
 
         document.querySelector('#chat-message-input').focus();
         document.querySelector('#chat-message-input').onkeyup = function(e) {
-            if (e.key === 'Enter') {  // enter, return
+            if (e.key === 'Enter') {
                 document.querySelector('#chat-message-submit').click();
             }
         };
@@ -40,6 +43,7 @@
             const messageInputDom = document.querySelector('#chat-message-input');
             const message = messageInputDom.value;
             chatSocket.send(JSON.stringify({
+                'username': username, // Include username in the message data
                 'message': message
             }));
             messageInputDom.value = '';
@@ -47,5 +51,3 @@
     </script>
 </body>
 </html>
-
-
