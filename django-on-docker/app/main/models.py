@@ -11,7 +11,10 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):
     is_active = models.BooleanField(default=True)
     date_joined = models.DateTimeField(default=timezone.now)
     display_name = models.CharField(_("display name"), unique=True, validators=[validate_display_name])
-    # avatar = models.ImageField(upload_to=files/avatars)
+    # User profiles display stats, such as wins and losses.
+    # - stats  
+    # - avatar = models.ImageField(upload_to=files/avatars)
+
 
     USERNAME_FIELD = "email"
     REQUIRED_FIELDS = []
@@ -46,11 +49,22 @@ class Friendship(models.Model):
         return f"{self.sender.display_name} <-> {self.sender.display_name} (Status: {self.status})"
 
 
-class Message(models.Model):
-    username = models.CharField(max_length=255)
-    room = models.CharField(max_length=255)
+class ChatMessage(models.Model):
     content = models.TextField()
+    sender = models.ForeignKey(AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='message_sender')
+    receiver = models.ForeignKey(AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='message_receiver')
     date_added = models.DateTimeField(auto_now_add=True)
 
     class Meta:
         ordering = ('date_added',)
+
+
+class BlockUser(models.Model):
+    blocked_by = models.ForeignKey(AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='blocked_by')
+    blocked_user = models.ForeignKey(AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='blocked_user')
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(fields=['blocked_by', 'blocked_user'], name='unique_bloking')
+        ]

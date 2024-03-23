@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import CustomUser, Friendship
+from .models import CustomUser, Friendship, ChatMessage
 
 from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
@@ -73,6 +73,11 @@ class UpdateSerializer(serializers.ModelSerializer):
         instance.set_password(validated_data['password'])
         instance.save()
         return instance
+    
+class ChatMessageSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ChatMessage
+        fields = ['sender', 'receiver', 'content', 'date_added']
 
 
 
