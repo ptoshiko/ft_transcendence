@@ -1,7 +1,7 @@
-from .models import CustomUser, Friendship, Message
+from .models import CustomUser, Friendship, ChatMessage, BlockUser
 from django.db import models
 from rest_framework.response import Response
-from .serializers import CustomUserSerializer, RegisterSerializer, UpdateSerializer, FriendshipSerializer, FriendshipRequestSerializer
+from . import serializers
 from rest_framework import generics, views, status
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from .permissions import IsOwnerOrReadOnly,  IsAdminOrReadnly
@@ -11,30 +11,30 @@ from django.shortcuts import render
 class RegisterView(generics.CreateAPIView):
     queryset = CustomUser.objects.all()
     permission_classes = (AllowAny,)
-    serializer_class = RegisterSerializer
+    serializer_class = serializers.RegisterSerializer
 
 # [GET] returns info of every user 
 class CustomUserAPIList(generics.ListAPIView):
     queryset = CustomUser.objects.all()
-    serializer_class = CustomUserSerializer
+    serializer_class = serializers.CustomUserSerializer
     permission_classes = (AllowAny,)
 
 # [PUT] update owner's info
 class CustomUserAPIUpdate(generics.UpdateAPIView):
     queryset = CustomUser.objects.all()
-    serializer_class = UpdateSerializer 
+    serializer_class = serializers.UpdateSerializer 
     permission_classes = (IsOwnerOrReadOnly, IsAuthenticated)
 
 # [GET] read info of certain user 
 class CustomUserAPIRetrieve(generics.RetrieveAPIView):
     queryset = CustomUser.objects.all()
-    serializer_class = CustomUserSerializer
+    serializer_class = serializers.CustomUserSerializer
     permission_classes = (IsAuthenticated,)
 
 from .permissions import IsAdminOrReadnly
 class CuestomUserAPIDetailView(generics.RetrieveUpdateDestroyAPIView):
     queryset = CustomUser.objects.all()
-    serializer_class = CustomUserSerializer
+    serializer_class = serializers.CustomUserSerializer
     permission_classes = (IsAdminOrReadnly,)
 
 
@@ -54,7 +54,7 @@ class FriendsListView(views.APIView):
         friend_ids.discard(user.id)
 
         friends = CustomUser.objects.filter(id__in=friend_ids)
-        serializer = CustomUserSerializer(friends, many=True)
+        serializer = serializers.CustomUserSerializer(friends, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
 
@@ -64,7 +64,7 @@ class FriendshipRequestsView(views.APIView):
         user = request.user
 
         friendship_requests = Friendship.objects.filter(models.Q(receiver=user, status=Friendship.PENDING))
-        serializer = FriendshipRequestSerializer(friendship_requests, many=True)
+        serializer = serializers.FriendshipRequestSerializer(friendship_requests, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
 
@@ -74,7 +74,7 @@ class FriendshipRequestsView(views.APIView):
 #  body example {"receiver_id": 6}
 class SendFriendRequestView(views.APIView):
     def post(self, request, *args, **kwargs):
-        sender = request.user  
+        sender = request.user 
         receiver_id = request.data.get('receiver_id')  
 
         try:
@@ -86,14 +86,14 @@ class SendFriendRequestView(views.APIView):
             return Response({"error": "Friendship already exists"}, status=status.HTTP_400_BAD_REQUEST)
 
         friendship_data = {'sender': sender.id, 'receiver': receiver.id}
-        serializer = FriendshipSerializer(data=friendship_data)
+        serializer = serializers.FriendshipSerializer(data=friendship_data)
         if serializer.is_valid():
             serializer.save()
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
-# [POST] approves a friend request from the particular user: friendship status=APPROVED
+# [PUT] approves a friend request from the particular user: friendship status=APPROVED
 # required friendship_id
 #  body example {"friendship_id": 1}
 class ApproveFriendRequestView(views.APIView):
@@ -110,15 +110,61 @@ class ApproveFriendRequestView(views.APIView):
         friendship.status = Friendship.APPROVED 
         friendship.save()
 
-        serializer = FriendshipSerializer(friendship)
+        serializer = serializers.FriendshipSerializer(friendship)
         return Response(serializer.data)
+    
 
+class BlockUserView(views.APIView):
+    def post(self, request):
+        blocked_user_id = request.data.get('blocked_user_id')
+        blocked_by_id = request.user.id
+
+        if not CustomUser.objects.filter(id=blocked_user_id).exists():
+            return Response({'error': 'User to block does not exist'}, status=status.HTTP_404_NOT_FOUND)
+
+        # Check if the blocking relationship already exists
+        if BlockUser.objects.filter(blocked_by_id=blocked_by_id, blocked_user_id=blocked_user_id).exists():
+            return Response({'error': 'User is already blocked'}, status=status.HTTP_400_BAD_REQUEST)
+
+        # Create the blocking relationship
+        BlockUser.objects.create(blocked_by_id=blocked_by_id, blocked_user_id=blocked_user_id)
+        return Response({'message': 'User blocked successfully'}, status=status.HTTP_200_OK)
+    
+class UnblockUserView(views.APIView):
+    def post(self, request):
+        blocked_user_id = request.data.get('blocked_user_id')
+        blocked_by_id = request.user.id
+
+        # Check if the blocking relationship exists
+        try:
+            blocking_relationship = BlockUser.objects.get(blocked_by_id=blocked_by_id, blocked_user_id=blocked_user_id)
+        except BlockUser.DoesNotExist:
+            return Response({'error': 'User is not blocked'}, status=status.HTTP_400_BAD_REQUEST)
+
+        # Delete the blocking relationship
+        blocking_relationship.delete()
+        return Response({'message': 'User unblocked successfully'}, status=status.HTTP_200_OK)
+
+
+class GetMessagesView(views.APIView):
+    def get(self, request, *args, **kwargs):
+        user_id = request.user.id
+        messages = ChatMessage.objects.filter(models.Q(sender_id=user_id) | models.Q(receiver_id=user_id)).order_by('-date_added')[:25]
+        serializer = serializers.ChatMessageSerializer(messages, many=True)
+        
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+
+def login(request):
+    return render(request, "chat/login.html")
 
 def index(request):
     return render(request, "chat/index.html")
 
+def room(request, receiver_id):
+    messages = ChatMessage.objects.filter(
+        (models.Q(sender=request.user.id) | models.Q(sender__id=receiver_id)) &
+        (models.Q(receiver=request.user.id) | models.Q(receiver__id=receiver_id))
+    ).order_by('-date_added')[:25]
 
-def room(request, room_name):
-    messages = Message.objects.filter(room=room_name)[0:25]
-    return render(request, "chat/room.html", {"room_name": room_name, 'messages': messages})
-
+    return render(request, "chat/room.html", {"receiver_id": receiver_id, "messages": messages})

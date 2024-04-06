@@ -8,12 +8,13 @@ from rest_framework_simplejwt.views import (
 )
 
 urlpatterns = [
+
+	path("login/", views.login, name ="login"),
 	
-	path("", views.index, name="index"),
-	path("<str:room_name>/", views.room, name="room"),
+	path("chat/", views.index, name="index"),
+	path("chat/<str:receiver_id>/", views.room, name="room"),
 
 	path('api/register/', views.RegisterView.as_view()),   # registration: required display_name, email and username 
-
 	path('api/userslist/', views.CustomUserAPIList.as_view()), # returns info for every user in db
 	path('api/updateinfo/<int:pk>/', views.CustomUserAPIUpdate.as_view()), # updates info of owner
 	path('api/getinfo/<int:pk>/', views.CustomUserAPIRetrieve.as_view()), # returns info for particular user in db
@@ -27,6 +28,11 @@ urlpatterns = [
 	path('api/sendfriendrequest/', views.SendFriendRequestView.as_view(), name='send_friend_request'), # makes a friend request to particular user 
 	path('api/approvefriendrequest/', views.ApproveFriendRequestView.as_view(), name='approve_friend_request'),
 	path('api/friendrequests/', views.FriendshipRequestsView.as_view(), name='friendship_requests'), 
+
+	path('api/blockuser/', views.BlockUserView.as_view(), name='block_user'),
+	path('api/unblockuser/', views.UnblockUserView.as_view(), name='unblock_user'),
+	path('api/getmessages/', views.GetMessagesView.as_view(), name='get_messages'),
+
 ]
 
 

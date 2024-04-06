@@ -5,24 +5,25 @@
     <title>Chat Rooms</title>
 </head>
 <body>
-    What chat room would you like to enter?<br>
-    <input id="room-name-input" type="text" size="100"><br>
-    <input id="room-name-submit" type="button" value="Enter">
+    Whom would you like to text?<br>
+    <input id="receiverid-input" type="text" size="100" placeholder="Enter receiver ID"><br> <!-- Updated input for receiver ID -->
+    <input id="receiverid-submit" type="button" value="Enter">
 
     <script>
-        document.querySelector('#room-name-input').focus();
-        document.querySelector('#room-name-input').onkeyup = function(e) {
-            if (e.key === 'Enter') {  // enter, return
-                document.querySelector('#room-name-submit').click();
+        document.querySelector('#receiverid-input').focus();
+        document.querySelector('#receiverid-input').onkeyup = function(e) {
+            if (e.key === 'Enter') {
+                document.querySelector('#receiverid-submit').click();
             }
         };
 
-        document.querySelector('#room-name-submit').onclick = function(e) {
-            var roomName = document.querySelector('#room-name-input').value;
-            window.location.pathname = '/chat/' + roomName + '/';
+        document.querySelector('#receiverid-submit').onclick = function(e) {
+            var receiverId = document.querySelector('#receiverid-input').value;
+            window.location.pathname = '/chat/' + receiverId; // Pass only receiver ID in URL
         };
     </script>
 </body>
 </html>
+
 
 

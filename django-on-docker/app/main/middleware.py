@@ -8,9 +8,9 @@ from django.contrib.auth.models import User
 from channels.middleware import BaseMiddleware
 from channels.auth import AuthMiddlewareStack
 from django.db import close_old_connections
-from urllib.parse import parse_qs
 from jwt import decode as jwt_decode
 from django.conf import settings
+from rest_framework import exceptions
 
 
 @database_sync_to_async
@@ -34,7 +34,12 @@ class JwtAuthMiddleware(BaseMiddleware):
         close_old_connections()
 
         # Get the token
-        token = parse_qs(scope["query_string"].decode("utf8"))["token"][0]
+        try:
+            token = scope['query_string'].decode().split('=')[1]  # Assuming token is passed as query parameter
+            if not token:
+                raise ValueError('Token not provided')
+        except (KeyError, IndexError):
+            raise exceptions.AuthenticationFailed('Token not provided')
 
         # Try to authenticate the user
         try:
@@ -64,6 +69,4 @@ class JwtAuthMiddleware(BaseMiddleware):
 
 def JwtAuthMiddlewareStack(inner):
     return JwtAuthMiddleware(AuthMiddlewareStack(inner))
-
-
 
