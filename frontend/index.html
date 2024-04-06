@@ -3,13 +3,15 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
+    <title>Transcendence</title>
 </head>
 <body>
-    <input type="text" id="text" style="width: 200px; height: 200px;">
-    <h1 style="font-size: 200px;">Chatty EPILEPSIC FRIENDLY</h1>
-    <button>Some button</button>
-    <div id="rec" style="width: 500px; height: 500px; background-color: grey;"></div>
-    <script src="main.js"></script>
+    <nav class="nav">
+        <a href="/" class="nav_link" data-link>Profile</a>
+        <a href="/game" class="nav_link" data-link>Game</a>
+        <a href="/chat" class="nav_link" data-link>Chat</a>
+    </nav>
+    <div id="app"></div>
+    <script defer type="module" src="/src/js/index.js"></script>
 </body>
 </html>
