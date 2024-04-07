@@ -17,6 +17,7 @@ urlpatterns = [
 	path('api/register/', views.RegisterView.as_view()),   # registration: required display_name, email and username 
 	path('api/userslist/', views.CustomUserAPIList.as_view()), # returns info for every user in db
 	path('api/updateinfo/<int:pk>/', views.CustomUserAPIUpdate.as_view()), # updates info of owner
+	path('api/getuser/<str:display_name>/', views.GetUserByDisplayName.as_view()),
 	path('api/getinfo/<int:pk>/', views.CustomUserAPIRetrieve.as_view()), # returns info for particular user in db
 	path('api/userdetail/<int:pk>/', views.CuestomUserAPIDetailView.as_view()),
 

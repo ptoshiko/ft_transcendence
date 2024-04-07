@@ -6,6 +6,7 @@ from rest_framework import generics, views, status
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from .permissions import IsOwnerOrReadOnly,  IsAdminOrReadnly
 from django.shortcuts import render
+from django.http import Http404
 
 # [POST]:registration  required display_name, email and username 
 class RegisterView(generics.CreateAPIView):
@@ -153,6 +154,44 @@ class GetMessagesView(views.APIView):
         serializer = serializers.ChatMessageSerializer(messages, many=True)
         
         return Response(serializer.data, status=status.HTTP_200_OK)
+
+
+class GetUserByDisplayName(views.APIView):
+    def get(self, request, display_name, format=None):
+        try:
+            user = CustomUser.objects.get(display_name=display_name)
+            serializer = serializers.CustomUserSerializer(user)
+            return Response(serializer.data)
+        except CustomUser.DoesNotExist:
+            raise Http404
+
+# for 2FA
+from django.core.exceptions import ValidationError 
+from django.views.generic import TemplateView 
+from .services import user_two_factor_auth_data_create       
+
+class SetupTwoFactorAuthView(TemplateView):
+    template_name = "admin_2fa/setup_2fa.html"
+
+    def post(self, request):
+        context = {}
+        user = request.user
+
+        try:
+            two_factor_auth_data = user_two_factor_auth_data_create(user=user)
+            otp_secret = two_factor_auth_data.otp_secret
+
+            context["otp_secret"] = otp_secret
+            context["qr_code"] = two_factor_auth_data.generate_qr_code(
+                name=user.email
+            )
+        except ValidationError as exc:
+            context["form_errors"] = exc.messages
+
+        return self.render_to_response(context)
+
+
+
 
 
 def login(request):

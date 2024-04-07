@@ -9,3 +9,5 @@ django_extensions
 werkzeug
 pyopenssl
 channels[daphne]
+pyotp
+qrcode
