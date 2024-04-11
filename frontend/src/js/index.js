@@ -1,47 +1,45 @@
-import Profile from "./views/Profile.js"
+import Profile from "./components/Profile.js"
+import Login from "./components/Login.js"
+import FourZeroFor from "./components/404.js"
+import { isLoggedIn } from "./service/auth.js"
+import NavBar from "./components/NavBar.js";
 
-const navigateTo = url => {
-    history.pushState(null, null, url)
-    router()
-}
+customElements.define('tr-login', Login);
+customElements.define('tr-not-found', FourZeroFor);
+customElements.define('tr-nav', NavBar);
+customElements.define('tr-profile', Profile);
 
-const router = async () => {
+const app = document.querySelector("#app");
+
+export default async function router() {
     const routes = [
-        { path: "/", view: Profile },
-        // { path: "/game", view: () => console.log('viewing game') },
-        // { path: "/chat", view: () => console.log('viewing chat') },
+        { path: "/login", component: "tr-login"},
+        { path: "/profile", component: "tr-profile"},
     ]
 
-
-    const potentialMatches = routes.map(route => {
-        return {
-            route: route,
-            isMatch: location.pathname == route.path
-        }
+    let match = routes.find(route => {
+        return location.pathname == route.path
     })
 
-    let match = potentialMatches.find(potentialMatch => potentialMatch.isMatch)
     if (!match) {
         match = {
-            route: routes[0],
-            isMatch: true,
+            route: {path: location.pathname, component: "tr-not-found"},
         }
+    } else if (!isLoggedIn()) {
+        match = {
+            route: {path: "/login", component: "tr-login"},
+        }
+
+        history.pushState(null, null, "/login")
     }
 
-    const view = new match.route.view()
 
-    document.querySelector("#app").innerHTML = await view.getHtml()
+    app.innerHTML=``;
+    app.appendChild(document.createElement(match.route.component));
 }
 
 window.addEventListener('popstate', router)
 
 document.addEventListener("DOMContentLoaded", () => {
-    document.body.addEventListener('click', e => {
-        if (e.target.matches('[data-link]')) {
-            e.preventDefault()
-            navigateTo(e.target.href)
-        }
-    })
-
-    router()
+    router();
 })
