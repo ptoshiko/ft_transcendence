@@ -11,10 +11,8 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):
     is_active = models.BooleanField(default=True)
     date_joined = models.DateTimeField(default=timezone.now)
     display_name = models.CharField(_("display name"), unique=True, validators=[validate_display_name])
-    # User profiles display stats, such as wins and losses.
-    # - stats  
+ 
     # - avatar = models.ImageField(upload_to=files/avatars)
-
 
     USERNAME_FIELD = "email"
     REQUIRED_FIELDS = []
@@ -25,6 +23,18 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):
         return self.email
         
 AUTH_USER_MODEL = "main.CustomUser"
+
+
+class MatchHistory(models.Model):
+    player1 = models.ForeignKey(AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='matches_played')
+    player2 = models.ForeignKey(AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='matches_opponent')
+    player1_result = models.IntegerField(default=0)
+    player2_result = models.IntegerField(default=0)
+
+    match_date = models.DateTimeField(_("match date"), auto_now_add=True)
+
+    def __str__(self):
+        return f"{self.user.email} vs {self.opponent.email} - {self.result}"
 
 class Friendship(models.Model):
 
@@ -69,6 +79,8 @@ class BlockUser(models.Model):
             models.UniqueConstraint(fields=['blocked_by', 'blocked_user'], name='unique_bloking')
         ]
 
+
+
 # for 2FA
 from typing import Optional
 
@@ -103,3 +115,8 @@ class UserTwoFactorAuthData(models.Model):
 
         # The result is going to be an HTML <svg> tag
         return qr_code_image.to_string().decode('utf_8')
+    
+    def validate_otp(self, otp: str) -> bool:
+        totp = pyotp.TOTP(self.otp_secret)
+
+        return totp.verify(otp)

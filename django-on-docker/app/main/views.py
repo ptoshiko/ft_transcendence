@@ -1,4 +1,4 @@
-from .models import CustomUser, Friendship, ChatMessage, BlockUser
+from .models import CustomUser, Friendship, ChatMessage, BlockUser, MatchHistory
 from django.db import models
 from rest_framework.response import Response
 from . import serializers
@@ -165,17 +165,22 @@ class GetUserByDisplayName(views.APIView):
         except CustomUser.DoesNotExist:
             raise Http404
 
+class GetUserMe(views.APIView):
+    def get(self, request):
+        user_id = request.user.id
+        user = CustomUser.objects.get(id=user_id)
+        serializer = serializers.CustomUserSerializer(user)
+        return Response(serializer.data)
+
 # for 2FA
 from django.core.exceptions import ValidationError 
 from django.views.generic import TemplateView 
 from .services import user_two_factor_auth_data_create       
 
-class SetupTwoFactorAuthView(TemplateView):
-    template_name = "admin_2fa/setup_2fa.html"
-
+class SetupTwoFactorAuthView(views.APIView):
     def post(self, request):
-        context = {}
         user = request.user
+        context = {}
 
         try:
             two_factor_auth_data = user_two_factor_auth_data_create(user=user)
@@ -185,14 +190,101 @@ class SetupTwoFactorAuthView(TemplateView):
             context["qr_code"] = two_factor_auth_data.generate_qr_code(
                 name=user.email
             )
+
+            return Response(context, status=status.HTTP_200_OK)
         except ValidationError as exc:
-            context["form_errors"] = exc.messages
-
-        return self.render_to_response(context)
+            return Response({"error": exc.messages}, status=status.HTTP_400_BAD_REQUEST)
 
 
+from django import forms
+from django.urls import reverse_lazy
+from .models import UserTwoFactorAuthData
+
+class ConfirmTwoFactorAuthView(views.APIView):
+    success_url = reverse_lazy("admin:index")
+
+    class Form(forms.Form):
+        otp = forms.CharField(required=True)
+
+        def clean_otp(self):
+            self.two_factor_auth_data = UserTwoFactorAuthData.objects.filter(
+                user=self.user
+            ).first()
+
+            if self.two_factor_auth_data is None:
+                raise ValidationError('2FA not set up.')
+
+            otp = self.cleaned_data.get('otp')
+
+            if not self.two_factor_auth_data.validate_otp(otp):
+                raise ValidationError('Invalid 2FA code.')
+
+            return otp
+
+    def post(self, request, *args, **kwargs):
+        form = self.Form(request.data)
+        form.user = request.user
+
+        if form.is_valid():
+            return Response({'success': True}, status=status.HTTP_200_OK)
+        else:
+            return Response({'errors': form.errors}, status=status.HTTP_400_BAD_REQUEST)
 
 
+class UserMatchHistoryView(views.APIView):
+    def get(self, request):
+        user_id = request.user.id
+        match_history = MatchHistory.objects.filter(models.Q(player1=user_id) | models.Q(player2=user_id))
+        serializer = serializers.MatchHistorySerializer(match_history, many=True)
+        
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+
+
+class MatchCreateView(views.APIView):
+    def post(self, request, *args, **kwargs):
+        player1_id = request.data.get('player1_id')
+        player2_id = request.data.get('player2_id')
+        player1_result = request.data.get('player1_result')
+        player2_result = request.data.get('player2_result')
+
+        try:
+            player1 = CustomUser.objects.get(id=player1_id)
+        except CustomUser.DoesNotExist:
+            return Response({"error": "Player1 does not exist"}, status=status.HTTP_404_NOT_FOUND)
+        
+        try:
+            player2 = CustomUser.objects.get(id=player2_id)
+        except CustomUser.DoesNotExist:
+            return Response({"error": "Player2 does not exist"}, status=status.HTTP_404_NOT_FOUND)
+
+        match_data = {
+            'player1': player1.id,
+            'player2': player2.id,
+            'player1_result': player1_result,
+            'player2_result': player2_result
+        }
+        serializer = serializers.MatchCreateSerializer(data=match_data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+class UserGetStatsView(views.APIView):
+    def get(self, request):
+        user = request.user
+        wins = MatchHistory.objects.filter(player1=user, player1_result=1).count() + \
+               MatchHistory.objects.filter(player2=user, player2_result=1).count()
+        
+        losses = MatchHistory.objects.filter(player1=user, player1_result=0).count() + \
+                 MatchHistory.objects.filter(player2=user, player2_result=0).count()
+        
+        stats = {
+            'wins': wins,
+            'losses': losses
+        }
+        return Response(stats, status=status.HTTP_200_OK)
+        
 
 def login(request):
     return render(request, "chat/login.html")

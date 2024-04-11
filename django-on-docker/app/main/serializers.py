@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import CustomUser, Friendship, ChatMessage
+from .models import CustomUser, Friendship, ChatMessage, MatchHistory
 
 from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
@@ -80,9 +80,25 @@ class ChatMessageSerializer(serializers.ModelSerializer):
         fields = ['sender', 'receiver', 'content', 'date_added']
 
 
+class MatchHistorySerializer(serializers.ModelSerializer):
+    class Meta:
+        model = MatchHistory
+        fields = ['player1', 'player2', 'player1_result', 'player2_result']
 
 
+class MatchCreateSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = MatchHistory
+        fields = ['player1', 'player2', 'player1_result', 'player2_result']
 
+    def validate(self, data):
+        player1_result = data.get('player1_result')
+        player2_result = data.get('player2_result')
 
+        if player1_result not in [0, 1] or player2_result not in [0, 1]:
+            raise serializers.ValidationError("Result must be either 0 or 1")
 
+        if player1_result == 1 and player2_result == 1:
+            raise serializers.ValidationError("Both results cannot equal 1")
 
+        return data
