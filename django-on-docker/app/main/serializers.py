@@ -7,14 +7,19 @@ from django.contrib.auth.password_validation import validate_password
 from django.core.exceptions import ValidationError
 
 class CustomUserSerializer(serializers.ModelSerializer):
-	class Meta(object):
-		model = CustomUser
-		fields = ['id', 'display_name', 'password', 'email']
+    is_me = serializers.SerializerMethodField()
+    class Meta(object):
+        model = CustomUser
+        fields = ['id', 'display_name', 'password', 'email', 'is_me']
         
-		extra_kwargs = {
+        extra_kwargs = {
             'password': {'write_only': True}
-		}
-
+        }
+    def get_is_me(self, obj):
+        request = self.context.get('request')
+        if request and request.user.is_authenticated:
+            return 1 if obj.display_name == request.user.display_name else 0
+        return 0 
 
 class FriendshipSerializer(serializers.ModelSerializer):
     class Meta:
