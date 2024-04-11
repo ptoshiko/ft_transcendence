@@ -47,7 +47,7 @@ func main() {
 			log.Fatalf("couldn't marshal user: %s", err)
 		}
 
-		resp, err := http.Post("https://localhost:8081/chat/api/register/", "application/json", bytes.NewReader(data))
+		resp, err := http.Post("https://localhost:8081/api/token/", "application/json", bytes.NewReader(data))
 		if err != nil {
 			log.Fatalf("couldn't create users: %s", err)
 		}
