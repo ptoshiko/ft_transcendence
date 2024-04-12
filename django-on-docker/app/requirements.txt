@@ -11,3 +11,4 @@ pyopenssl
 channels[daphne]
 pyotp
 qrcode
+Pillow

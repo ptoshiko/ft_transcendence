@@ -11,8 +11,7 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):
     is_active = models.BooleanField(default=True)
     date_joined = models.DateTimeField(default=timezone.now)
     display_name = models.CharField(_("display name"), unique=True, validators=[validate_display_name])
- 
-    # - avatar = models.ImageField(upload_to=files/avatars)
+    avatar = models.ImageField(_("avatar"), upload_to='avatars/', blank=True, null=True, default='default-avatar.jpg')
 
     USERNAME_FIELD = "email"
     REQUIRED_FIELDS = []
