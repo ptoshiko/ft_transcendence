@@ -12,13 +12,11 @@ export default class extends HTMLElement {
 
         const user = await getUserByDisplayName(username);
 
-        console.log(user);
         this.username.textContent = user.display_name;
+        this.avatar.setAttribute("src", user.avatar);
         if (user.is_me > 0) {
             this.isMe.textContent = "This is you!";
         }
-
-
 
         document.title = "Profile";
     }
@@ -29,10 +27,12 @@ export default class extends HTMLElement {
             <section class="profile-container">
                 <h1 class="username"></h1>
                 <h1 class="is-me"></h1>
+                <img class="avatar">
             </section>
         `;
 
         this.username = this.querySelector(".username");
         this.isMe = this.querySelector(".is-me");
+        this.avatar = this.querySelector(".avatar");
     }
 }
