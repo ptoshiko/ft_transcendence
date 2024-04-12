@@ -1,16 +1,26 @@
-import getMe from "../service/getMe.js";
+import {getMe, getUserByDisplayName} from "../service/users.js";
 
 export default class extends HTMLElement {
     constructor() {
         super();
     }
     
-    connectedCallback() {
+    async connectedCallback() {
         this.render();
 
-        const user = getMe();
+        const username  = this.getAttribute("username");
 
-        this.username.textContent = user.displayName;
+        const user = await getUserByDisplayName(username);
+
+        console.log(user);
+        this.username.textContent = user.display_name;
+        if (user.is_me > 0) {
+            this.isMe.textContent = "This is you!";
+        }
+
+
+
+        document.title = "Profile";
     }
 
     render() {
@@ -18,9 +28,11 @@ export default class extends HTMLElement {
             <tr-nav></tr-nav>
             <section class="profile-container">
                 <h1 class="username"></h1>
+                <h1 class="is-me"></h1>
             </section>
         `;
 
-        this.username = this.querySelector(".username")
+        this.username = this.querySelector(".username");
+        this.isMe = this.querySelector(".is-me");
     }
 }

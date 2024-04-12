@@ -11,31 +11,55 @@ customElements.define('tr-profile', Profile);
 
 const app = document.querySelector("#app");
 
-export default async function router() {
-    const routes = [
-        { path: "/login", component: "tr-login"},
-        { path: "/profile", component: "tr-profile"},
-    ]
+function pathToRegex(path) {
+   return new RegExp("^" + path.replace(/\//g, "\\/").replace(/:\w+/g, "(.+)") + "$");
+}
 
-    let match = routes.find(route => {
-        return location.pathname == route.path
-    })
-
-    if (!match) {
-        match = {
-            route: {path: location.pathname, component: "tr-not-found"},
-        }
-    } else if (!isLoggedIn()) {
-        match = {
-            route: {path: "/login", component: "tr-login"},
-        }
-
-        history.pushState(null, null, "/login")
+function getParams(result, path) {
+    if (!result) {
+        return null;
     }
 
+    const values = result.slice(1);
+    const keys = Array.from(path.matchAll(/:(\w+)/g)).map(result => result[1]);
+
+    return Object.fromEntries(keys.map((key, i) => {
+        return [key, values[i]];
+    }));
+}
+
+export default async function router() {
+    const routes = [
+        // { path: "/", component: "tr-profile"},
+        { path: "/login", component: "tr-login"},
+        { path: "/profiles/:username", component: "tr-profile"},
+    ];
+
+    let result = null;
+    let route = null;
+    for (const r of routes) {
+        result = location.pathname.match(pathToRegex(r.path));
+        if (result !==null) {
+            route = r;
+            break;
+        }
+    }
+
+    if (!route) {
+        route = {path: location.pathname, component: "tr-not-found"};
+    };
 
     app.innerHTML=``;
-    app.appendChild(document.createElement(match.route.component));
+    let component = document.createElement(route.component);
+    
+    let params = getParams(result, route.path);
+    if (params) {
+        for (const [key, value] of Object.entries(params)) {
+            component.setAttribute(key, value);
+        }
+    }
+
+    app.appendChild(component);
 }
 
 window.addEventListener('popstate', router)

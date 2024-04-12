@@ -4,13 +4,49 @@
     padding: 0;
 }
 
-body, button, input {
+:root {
+    --primary: #50514F;
+    --secondary: #EDF7D2;
+    --accent: #F25F5C;
+}
+
+body, input {
     font-family: "Roboto", sans-serif;
     font-weight: 500;
     font-style: normal;
     color: #50514F;
     background-color: #c9c19f;
 }
+
+/* 
+    Navigator
+*/
+
+#menu-bar {
+    color: var(--primary);
+    background-color:  var(--accent);
+    font-size: 2rem;
+    display: flex;
+    justify-content: space-between;
+    list-style: none;
+}
+
+#menu-bar li {
+    padding: 15px 0;
+    flex-grow: 1;
+    text-align: center;
+}
+
+#menu-bar li:hover {
+    background-color: var(--primary); 
+    color: var(--accent);
+    cursor: pointer;
+}
+
+
+/* 
+    Login
+*/
 
 .login-container {
     display: flex;
@@ -22,7 +58,7 @@ body, button, input {
 .login-form {
     border-radius: 2rem;
     min-width: 500px;
-    height: 400px;
+    max-height: 600px;
     display: flex;
     flex-direction: column;
     justify-content: center;
@@ -34,36 +70,71 @@ body, button, input {
     font-size: 2rem;
 }
 
-#email-form, #password-form {
+#email-form, #password-form, #display-name-form, #password-repeat-form {
     border-color: bisque;
     border: none;
     border-radius: 0.5em;
     height: 30px;
     padding: 0.5em 0 0.5em 0.5em;
+    transition: all 2s ease-in;
+}
+
+#display-name-form, #password-repeat-form {
+    display: none;
 }
 
 .login-form h1 {
     text-align: center;
 }
 
-.login-form button {
-    background-color: #C9C19F;
-    border: none;
-    border-radius: 2rem;
-    align-self: center;
-    padding: 15px 30px;
-    font-size: 25px;
-}
-
-.login-form button:hover {
-    cursor: pointer;
-    background-color: #EDF7B5;
-}
-
 .login-form > * {
     margin: 0.75em;
 }
 
+.login-err-input::placeholder{
+    color: red;
+    font-weight: bold;
+    text-decoration: underline;
+}
+
+.login-btns-containers {
+    display: flex;
+    justify-content: space-around;
+}
+
+.login-btn {
+    background-color: var(--secondary);
+    border: none;
+    border-radius: 2rem;
+    padding: 15px 30px;
+    font-size: 25px;
+    transition: background-color 0.5s;
+    cursor: pointer;
+}
+
+.login-btn:hover {
+    background-color: #EDF7B5;
+}
+
+.login-disabled {
+    background-color: var(--primary);
+}
+
+.login-err {
+    color: red;
+    background-color: var(--secondary);
+    border-radius: 20px;
+    text-align: center;
+    display: none;
+}
+
+.login-info {
+    display: none;
+}
+
+/* 
+    404 Page
+*/
 .not-found-container {
     display: flex;
     min-height: 100vh;
@@ -86,9 +157,4 @@ body, button, input {
 
 .not-found-img img {
     width: 100%;
-}
-
-.login-err {
-    color: red;
-    text-align: center;
 }
