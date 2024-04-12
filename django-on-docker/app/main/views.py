@@ -7,11 +7,12 @@ from rest_framework.permissions import IsAuthenticated, AllowAny
 from .permissions import IsOwnerOrReadOnly,  IsAdminOrReadnly
 from django.shortcuts import render
 from django.http import Http404
+from . import error_messages
 
 # [POST]:registration  required display_name, email and username 
 class RegisterView(generics.CreateAPIView):
     queryset = CustomUser.objects.all()
-    permission_classes = (AllowAny,)
+    permission_classes = [AllowAny]
     serializer_class = serializers.RegisterSerializer
 
 # [GET] returns info of every user 
@@ -32,18 +33,15 @@ class CustomUserAPIRetrieve(generics.RetrieveAPIView):
     serializer_class = serializers.CustomUserSerializer
     permission_classes = (IsAuthenticated,)
 
-from .permissions import IsAdminOrReadnly
 class CuestomUserAPIDetailView(generics.RetrieveUpdateDestroyAPIView):
     queryset = CustomUser.objects.all()
     serializer_class = serializers.CustomUserSerializer
     permission_classes = (IsAdminOrReadnly,)
 
 
-# [GET] Retrieves friendships where the user is either sender or receiver and the status is approved 
 class FriendsListView(views.APIView):
     def get(self, request, *args, **kwargs):
         user = request.user 
-
         friendships = Friendship.objects.filter(
             models.Q(sender=user, status=Friendship.APPROVED) | models.Q(receiver=user, status=Friendship.APPROVED))
 
@@ -59,20 +57,14 @@ class FriendsListView(views.APIView):
         return Response(serializer.data, status=status.HTTP_200_OK)
 
 
-# [GET] Retrieves friendships where the user is either sender or receiver and the status is PENDING
 class FriendshipRequestsView(views.APIView):
     def get(self, request, *args, **kwargs):
         user = request.user
-
         friendship_requests = Friendship.objects.filter(models.Q(receiver=user, status=Friendship.PENDING))
         serializer = serializers.FriendshipRequestSerializer(friendship_requests, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
 
-
-# [POST] sends a friend request to the particular user: makes a new row in friendship table with status PENDING
-# required receiver_id
-#  body example {"receiver_id": 6}
 class SendFriendRequestView(views.APIView):
     def post(self, request, *args, **kwargs):
         sender = request.user 
@@ -160,7 +152,7 @@ class GetUserByDisplayName(views.APIView):
     def get(self, request, display_name, format=None):
         try:
             user = CustomUser.objects.get(display_name=display_name)
-            serializer = serializers.CustomUserSerializer(user)
+            serializer = serializers.CustomUserSerializer(user, context={'request': request})
             return Response(serializer.data)
         except CustomUser.DoesNotExist:
             raise Http404
@@ -270,6 +262,7 @@ class MatchCreateView(views.APIView):
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
+
 class UserGetStatsView(views.APIView):
     def get(self, request):
         user = request.user
@@ -278,13 +271,13 @@ class UserGetStatsView(views.APIView):
         
         losses = MatchHistory.objects.filter(player1=user, player1_result=0).count() + \
                  MatchHistory.objects.filter(player2=user, player2_result=0).count()
-        
+                 
         stats = {
             'wins': wins,
             'losses': losses
         }
         return Response(stats, status=status.HTTP_200_OK)
-        
+
 
 def login(request):
     return render(request, "chat/login.html")
