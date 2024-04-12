@@ -25,6 +25,7 @@ urlpatterns = [
 	path('api/userdetail/<int:pk>/', views.CuestomUserAPIDetailView.as_view()),
 
 	path('api/user/getstats/', views.UserGetStatsView.as_view()),
+	path('api/user/upload_avatar/', views.AvatarUploadView.as_view()),
 
 	path('api/match/gethistory/', views.UserMatchHistoryView.as_view()),
 	path('api/match/create/', views.MatchCreateView.as_view()),

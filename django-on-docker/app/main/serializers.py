@@ -10,7 +10,7 @@ class CustomUserSerializer(serializers.ModelSerializer):
     is_me = serializers.SerializerMethodField()
     class Meta(object):
         model = CustomUser
-        fields = ['id', 'display_name', 'password', 'email', 'is_me']
+        fields = ['id', 'display_name', 'password', 'email', 'avatar', 'is_me']
         
         extra_kwargs = {
             'password': {'write_only': True}
@@ -107,3 +107,8 @@ class MatchCreateSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError("Both results cannot equal 1")
 
         return data
+
+class AvatarUploadSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = CustomUser
+        fields = ['avatar']

@@ -9,17 +9,17 @@ from django.shortcuts import render
 from django.http import Http404
 from . import error_messages
 
-# [POST]:registration  required display_name, email and username 
-class RegisterView(generics.CreateAPIView):
+
+class RegisterView(generics.CreateAPIView):  # [POST]:registration  required display_name, email and username 
     queryset = CustomUser.objects.all()
     permission_classes = [AllowAny]
     serializer_class = serializers.RegisterSerializer
 
-# [GET] returns info of every user 
+
 class CustomUserAPIList(generics.ListAPIView):
     queryset = CustomUser.objects.all()
     serializer_class = serializers.CustomUserSerializer
-    permission_classes = (AllowAny,)
+    permission_classes = [AllowAny]
 
 # [PUT] update owner's info
 class CustomUserAPIUpdate(generics.UpdateAPIView):
@@ -67,6 +67,8 @@ class FriendshipRequestsView(views.APIView):
 
 class SendFriendRequestView(views.APIView):
     def post(self, request, *args, **kwargs):
+        if not request.data:
+            return Response({'error': 'Empty request body'}, status=status.HTTP_400_BAD_REQUEST)
         sender = request.user 
         receiver_id = request.data.get('receiver_id')  
 
@@ -86,11 +88,10 @@ class SendFriendRequestView(views.APIView):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
-# [PUT] approves a friend request from the particular user: friendship status=APPROVED
-# required friendship_id
-#  body example {"friendship_id": 1}
 class ApproveFriendRequestView(views.APIView):
     def put(self, request, *args, **kwargs):
+        if not request.data:
+            return Response({'error': 'Empty request body'}, status=status.HTTP_400_BAD_REQUEST)
         friendship_id = request.data.get('friendship_id')  
         try:
             friendship = Friendship.objects.get(id=friendship_id)
@@ -109,32 +110,39 @@ class ApproveFriendRequestView(views.APIView):
 
 class BlockUserView(views.APIView):
     def post(self, request):
+        if not request.data:
+            return Response({'error': 'Empty request body'}, status=status.HTTP_400_BAD_REQUEST)
         blocked_user_id = request.data.get('blocked_user_id')
         blocked_by_id = request.user.id
 
         if not CustomUser.objects.filter(id=blocked_user_id).exists():
             return Response({'error': 'User to block does not exist'}, status=status.HTTP_404_NOT_FOUND)
 
-        # Check if the blocking relationship already exists
         if BlockUser.objects.filter(blocked_by_id=blocked_by_id, blocked_user_id=blocked_user_id).exists():
             return Response({'error': 'User is already blocked'}, status=status.HTTP_400_BAD_REQUEST)
 
-        # Create the blocking relationship
+
+        block_user_obj = BlockUser.objects.create(blocked_by_id=blocked_by_id, blocked_user_id=blocked_user_id)
+        
+        serializer = BlockUserSerializer(block_user_obj)
+        
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
         BlockUser.objects.create(blocked_by_id=blocked_by_id, blocked_user_id=blocked_user_id)
+
         return Response({'message': 'User blocked successfully'}, status=status.HTTP_200_OK)
     
 class UnblockUserView(views.APIView):
     def post(self, request):
+        if not request.data:
+            return Response({'error': 'Empty request body'}, status=status.HTTP_400_BAD_REQUEST)
         blocked_user_id = request.data.get('blocked_user_id')
         blocked_by_id = request.user.id
 
-        # Check if the blocking relationship exists
         try:
             blocking_relationship = BlockUser.objects.get(blocked_by_id=blocked_by_id, blocked_user_id=blocked_user_id)
         except BlockUser.DoesNotExist:
             return Response({'error': 'User is not blocked'}, status=status.HTTP_400_BAD_REQUEST)
 
-        # Delete the blocking relationship
         blocking_relationship.delete()
         return Response({'message': 'User unblocked successfully'}, status=status.HTTP_200_OK)
 
@@ -235,6 +243,9 @@ class UserMatchHistoryView(views.APIView):
 
 class MatchCreateView(views.APIView):
     def post(self, request, *args, **kwargs):
+        if not request.data:
+            return Response({'error': 'Empty request body'}, status=status.HTTP_400_BAD_REQUEST)
+
         player1_id = request.data.get('player1_id')
         player2_id = request.data.get('player2_id')
         player1_result = request.data.get('player1_result')
@@ -277,6 +288,16 @@ class UserGetStatsView(views.APIView):
             'losses': losses
         }
         return Response(stats, status=status.HTTP_200_OK)
+
+class AvatarUploadView(views.APIView):
+    def post(self, request, *args, **kwargs):
+        if not request.data:
+            return Response({'error': 'Empty request body'}, status=status.HTTP_400_BAD_REQUEST)
+        serializer = serializers.AvatarUploadSerializer(request.user, data=request.data, partial=True)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
 def login(request):
