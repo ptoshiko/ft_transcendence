@@ -199,6 +199,28 @@ class GetUserByDisplayName(views.APIView):
         except CustomUser.DoesNotExist:
             raise Http404
 
+class GetFriendsByDisplayName(views.APIView):
+    def get(self, request, display_name, format=None):
+
+        try:
+            user = CustomUser.objects.get(display_name=display_name)
+        except CustomUser.DoesNotExist:
+            return Response({"error": "User does not exist"}, status=status.HTTP_404_NOT_FOUND)
+            
+        friendships = Friendship.objects.filter(
+            models.Q(sender=user, status=Friendship.APPROVED) | models.Q(receiver=user, status=Friendship.APPROVED))
+
+        friend_ids = set()
+        for friendship in friendships:
+            friend_ids.add(friendship.sender_id)
+            friend_ids.add(friendship.receiver_id)
+
+        friend_ids.discard(user.id)
+
+        friends = CustomUser.objects.filter(id__in=friend_ids)
+        serializer = serializers.CustomUserSerializer(friends, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
 
 class GetUserMe(views.APIView):
     def get(self, request):

@@ -20,6 +20,8 @@ urlpatterns = [
 	path('api/user/updateinfo/', views.CustomUserAPIUpdate.as_view()),
 
 	path('api/getuser/<str:display_name>/', views.GetUserByDisplayName.as_view()),
+	path('api/getfriends/<str:display_name>/', views.GetFriendsByDisplayName.as_view()),
+	
 	path('api/me/', views.GetUserMe.as_view()),
 
 	path('api/userdetail/<int:pk>/', views.CuestomUserAPIDetailView.as_view()), # to delete a user
