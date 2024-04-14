@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import CustomUser, Friendship, ChatMessage, MatchHistory
+from .models import CustomUser, Friendship, ChatMessage, MatchHistory, BlockUser
 
 from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
@@ -7,6 +7,15 @@ from django.contrib.auth.password_validation import validate_password
 from django.core.exceptions import ValidationError
 
 class CustomUserSerializer(serializers.ModelSerializer):
+    class Meta(object):
+        model = CustomUser
+        fields = ['id', 'display_name', 'password', 'email', 'avatar']
+        
+        extra_kwargs = {
+            'password': {'write_only': True}
+        }
+
+class ByDisplayNameSerializer(serializers.ModelSerializer):
     is_me = serializers.SerializerMethodField()
     class Meta(object):
         model = CustomUser
@@ -30,7 +39,7 @@ class FriendshipSerializer(serializers.ModelSerializer):
 class FriendshipRequestSerializer(serializers.ModelSerializer):
     class Meta:
         model = Friendship
-        fields = ['sender', 'status', 'created_at'] 
+        fields = ['id', 'sender', 'status', 'created_at'] 
 
 
 class RegisterSerializer(serializers.ModelSerializer):
@@ -67,15 +76,16 @@ class UpdateSerializer(serializers.ModelSerializer):
              'password':{'write_only':True} 
         }
     def update(self, instance, validated_data):
+        if 'password' in validated_data:
+            password = validated_data.pop('password')
+            try:
+                validate_password(password)
+            except ValidationError as err:
+                raise serializers.ValidationError({'password': err.messages})
+            instance.set_password(password)
+
         instance.email = validated_data.get('email', instance.email)
         instance.display_name = validated_data.get('display_name', instance.display_name)
-        instance.password = validated_data.get('password', instance.password)
-
-        try:
-            validate_password(password=validated_data['password'], user=instance)
-        except ValidationError as err:
-            raise serializers.ValidationError({'password': err.messages})
-        instance.set_password(validated_data['password'])
         instance.save()
         return instance
     
@@ -88,7 +98,7 @@ class ChatMessageSerializer(serializers.ModelSerializer):
 class MatchHistorySerializer(serializers.ModelSerializer):
     class Meta:
         model = MatchHistory
-        fields = ['player1', 'player2', 'player1_result', 'player2_result']
+        fields = ['player1', 'player2', 'player1_result', 'player2_result', 'match_date']
 
 
 class MatchCreateSerializer(serializers.ModelSerializer):
@@ -112,3 +122,8 @@ class AvatarUploadSerializer(serializers.ModelSerializer):
     class Meta:
         model = CustomUser
         fields = ['avatar']
+
+class BlockUserSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = BlockUser
+        fields = '__all__' 

@@ -140,4 +140,6 @@ class ChatConsumer(AsyncWebsocketConsumer):
     def is_blocked(self, receiver_id, sender_id):
         return BlockUser.objects.filter(blocked_by_id=receiver_id, blocked_user_id=sender_id).exists()
 
+    
+
 

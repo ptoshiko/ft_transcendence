@@ -16,13 +16,15 @@ urlpatterns = [
 
 	path('api/register/', views.RegisterView.as_view()),   # registration: required display_name, email and username 
 	path('api/userslist/', views.CustomUserAPIList.as_view()), # returns info for every user in db
-	path('api/updateinfo/<int:pk>/', views.CustomUserAPIUpdate.as_view()), # updates info of owner
+
+	path('api/user/updateinfo/', views.CustomUserAPIUpdate.as_view()),
 
 	path('api/getuser/<str:display_name>/', views.GetUserByDisplayName.as_view()),
+	path('api/getfriends/<str:display_name>/', views.GetFriendsByDisplayName.as_view()),
+	
 	path('api/me/', views.GetUserMe.as_view()),
 
-	path('api/getinfo/<int:pk>/', views.CustomUserAPIRetrieve.as_view()), # returns info for particular user in db
-	path('api/userdetail/<int:pk>/', views.CuestomUserAPIDetailView.as_view()),
+	path('api/userdetail/<int:pk>/', views.CuestomUserAPIDetailView.as_view()), # to delete a user
 
 	path('api/user/getstats/', views.UserGetStatsView.as_view()),
 	path('api/user/upload_avatar/', views.AvatarUploadView.as_view()),
@@ -38,14 +40,16 @@ urlpatterns = [
 	path('api/friends/sendrequest/', views.SendFriendRequestView.as_view(), name='send_friend_request'), # makes a friend request to particular user 
 	path('api/friends/approverequest/', views.ApproveFriendRequestView.as_view(), name='approve_friend_request'),
 	path('api/friends/showrequests/', views.FriendshipRequestsView.as_view(), name='friendship_requests'), 
+	# path('api/friends/remove/', views.FriendRemoveView.as_view(), name='remove_friend'),
 
 	path('api/blockuser/', views.BlockUserView.as_view(), name='block_user'),
 	path('api/unblockuser/', views.UnblockUserView.as_view(), name='unblock_user'),
 	path('api/getmessages/', views.GetMessagesView.as_view(), name='get_messages'),
 
 	path('api/setup-2fa/', views.SetupTwoFactorAuthView.as_view(), name='setup_2fa'),
-	path('api/confirm-2fa/', views.ConfirmTwoFactorAuthView.as_view(), name='confirm_2fa')
+	path('api/confirm-2fa/', views.ConfirmTwoFactorAuthView.as_view(), name='confirm_2fa'),
 
+	path('api/search/<str:string>/', views.UserSearchView.as_view(), name='user_search')
 ]
 
 
