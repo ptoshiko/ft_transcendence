@@ -3,11 +3,13 @@ import Login from "./components/Login.js"
 import FourZeroFor from "./components/404.js"
 import { isLoggedIn } from "./service/auth.js"
 import NavBar from "./components/NavBar.js";
+import UserSmall from "./components/UserSmall.js";
 
 customElements.define('tr-login', Login);
 customElements.define('tr-not-found', FourZeroFor);
 customElements.define('tr-nav', NavBar);
 customElements.define('tr-profile', Profile);
+customElements.define('tr-user-small', UserSmall);
 
 const app = document.querySelector("#app");
 
@@ -51,14 +53,14 @@ export default async function router() {
 
     app.innerHTML=``;
     let component = document.createElement(route.component);
-    
+
     let params = getParams(result, route.path);
     if (params) {
         for (const [key, value] of Object.entries(params)) {
             component.setAttribute(key, value);
         }
     }
-
+    
     app.appendChild(component);
 }
 

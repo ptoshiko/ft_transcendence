@@ -24,21 +24,21 @@ export default class extends HTMLElement {
 
         this.signInBtn.addEventListener("click", (e)=>{
             e.preventDefault();
-            this.displayNameInput.style.display = "none";
-            this.repeatPasswordInput.style.display = "none";
+            this.displayNameContainer.style.display = "none";
+            this.repeatPasswordContainer.style.display = "none";
             this.mainBtn.textContent = "Sign In";
-            this.signUpBtn.classList.remove("login-disabled");
-            this.signInBtn.classList.add("login-disabled");
+            this.signInBtn.classList.add("active");
+            this.signUpBtn.classList.remove("active");
             this.clearInputs();
         })
 
         this.signUpBtn.addEventListener("click", (e)=>{
             e.preventDefault();
-            this.displayNameInput.style.display = "inline-block";
-            this.repeatPasswordInput.style.display = "inline-block";
+            this.displayNameContainer.style.display = "block";
+            this.repeatPasswordContainer.style.display = "block";
             this.mainBtn.textContent = "Sign Up";
-            this.signUpBtn.classList.add("login-disabled");
-            this.signInBtn.classList.remove("login-disabled");
+            this.signInBtn.classList.remove("active");
+            this.signUpBtn.classList.add("active");
             this.clearInputs();
         })
 
@@ -46,32 +46,63 @@ export default class extends HTMLElement {
     }
 
     render() {
-        this.innerHTML = 
-        `<section class="login-container">
-            <form class="login-form">
-                <div class="login-btns-containers">
-                    <button class="login-btn login-sign-in login-disabled">Sign In</button>
-                    <button class="login-btn login-sign-up">Sign Up</button>
+        this.innerHTML = `
+        <div class="container-fluid">
+            <!-- One Row with 100% height -->
+            <div class="row justify-content-center align-items-center vh-100">
+                <!-- One Col which is login block. Always half the page. The height depends on the content -->
+                <div class="col-4 container p-5">
+                    <!-- Title Row -->
+                    <h1 class="row mb-3">Trancendance</h1>
+                    <div style="display:none;" class="alert alert-danger" role="alert" id="login-err"></div>
+                    <div style="display:none;" class="alert alert-success" role="alert" id="login-info"></div>
+                    <!-- Header Row -->
+                    <ul class="row nav nav-tabs mb-3">
+                        <li class="nav-item">
+                            <a class="nav-link active" id="login-sign-in">Sign In</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" id="login-sign-up">Sign Up</a>
+                        </li>
+                    </ul>
+                    <!-- Content Row -->
+                    <div class="row justify-content-center">
+                        <form class="container">
+                            <div style="display:none;"class="mb-3" id="display-name-container">
+                                <label for="login-display-name" class="form-label">Display Name</label>
+                                <input type="text" class="form-control" id="login-display-name">
+                            </div>
+                            <div class="mb-3">
+                                <label for="login-email" class="form-label">Email address</label>
+                                <input type="email" class="form-control" id="login-email">
+                            </div>
+                            <div class="mb-3">
+                                <label for="login-password" class="form-label">Password</label>
+                                <input type="password" class="form-control" id="login-password">
+                            </div>
+                            <div style="display:none;" class="mb-3" id="password-repeat-container">
+                                <label for="login-password-repeat" class="form-label">Repeat Password</label>
+                                <input type="password" class="form-control" id="login-password-repeat">
+                            </div>
+                            <button type="submit" class="btn btn-primary" id="login-main-btn">Sign In</button>
+                        </form>
+                    </div>
                 </div>
-                <h1 class="login-err"></h1>
-                <h1 class="login-info"></h1>
-                <input type="text" id="display-name-form" placeholder="Display Name">
-                <input type="email" id="email-form" placeholder="Email Address" >
-                <input type="password" id="password-form" placeholder="Password">
-                <input type="password" id="password-repeat-form" placeholder="Repeat Password">
-                <button class="login-btn login-main-button">Sign In</button>
-            </form>
-        </section>`;
+            </div>
+        </div>
+        `;
 
-        this.email = this.querySelector("#email-form");
-        this.password = this.querySelector("#password-form");
-        this.displayNameInput = this.querySelector("#display-name-form");
-        this.repeatPasswordInput = this.querySelector("#password-repeat-form");
-        this.signInBtn = this.querySelector(".login-sign-in");
-        this.signUpBtn = this.querySelector(".login-sign-up");
-        this.mainBtn = this.querySelector(".login-main-button");
-        this.err = this.querySelector(".login-err");
-        this.info = this.querySelector(".login-info");
+        this.email = this.querySelector("#login-email");
+        this.password = this.querySelector("#login-password");
+        this.repeatPasswordContainer = this.querySelector("#password-repeat-container")
+        this.displayNameInput = this.querySelector("#login-display-name");
+        this.displayNameContainer = this.querySelector("#display-name-container");
+        this.repeatPasswordInput = this.querySelector("#login-password-repeat");
+        this.signInBtn = this.querySelector("#login-sign-in");
+        this.signUpBtn = this.querySelector("#login-sign-up");
+        this.mainBtn = this.querySelector("#login-main-btn");
+        this.err = this.querySelector("#login-err");
+        this.info = this.querySelector("#login-info");
     }
 
     async onMainBtnClicked(e) {
@@ -142,6 +173,8 @@ export default class extends HTMLElement {
 
     checkSignUpInputs() {
         if (this.password.value !== this.repeatPasswordInput.value) {
+            this.password.classList.add("is-invalid");
+            this.repeatPasswordInput.classList.add("is-invalid");
             this.showErr("Passwords don't match");
             return false;
         }
@@ -156,19 +189,19 @@ export default class extends HTMLElement {
         }
 
         if (this.email.value === ``) {
-            this.email.classList.add("login-err-input");
+            this.email.classList.add("is-invalid");
         }
         
         if (this.password.value === ``) {
-            this.password.classList.add("login-err-input");
+            this.password.classList.add("is-invalid");
         }
 
         if (this.repeatPasswordInput.value === ``) {
-            this.repeatPasswordInput.classList.add("login-err-input");
+            this.repeatPasswordInput.classList.add("is-invalid");
         }
 
         if (this.displayNameInput.value === ``) {
-            this.displayNameInput.classList.add("login-err-input");
+            this.displayNameInput.classList.add("is-invalid");
         }
 
         return false;
@@ -199,11 +232,11 @@ export default class extends HTMLElement {
 
             this.removeErr();
             this.showInfo("Now Sign In!");
-            this.displayNameInput.style.display = "none";
-            this.repeatPasswordInput.style.display = "none";
+            this.displayNameContainer.style.display = "none";
+            this.repeatPasswordContainer.style.display = "none";
             this.mainBtn.textContent = "Sign In";
-            this.signUpBtn.classList.remove("login-disabled");
-            this.signInBtn.classList.add("login-disabled");
+            this.signInBtn.classList.add("active");
+            this.signUpBtn.classList.remove("active");
         } catch(e) {
             console.log(e);
             this.err.textContent = "There is some server error";
@@ -227,10 +260,10 @@ export default class extends HTMLElement {
 
     clearInputErr() {
         this.removeErr();
-        this.email.classList.remove("login-err-input");
-        this.password.classList.remove("login-err-input");
-        this.repeatPasswordInput.classList.remove("login-err-input");
-        this.displayNameInput.classList.remove("login-err-input");
+        this.email.classList.remove("is-invalid");
+        this.password.classList.remove("is-invalid");
+        this.repeatPasswordInput.classList.remove("is-invalid");
+        this.displayNameInput.classList.remove("is-invalid");
     }
 
     showInfo(text) {
