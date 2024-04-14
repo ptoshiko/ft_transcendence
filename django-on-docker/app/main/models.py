@@ -23,7 +23,6 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):
         
 AUTH_USER_MODEL = "main.CustomUser"
 
-
 class MatchHistory(models.Model):
     player1 = models.ForeignKey(AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='matches_played')
     player2 = models.ForeignKey(AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='matches_opponent')
@@ -79,6 +78,9 @@ class BlockUser(models.Model):
         ]
 
 
+# class Game(models.Model):
+
+# class UserStatus
 
 # for 2FA
 from typing import Optional

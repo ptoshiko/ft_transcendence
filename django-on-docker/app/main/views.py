@@ -16,24 +16,30 @@ class RegisterView(generics.CreateAPIView):  # [POST]:registration  required dis
     serializer_class = serializers.RegisterSerializer
 
 
-class CustomUserAPIList(generics.ListAPIView):
+class CustomUserAPIList(generics.ListAPIView): 
     queryset = CustomUser.objects.all()
     serializer_class = serializers.CustomUserSerializer
     permission_classes = [AllowAny]
 
-# [PUT] update owner's info
-class CustomUserAPIUpdate(generics.UpdateAPIView):
-    queryset = CustomUser.objects.all()
+class CustomUserAPIUpdate(generics.UpdateAPIView): # [PUT] update owner's info
     serializer_class = serializers.UpdateSerializer 
     permission_classes = (IsOwnerOrReadOnly, IsAuthenticated)
 
-# [GET] read info of certain user 
-class CustomUserAPIRetrieve(generics.RetrieveAPIView):
-    queryset = CustomUser.objects.all()
-    serializer_class = serializers.CustomUserSerializer
-    permission_classes = (IsAuthenticated,)
+    def get_object(self):
+        return self.request.user
 
-class CuestomUserAPIDetailView(generics.RetrieveUpdateDestroyAPIView):
+    def update(self, request, *args, **kwargs):
+        if not request.data:
+            return Response({'error': 'Empty request body'}, status=status.HTTP_400_BAD_REQUEST)
+
+        partial = kwargs.pop('partial', True)
+        instance = self.get_object()
+        serializer = self.get_serializer(instance, data=request.data, partial=partial)
+        serializer.is_valid(raise_exception=True)
+        self.perform_update(serializer)
+        return Response(serializer.data)
+
+class CuestomUserAPIDetailView(generics.RetrieveUpdateDestroyAPIView): #to delete a user
     queryset = CustomUser.objects.all()
     serializer_class = serializers.CustomUserSerializer
     permission_classes = (IsAdminOrReadnly,)
@@ -107,6 +113,8 @@ class ApproveFriendRequestView(views.APIView):
         serializer = serializers.FriendshipSerializer(friendship)
         return Response(serializer.data)
     
+# class FriendRemoveView(views.APIView):
+
 
 class BlockUserView(views.APIView):
     def post(self, request):
@@ -121,15 +129,11 @@ class BlockUserView(views.APIView):
         if BlockUser.objects.filter(blocked_by_id=blocked_by_id, blocked_user_id=blocked_user_id).exists():
             return Response({'error': 'User is already blocked'}, status=status.HTTP_400_BAD_REQUEST)
 
-
         block_user_obj = BlockUser.objects.create(blocked_by_id=blocked_by_id, blocked_user_id=blocked_user_id)
         
-        serializer = BlockUserSerializer(block_user_obj)
-        
-        return Response(serializer.data, status=status.HTTP_201_CREATED)
-        BlockUser.objects.create(blocked_by_id=blocked_by_id, blocked_user_id=blocked_user_id)
+        serializer = serializers.BlockUserSerializer(block_user_obj)
 
-        return Response({'message': 'User blocked successfully'}, status=status.HTTP_200_OK)
+        return Response({'message': 'User blocked', 'block_record': serializer.data}, status=status.HTTP_200_OK)
     
 class UnblockUserView(views.APIView):
     def post(self, request):
@@ -144,7 +148,7 @@ class UnblockUserView(views.APIView):
             return Response({'error': 'User is not blocked'}, status=status.HTTP_400_BAD_REQUEST)
 
         blocking_relationship.delete()
-        return Response({'message': 'User unblocked successfully'}, status=status.HTTP_200_OK)
+        return Response({'message': 'User unblocked'}, status=status.HTTP_200_OK)
 
 
 class GetMessagesView(views.APIView):
@@ -160,10 +164,41 @@ class GetUserByDisplayName(views.APIView):
     def get(self, request, display_name, format=None):
         try:
             user = CustomUser.objects.get(display_name=display_name)
-            serializer = serializers.CustomUserSerializer(user, context={'request': request})
-            return Response(serializer.data)
+            serializer = serializers.ByDisplayNameSerializer(user, context={'request': request})
+        
+            friend_status = 0
+            friend_request_sent_by_me = False
+
+            try:
+                friendship_request_sent = Friendship.objects.get(sender=request.user, receiver=user)
+                if friendship_request_sent.status == Friendship.PENDING:
+                    friend_status = "pending"
+                    friend_request_sent_by_me = True
+                elif friendship_request_sent.status == Friendship.APPROVED:
+                    friend_status = "approved"
+            except Friendship.DoesNotExist:
+                try:
+                    friendship_request_received = Friendship.objects.get(sender=user, receiver=request.user)
+                    if friendship_request_received.status == Friendship.PENDING:
+                        friend_status = "pending"
+                    elif friendship_request_received.status == Friendship.APPROVED:
+                        friend_status = "approved"
+                except Friendship.DoesNotExist:
+                    pass 
+
+            blocked_me= BlockUser.objects.filter(blocked_user=request.user, blocked_by=user).exists()
+            is_blocked_by_me= BlockUser.objects.filter(blocked_user=user, blocked_by=request.user).exists()
+
+            data = serializer.data
+            data['friend_status'] = friend_status
+            data['friend_request_sent_by_me'] = friend_request_sent_by_me
+            data['blocked_me'] = blocked_me
+            data['is_blocked_by_me'] = is_blocked_by_me
+
+            return Response(data)
         except CustomUser.DoesNotExist:
             raise Http404
+
 
 class GetUserMe(views.APIView):
     def get(self, request):
@@ -234,7 +269,7 @@ class ConfirmTwoFactorAuthView(views.APIView):
 class UserMatchHistoryView(views.APIView):
     def get(self, request):
         user_id = request.user.id
-        match_history = MatchHistory.objects.filter(models.Q(player1=user_id) | models.Q(player2=user_id))
+        match_history = MatchHistory.objects.filter(models.Q(player1=user_id) | models.Q(player2=user_id)).order_by('-match_date')
         serializer = serializers.MatchHistorySerializer(match_history, many=True)
         
         return Response(serializer.data, status=status.HTTP_200_OK)
@@ -299,6 +334,11 @@ class AvatarUploadView(views.APIView):
             return Response(serializer.data, status=status.HTTP_200_OK)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
+class UserSearchView(views.APIView):
+    def get(self, request, string):
+        users = CustomUser.objects.filter(display_name__startswith=string)
+        serializer = serializers.CustomUserSerializer(users, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
 
 def login(request):
     return render(request, "chat/login.html")
@@ -313,3 +353,5 @@ def room(request, receiver_id):
     ).order_by('-date_added')[:25]
 
     return render(request, "chat/room.html", {"receiver_id": receiver_id, "messages": messages})
+
+    
