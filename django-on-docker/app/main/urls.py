@@ -40,7 +40,7 @@ urlpatterns = [
 	path('api/friends/sendrequest/', views.SendFriendRequestView.as_view(), name='send_friend_request'), # makes a friend request to particular user 
 	path('api/friends/approverequest/', views.ApproveFriendRequestView.as_view(), name='approve_friend_request'),
 	path('api/friends/showrequests/', views.FriendshipRequestsView.as_view(), name='friendship_requests'), 
-	# path('api/friends/remove/', views.FriendRemoveView.as_view(), name='remove_friend'),
+	path('api/friends/remove/', views.FriendRemoveView.as_view(), name='remove_friend'),
 
 	path('api/blockuser/', views.BlockUserView.as_view(), name='block_user'),
 	path('api/unblockuser/', views.UnblockUserView.as_view(), name='unblock_user'),

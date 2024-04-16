@@ -98,23 +98,28 @@ class ChatMessageSerializer(serializers.ModelSerializer):
 class MatchHistorySerializer(serializers.ModelSerializer):
     class Meta:
         model = MatchHistory
-        fields = ['player1', 'player2', 'player1_result', 'player2_result', 'match_date']
+        fields = ['player1', 'player2', 'player1_result', 'player2_result', 'player1_score', 'player2_score','match_date']
 
 
 class MatchCreateSerializer(serializers.ModelSerializer):
     class Meta:
         model = MatchHistory
-        fields = ['player1', 'player2', 'player1_result', 'player2_result']
+        fields = ['player1', 'player2', 'player1_result', 'player2_result', 'player1_score', 'player2_score']
 
     def validate(self, data):
         player1_result = data.get('player1_result')
         player2_result = data.get('player2_result')
+        player1_score = data.get('player1_score')
+        player2_score = data.get('player2_score')
 
         if player1_result not in [0, 1] or player2_result not in [0, 1]:
             raise serializers.ValidationError("Result must be either 0 or 1")
 
         if player1_result == 1 and player2_result == 1:
             raise serializers.ValidationError("Both results cannot equal 1")
+        
+        if player1_score not in range(12) or player2_score  not in range(12):
+            raise serializers.ValidationError("Score result must be in  between 0 and 11")
 
         return data
 

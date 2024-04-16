@@ -1,7 +1,7 @@
 import json
 from channels.generic.websocket import AsyncWebsocketConsumer
 from channels.db import database_sync_to_async
-from .models import ChatMessage, CustomUser, BlockUser
+from .models import ChatMessage, CustomUser, BlockUser, UserStatus
 from django.core.exceptions import ObjectDoesNotExist
 
 class ChatConsumer(AsyncWebsocketConsumer):
@@ -10,9 +10,11 @@ class ChatConsumer(AsyncWebsocketConsumer):
         self.sender = self.scope["user"]
         self.room_name = f"{self.sender.id}"
         await self.channel_layer.group_add(self.room_name, self.channel_name)
+        await self.update_user_status(self.sender, True)
         await self.accept()
 
     async def disconnect(self, close_code):
+        await self.update_user_status(self.sender, False)
         await self.channel_layer.group_discard(self.room_name, self.channel_name)
 
 
@@ -140,6 +142,8 @@ class ChatConsumer(AsyncWebsocketConsumer):
     def is_blocked(self, receiver_id, sender_id):
         return BlockUser.objects.filter(blocked_by_id=receiver_id, blocked_user_id=sender_id).exists()
 
-    
-
-
+    @database_sync_to_async
+    def update_user_status(self, user, is_online):
+        user_status, created = UserStatus.objects.get_or_create(user=user)
+        user_status.is_online = is_online
+        user_status.save()
