@@ -9,7 +9,7 @@ from django.core.exceptions import ValidationError
 class CustomUserSerializer(serializers.ModelSerializer):
     class Meta(object):
         model = CustomUser
-        fields = ['id', 'display_name', 'password', 'email', 'avatar']
+        fields = ['id', 'display_name', 'password', 'email', 'avatar', 'is_online']
         
         extra_kwargs = {
             'password': {'write_only': True}
@@ -19,7 +19,7 @@ class ByDisplayNameSerializer(serializers.ModelSerializer):
     is_me = serializers.SerializerMethodField()
     class Meta(object):
         model = CustomUser
-        fields = ['id', 'display_name', 'password', 'email', 'avatar', 'is_me']
+        fields = ['id', 'display_name', 'password', 'email', 'avatar', 'is_me', 'is_online']
         
         extra_kwargs = {
             'password': {'write_only': True}

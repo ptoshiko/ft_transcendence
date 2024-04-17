@@ -12,6 +12,7 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):
     date_joined = models.DateTimeField(default=timezone.now)
     display_name = models.CharField(_("display name"), unique=True, validators=[validate_display_name])
     avatar = models.ImageField(_("avatar"), upload_to='avatars/', blank=True, null=True, default='default-avatar.jpg')
+    is_online = models.BooleanField(default=False)
 
     USERNAME_FIELD = "email"
     REQUIRED_FIELDS = []
@@ -82,10 +83,9 @@ class BlockUser(models.Model):
 
 # class Game(models.Model):
 
-
-class UserStatus(models.Model):
-    user = models.OneToOneField(AUTH_USER_MODEL, on_delete=models.CASCADE)
-    is_online = models.BooleanField(default=False)
+# class UserStatus(models.Model):
+#     user = models.OneToOneField(AUTH_USER_MODEL, on_delete=models.CASCADE)
+#     is_online = models.BooleanField(default=False)
 
 # for 2FA
 from typing import Optional

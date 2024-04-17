@@ -1,8 +1,9 @@
 import json
 from channels.generic.websocket import AsyncWebsocketConsumer
 from channels.db import database_sync_to_async
-from .models import ChatMessage, CustomUser, BlockUser, UserStatus
+from .models import ChatMessage, CustomUser, BlockUser
 from django.core.exceptions import ObjectDoesNotExist
+from .consumer_services import .
 
 class ChatConsumer(AsyncWebsocketConsumer):
     async def connect(self):
@@ -20,8 +21,20 @@ class ChatConsumer(AsyncWebsocketConsumer):
 
     async def receive(self, text_data):
         text_data_json = json.loads(text_data)
-        message_type = text_data_json.get("type")
-        if message_type == "invitation":
+        # print(text_data_json)
+        # event_type = text_data_json.get("event_type")
+        # match text_data_json.get('event_type'):
+        #     case 'move_paddle':
+        #         await self.handle_move_paddle(message.get('data', {}))
+        #     case 'direct_message':
+        #         await self.handle_direct_message(message.get('data', {}))
+        #     case 'invitation':
+        #         await self.handle_invitation(message.get('data', {}))
+        #     case _:
+        #         await self.send_error_message("Unknown event type")
+
+        event_type = text_data_json.get("event_type")
+        if event_type == "invitation":
             await self.handle_invitation(text_data_json)
         else:
             await self.handle_private_message(text_data_json)
@@ -144,6 +157,6 @@ class ChatConsumer(AsyncWebsocketConsumer):
 
     @database_sync_to_async
     def update_user_status(self, user, is_online):
-        user_status, created = UserStatus.objects.get_or_create(user=user)
-        user_status.is_online = is_online
-        user_status.save()
+        custom_user = CustomUser.objects.get(id=user.id)
+        custom_user.is_online = is_online
+        custom_user.save()

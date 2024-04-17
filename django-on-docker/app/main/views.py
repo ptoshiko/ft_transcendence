@@ -9,12 +9,10 @@ from django.shortcuts import render
 from django.http import Http404
 from . import error_messages
 
-
-class RegisterView(generics.CreateAPIView):  # [POST]:registration  required display_name, email and username 
+class RegisterView(generics.CreateAPIView): 
     queryset = CustomUser.objects.all()
     permission_classes = [AllowAny]
     serializer_class = serializers.RegisterSerializer
-
 
 class CustomUserAPIList(generics.ListAPIView): 
     queryset = CustomUser.objects.all()
@@ -216,13 +214,33 @@ class UnblockUserView(views.APIView):
         blocking_relationship.delete()
         return Response({'message': 'User unblocked'}, status=status.HTTP_200_OK)
 
-
+### CHAT ###
 class GetMessagesView(views.APIView):
     def get(self, request, *args, **kwargs):
         user_id = request.user.id
         messages = ChatMessage.objects.filter(models.Q(sender_id=user_id) | models.Q(receiver_id=user_id)).order_by('-date_added')[:25]
         serializer = serializers.ChatMessageSerializer(messages, many=True)
         
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+class GetLastChatsView(views.APIView):
+    def get(self, request, *args, **kwargs):
+
+        user = request.user 
+        last_chat_users = ChatMessage.objects.filter(
+            models.Q(sender=user) | models.Q(receiver=user)
+        ).order_by('-date_added').values_list('sender', 'receiver').distinct()[:10]
+
+        user_ids = set()
+        for sender_id, receiver_id in last_chat_users:
+            user_ids.add(sender_id)
+            user_ids.add(receiver_id)
+
+        user_ids.remove(user.id)
+        result_users = CustomUser.objects.filter(id__in=user_ids)
+
+        serializer = serializers.CustomUserSerializer(result_users, many=True)
+
         return Response(serializer.data, status=status.HTTP_200_OK)
 
 
@@ -431,6 +449,7 @@ class UserSearchView(views.APIView):
         users = CustomUser.objects.filter(display_name__startswith=string)
         serializer = serializers.CustomUserSerializer(users, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
+
 
 def login(request):
     return render(request, "chat/login.html")
