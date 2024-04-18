@@ -3,7 +3,6 @@ from channels.generic.websocket import AsyncWebsocketConsumer
 from channels.db import database_sync_to_async
 from .models import ChatMessage, CustomUser, BlockUser
 from django.core.exceptions import ObjectDoesNotExist
-from .consumer_services import .
 
 class ChatConsumer(AsyncWebsocketConsumer):
     async def connect(self):

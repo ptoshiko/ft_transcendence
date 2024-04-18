@@ -8,6 +8,7 @@ from .permissions import IsOwnerOrReadOnly,  IsAdminOrReadnly
 from django.shortcuts import render
 from django.http import Http404
 from . import error_messages
+from .views_utils import *
 
 class RegisterView(generics.CreateAPIView): 
     queryset = CustomUser.objects.all()
@@ -71,13 +72,24 @@ class FriendshipRequestsView(views.APIView):
         return Response(serializer.data, status=status.HTTP_200_OK)
 
 
-class SendFriendRequestView(views.APIView):
+class SendFriendRequestView(CheckIdMixin, views.APIView):
     def post(self, request, *args, **kwargs):
         if not request.data:
             return Response({'error': 'Empty request body'}, status=status.HTTP_400_BAD_REQUEST)
         
         sender = request.user 
-        receiver_id = request.data.get('receiver_id')  
+        receiver_id = request.data.get('receiver_id')
+        error_response = self.check_id(receiver_id, 'receiver_id')
+        if error_response:
+            return error_response
+
+        # if receiver_id == None:
+        #     return Response({'error': 'Key receiver_id is missing'}, status=status.HTTP_400_BAD_REQUEST)
+        # try:
+        #     receiver_id = int(receiver_id)
+        # except ValueError:
+        #     return Response({'error': 'Invalid value for receiver_id'}, status=status.HTTP_400_BAD_REQUEST)
+
         try:
             receiver = CustomUser.objects.get(id=receiver_id)
         except CustomUser.DoesNotExist:
@@ -123,12 +135,22 @@ class SendFriendRequestView(views.APIView):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
-class ApproveFriendRequestView(views.APIView):
+class ApproveFriendRequestView(CheckIdMixin, views.APIView):
     def put(self, request, *args, **kwargs):
         if not request.data:
             return Response({'error': 'Empty request body'}, status=status.HTTP_400_BAD_REQUEST)
-        
         sender_id = request.data.get('sender_id')
+        error_response = self.check_id(sender_id, 'sender_id')
+        if error_response:
+            return error_response
+
+        # if sender_id == None:
+        #     return Response({'error': 'Key sender_id is missing'}, status=status.HTTP_400_BAD_REQUEST)
+        # try:
+        #     sender_id = int(sender_id)
+        # except ValueError:
+        #     return Response({'error': 'Invalid value for sender_id'}, status=status.HTTP_400_BAD_REQUEST) 
+
         try:
             sender = CustomUser.objects.get(id=sender_id)
         except CustomUser.DoesNotExist:
@@ -145,12 +167,23 @@ class ApproveFriendRequestView(views.APIView):
         return Response(serializer.data)
 
 
-class FriendRemoveView(views.APIView):
+class FriendRemoveView(CheckIdMixin, views.APIView):
     def post(self, request, *args, **kwargs):
         if not request.data:
             return Response({'error': 'Empty request body'}, status=status.HTTP_400_BAD_REQUEST)
         
         remove_user_id = request.data.get('remove_user_id')
+        error_response = self.check_id(remove_user_id, 'remove_user_id')
+        if error_response:
+            return error_response
+
+        # if remove_user_id == None:
+        #     return Response({'error': 'Key remove_user_id is missing'}, status=status.HTTP_400_BAD_REQUEST)
+        # try:
+        #     remove_user_id = int(remove_user_id)
+        # except ValueError:
+        #     return Response({'error': 'Invalid value for remove_user_id'}, status=status.HTTP_400_BAD_REQUEST)
+
         try:
             remove_user = CustomUser.objects.get(id=remove_user_id)
         except CustomUser.DoesNotExist:
@@ -182,12 +215,23 @@ class FriendRemoveView(views.APIView):
 
 ### BLOCK USER ###
 
-class BlockUserView(views.APIView):
+class BlockUserView(CheckIdMixin, views.APIView):
     def post(self, request):
         if not request.data:
             return Response({'error': 'Empty request body'}, status=status.HTTP_400_BAD_REQUEST)
-        blocked_user_id = request.data.get('blocked_user_id')
+        
         blocked_by_id = request.user.id
+        blocked_user_id = request.data.get('blocked_user_id')
+        error_response = self.check_id(blocked_user_id, 'blocked_user_id')
+        if error_response:
+            return error_response
+
+        # if blocked_user_id == None:
+        #     return Response({'error': 'Key blocked_user_id is missing'}, status=status.HTTP_400_BAD_REQUEST)
+        # try:
+        #     blocked_user_id = int(blocked_user_id)
+        # except ValueError:
+        #     return Response({'error': 'Invalid value for blocked_user_id'}, status=status.HTTP_400_BAD_REQUEST)
 
         if not CustomUser.objects.filter(id=blocked_user_id).exists():
             return Response({'error': 'User to block does not exist'}, status=status.HTTP_404_NOT_FOUND)
@@ -199,12 +243,21 @@ class BlockUserView(views.APIView):
         serializer = serializers.BlockUserSerializer(block_user_obj)
         return Response({'message': 'User blocked', 'block_record': serializer.data}, status=status.HTTP_200_OK)
     
-class UnblockUserView(views.APIView):
+class UnblockUserView(CheckIdMixin, views.APIView):
     def post(self, request):
         if not request.data:
             return Response({'error': 'Empty request body'}, status=status.HTTP_400_BAD_REQUEST)
-        blocked_user_id = request.data.get('blocked_user_id')
         blocked_by_id = request.user.id
+        blocked_user_id = request.data.get('blocked_user_id')
+        error_response = self.check_id(blocked_user_id, 'blocked_user_id')
+        if error_response:
+            return error_response
+        # if blocked_user_id == None:
+        #     return Response({'error': 'Key blocked_user_id is missing'}, status=status.HTTP_400_BAD_REQUEST)
+        # try:
+        #     blocked_user_id = int(blocked_user_id)
+        # except ValueError:
+        #     return Response({'error': 'Invalid value for blocked_user_id'}, status=status.HTTP_400_BAD_REQUEST)
 
         try:
             blocking_relationship = BlockUser.objects.get(blocked_by_id=blocked_by_id, blocked_user_id=blocked_user_id)
@@ -446,7 +499,7 @@ class AvatarUploadView(views.APIView):
 
 class UserSearchView(views.APIView):
     def get(self, request, string):
-        users = CustomUser.objects.filter(display_name__startswith=string)
+        users = CustomUser.objects.filter(display_name__startswith=string).exclude(id=request.user.id)
         serializer = serializers.CustomUserSerializer(users, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
