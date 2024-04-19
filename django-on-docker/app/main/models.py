@@ -12,6 +12,7 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):
     date_joined = models.DateTimeField(default=timezone.now)
     display_name = models.CharField(_("display name"), unique=True, validators=[validate_display_name])
     avatar = models.ImageField(_("avatar"), upload_to='avatars/', blank=True, null=True, default='default-avatar.jpg')
+    is_online = models.BooleanField(default=False)
 
     USERNAME_FIELD = "email"
     REQUIRED_FIELDS = []
@@ -28,6 +29,8 @@ class MatchHistory(models.Model):
     player2 = models.ForeignKey(AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='matches_opponent')
     player1_result = models.IntegerField(default=0)
     player2_result = models.IntegerField(default=0)
+    player1_score = models.IntegerField(default=0)
+    player2_score = models.IntegerField(default=0)
 
     match_date = models.DateTimeField(_("match date"), auto_now_add=True)
 
@@ -80,7 +83,9 @@ class BlockUser(models.Model):
 
 # class Game(models.Model):
 
-# class UserStatus
+# class UserStatus(models.Model):
+#     user = models.OneToOneField(AUTH_USER_MODEL, on_delete=models.CASCADE)
+#     is_online = models.BooleanField(default=False)
 
 # for 2FA
 from typing import Optional

@@ -10,16 +10,30 @@ class ChatConsumer(AsyncWebsocketConsumer):
         self.sender = self.scope["user"]
         self.room_name = f"{self.sender.id}"
         await self.channel_layer.group_add(self.room_name, self.channel_name)
+        await self.update_user_status(self.sender, True)
         await self.accept()
 
     async def disconnect(self, close_code):
+        await self.update_user_status(self.sender, False)
         await self.channel_layer.group_discard(self.room_name, self.channel_name)
 
 
     async def receive(self, text_data):
         text_data_json = json.loads(text_data)
-        message_type = text_data_json.get("type")
-        if message_type == "invitation":
+        # print(text_data_json)
+        # event_type = text_data_json.get("event_type")
+        # match text_data_json.get('event_type'):
+        #     case 'move_paddle':
+        #         await self.handle_move_paddle(message.get('data', {}))
+        #     case 'direct_message':
+        #         await self.handle_direct_message(message.get('data', {}))
+        #     case 'invitation':
+        #         await self.handle_invitation(message.get('data', {}))
+        #     case _:
+        #         await self.send_error_message("Unknown event type")
+
+        event_type = text_data_json.get("event_type")
+        if event_type == "invitation":
             await self.handle_invitation(text_data_json)
         else:
             await self.handle_private_message(text_data_json)
@@ -140,6 +154,8 @@ class ChatConsumer(AsyncWebsocketConsumer):
     def is_blocked(self, receiver_id, sender_id):
         return BlockUser.objects.filter(blocked_by_id=receiver_id, blocked_user_id=sender_id).exists()
 
-    
-
-
+    @database_sync_to_async
+    def update_user_status(self, user, is_online):
+        custom_user = CustomUser.objects.get(id=user.id)
+        custom_user.is_online = is_online
+        custom_user.save()
