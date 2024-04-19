@@ -11,3 +11,10 @@ class CheckIdMixin:
             return Response({'error': f'Invalid value for "{id_type}"'}, status=status.HTTP_400_BAD_REQUEST)
         
         return None
+
+def check_if_object_exists(model, object_id):
+    try:
+        obj = model.objects.get(id=object_id)
+        return obj
+    except model.DoesNotExist:
+        return None
