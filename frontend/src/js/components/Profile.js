@@ -1,4 +1,5 @@
-import {getFriends, getMe, getUserByDisplayName, uploadAvatar} from "../service/users.js";
+import { navigateTo, redirectTo } from "../helpers.js";
+import {getFriends, getMe, getUserByDisplayName, uploadAvatar, updateInfo} from "../service/users.js";
 
 export default class extends HTMLElement {
     constructor() {
@@ -6,16 +7,18 @@ export default class extends HTMLElement {
     }
     
     async connectedCallback() {
-        const username  = this.getAttribute("username");
+        this.username  = this.getAttribute("username");
 
         // Checking if user exists, otherwise - 404 page
-        const user = await getUserByDisplayName(username);
+        const user = await getUserByDisplayName(this.username);
         if (!user) {
             this.innerHTML = `<tr-not-found><tr-not-found>`
             return;
         }
 
-        this.render(username);
+        this.email = user.email;
+
+        this.render(this.username, this.email);
         this.avatar.setAttribute("src", user.avatar);
         this.initAvatarChangeComponents();
         this.initInfoChangeComponents();
@@ -23,6 +26,8 @@ export default class extends HTMLElement {
         if (user.is_me > 0) {
             this.avatarEditIcon.style.display = "inline-block";
             this.profileEditInfoBtn.style.display = "inline-block";
+        } else {
+
         }
 
         this.renderSmallFriendsList();
@@ -30,7 +35,7 @@ export default class extends HTMLElement {
         document.title = "Profile";
     }
 
-    render(username) {
+    render(username, email) {
         this.innerHTML = `
             <tr-nav username=${username}></tr-nav>
             <div class="container">
@@ -47,7 +52,7 @@ export default class extends HTMLElement {
                         <h5 class="card-header">Personal Info</h5>
                         <div class="card-body">
                             <h5 class="card-title">${username}</h5>
-                            <p class="card-text"><i class="fa-solid fa-envelope mr-1"></i>gene@gmail.com</p>
+                            <p class="card-text"><i class="fa-solid fa-envelope mr-1"></i>${email}</p>
                             <a data-toggle="modal" data-target="#edit-info-modal" id="profile-edit-info-btn" style="display:none;" href="#" class="btn btn-primary">Edit</a>
                         </div>
                     </div>
@@ -71,6 +76,7 @@ export default class extends HTMLElement {
                         <h5 class="card-header">Friends</h5>
                         <div id="profile-small-friends-list" class="list-group list-group-flush"></div>  
                         <div class="card-body">
+                            <h2 id="no-friends-title" style="display: none">You don't have friends yet 😭</h2>
                             <a id="profile-view-all-friends-btn" style="display: none" href="#" class="btn btn-primary" data-toggle="modal" data-target="#view-all-friends-modal">View All</a>
                         </div>  
                     </div>
@@ -108,12 +114,12 @@ export default class extends HTMLElement {
                         <form>
                             <div class="form-group">
                                 <label for="profile-edit-display-name-input">Edit Display Name</label>
-                                <input value="genegrigorian" type="text" class="form-control" id="profile-edit-display-name-input" placeholder="Edit Display Name">
+                                <input type="text" class="form-control" id="profile-edit-display-name-input" placeholder="Edit Display Name">
                                 <div id="profile-invalid-display-name-feedback" class="invalid-feedback"></div>
                             </div>
                             <div class="form-group">
                                 <label for="profile-edit-email-input">Edit Email</label>
-                                <input value="gene@gmail.com" type="email" class="form-control" id="profile-edit-email-input" placeholder="Edit Email">
+                                <input type="email" class="form-control" id="profile-edit-email-input" placeholder="Edit Email">
                                 <div id="profile-invalid-email-feedback" class="invalid-feedback"></div>
                             </div>
                         </form>
@@ -187,11 +193,13 @@ export default class extends HTMLElement {
         this.avatarEditIcon = this.querySelector("#profile-image-edit-icon");
         this.profileEditInfoBtn = this.querySelector("#profile-edit-info-btn");
         this.profileSmallFriendsList = this.querySelector("#profile-small-friends-list");
-        this.profileViewAllFriendsBtn = this.querySelector("#profile-view-all-friends-btn");
         this.changeAvatarInput = this.querySelector("#change-avatar-input");
         this.profileChangeAvatarPreview = this.querySelector("#profile-change-avatar-preview");
         this.profileAcceptAvatarChangeBtn = this.querySelector("#profile-accept-avatar-change-btn");
-        this.profileWrongAvatarFormatAlert = this.querySelector("#profile-wrong-avatar-format-alert");
+
+        // Friends Info
+        this.noFriendsTitle = this.querySelector("#no-friends-title");
+        this.profileViewAllFriendsBtn = this.querySelector("#profile-view-all-friends-btn");
 
         // Update Info
         this.profileEditEmailInput = this.querySelector("#profile-edit-email-input");
@@ -199,11 +207,6 @@ export default class extends HTMLElement {
         this.profileInvalidEmailFeedback = this.querySelector("#profile-invalid-email-feedback");
         this.profileInvalidDisplayNameFeedback = this.querySelector("#profile-invalid-display-name-feedback");
         this.profileUpdateInfoBtn = this.querySelector("#profile-update-info-btn");
-
-        // show error of display name
-        // show error of email
-        // send update
-        // clear values after close
     }
 
 
@@ -213,9 +216,10 @@ export default class extends HTMLElement {
         if (friends.length <= 0) {
             this.profileSmallFriendsList.innerHTML = ``;
             this.profileViewAllFriendsBtn.style.display = "none";
+            this.noFriendsTitle.style.display = "block";
         } else {
             this.profileViewAllFriendsBtn.style.display = "inline-block";
-            for (friend of friends) {
+            for (let friend of friends) {
                 const friendElement = document.createElement("tr-user-small");
                 friendElement.setAttribute("avatar", friend.avatar);
                 friendElement.setAttribute("display-name", friend.display_name);
@@ -254,7 +258,6 @@ export default class extends HTMLElement {
 
             reader.onload = (e) => {
                 this.profileChangeAvatarPreview.src = e.target.result;
-                // this.fileToUpload = e.target.result;
             };
 
             reader.readAsDataURL(fileInput.files[0]);
@@ -265,18 +268,72 @@ export default class extends HTMLElement {
         })
 
         this.profileAcceptAvatarChangeBtn.addEventListener('click', (e) => {
-            uploadAvatar(this.fileToUpload);
-            // this.profileAcceptAvatarChangeBtn.style.display = "none";
+            uploadAvatar(this.fileToUpload).then((newAvatar)=>{
+                this.avatar.src = newAvatar;
+            });
         })
     }
 
     initInfoChangeComponents() {
+        this.profileEditDisplayNameInput.value = this.username;
+        this.profileEditEmailInput.value = this.email;
+
         this.profileEditDisplayNameInput.addEventListener("input", (e)=>{
-            if (this.profileEditDisplayNameInput.value.length > 0) {
+            if (this.profileEditDisplayNameInput.value.length > 0 && this.profileEditDisplayNameInput.value != this.username) {
                 this.profileUpdateInfoBtn.removeAttribute('disabled')
             } else {
-                this.profileUpdateInfoBtn.addAttribute('disabled')
+                this.profileUpdateInfoBtn.setAttribute('disabled', "");
             }
-        })
+        });
+
+        this.profileEditEmailInput.addEventListener("input", (e)=>{
+            if (this.profileEditEmailInput.value.length > 0 && this.profileEditEmailInput.value != this.email) {
+                this.profileUpdateInfoBtn.removeAttribute('disabled')
+            } else {
+                this.profileUpdateInfoBtn.setAttribute('disabled', "");
+            }
+        });
+
+        $('#edit-info-modal').on('hide.bs.modal', (e) => {
+            this.profileEditDisplayNameInput.value = this.username;
+            this.profileEditEmailInput.value = this.email;
+        });
+
+        // !!! check that it is clickable only when button is valid
+        this.profileUpdateInfoBtn.addEventListener('click', (e)=>{
+            this.profileInvalidEmailFeedback.textContent = "";
+            this.profileEditEmailInput.classList.remove("is-invalid");
+            this.profileInvalidDisplayNameFeedback.textContent = "";
+            this.profileEditDisplayNameInput.classList.remove("is-invalid");
+
+            let body = {};
+
+            if (this.profileEditEmailInput.value.length > 0 && this.profileEditEmailInput.value != this.email) {
+                body['email'] = this.profileEditEmailInput.value;
+            }
+
+            if (this.profileEditDisplayNameInput.value.length > 0 && this.profileEditDisplayNameInput.value != this.username) {
+                body['display_name'] = this.profileEditDisplayNameInput.value;
+            }
+
+            updateInfo(JSON.stringify(body)).then((updatedFields)=>{
+                $(`#edit-info-modal`).modal('hide');
+                redirectTo(`/profiles/${updatedFields.display_name}`);
+            }).catch(errors=>{
+                console.log(errors);
+                if (errors['email'] && errors.email.length > 0) {
+                    this.profileInvalidEmailFeedback.textContent = errors.email[0];
+                    this.profileEditEmailInput.classList.add("is-invalid");
+                }
+
+                if (errors['display_name'] && errors.display_name.length > 0) {
+                    this.profileInvalidDisplayNameFeedback.textContent = errors.display_name[0];
+                    this.profileEditDisplayNameInput.classList.add("is-invalid");
+                }
+
+
+                this.profileEditInfoBtn.setAttribute('disabled', "");
+            });
+        });
     }
 }

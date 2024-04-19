@@ -1,4 +1,5 @@
 import { navigateTo, quit } from "../helpers.js";
+import {getMe, searchUsers} from "../service/users.js";
 
 export default class extends HTMLElement {
     constructor() {
@@ -8,11 +9,13 @@ export default class extends HTMLElement {
     connectedCallback() {
         this.render();
 
-        const username  = this.getAttribute("username");
+        this.username  = this.getAttribute("username");
 
         this.profileLink.addEventListener("click", (e)=>{
             e.preventDefault();
-            navigateTo(`/profiles/${username}`)
+             getMe().then(me=>{
+                 navigateTo(`/profiles/${me.username}`)
+             })
         });
 
         this.chatLink.addEventListener("click", (e)=>{
@@ -29,6 +32,8 @@ export default class extends HTMLElement {
             e.preventDefault();
             quit();
         });
+
+        this.initSearchComponents();
     }
 
     render() {
@@ -56,7 +61,8 @@ export default class extends HTMLElement {
                 </li>
             </ul>
             <form class="form-inline my-2 my-lg-0">
-                <input class="form-control mr-sm-2" type="search" placeholder="Find Friends...">
+                <div id="search-results-list" class="list-group list-group-flush" style="z-index: 1; position: absolute; top: 110%;"></div>
+                <input id="search-input" autocomplete='off' class="form-control mr-sm-2" type="search" placeholder="Find Friends...">
                 <button class="btn btn-outline-success my-2 my-sm-0" type="submit">Find</button>
             </form>
             </div>
@@ -67,5 +73,29 @@ export default class extends HTMLElement {
         this.gameLink = this.querySelector("#nav-game");
         this.chatLink = this.querySelector("#nav-chat");
         this.quitLink = this.querySelector("#nav-log-out");
+
+        this.searchResultsList = this.querySelector("#search-results-list")
+        this.searchInput = this.querySelector("#search-input")
+    }
+
+    async initSearchComponents() {
+        this.searchInput.addEventListener('input', e => {
+            this.searchResultsList.innerHTML = ``;
+
+            searchUsers(this.searchInput.value).then(users=> {
+                let max = 3
+                for (let i = 0; i < users.length && i < max; i++) {
+                    if (users[i].display_name===this.username) {
+                        max++;
+                        continue;
+                    }
+
+                    const friendElement = document.createElement("tr-user-small");
+                    friendElement.setAttribute("avatar", users[i].avatar);
+                    friendElement.setAttribute("display-name", users[i].display_name);
+                    this.searchResultsList.appendChild(friendElement);
+                }
+            })
+        })
     }
 }
