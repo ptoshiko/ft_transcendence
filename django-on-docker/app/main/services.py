@@ -1,7 +1,5 @@
 from django.core.exceptions import ValidationError
-
 import pyotp
-
 from .models import UserTwoFactorAuthData, Friendship, ChatMessage, BlockUser, MatchHistory
 from django.db import models
 
@@ -25,6 +23,14 @@ def check_if_object_exists(model, object_id):
         return obj
     except model.DoesNotExist:
         return None
+    
+def check_if_exists_by_str(model, display_name):
+    try:
+        obj = model.objects.get(display_name=display_name)
+        return obj
+    except model.DoesNotExist:
+        return None
+        
 
 def get_friendships_db(user):
     friendships = Friendship.objects.filter(

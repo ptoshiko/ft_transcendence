@@ -39,6 +39,7 @@ class CustomUserAPIUpdate(generics.UpdateAPIView): # [PUT] update owner's info
         self.perform_update(serializer)
         return Response(serializer.data)
 
+
 class CuestomUserAPIDetailView(generics.RetrieveUpdateDestroyAPIView): #to delete a user
     queryset = CustomUser.objects.all()
     serializer_class = serializers.CustomUserSerializer
@@ -78,12 +79,12 @@ class SendFriendRequestView(CheckIdMixin, views.APIView):
         if not request.data:
             return Response({'error': EMPTY}, status=status.HTTP_400_BAD_REQUEST)
         
-        sender = request.user 
         receiver_id = request.data.get('receiver_id')
         error_response = self.check_id(receiver_id, 'receiver_id')
         if error_response:
             return error_response
         
+        sender = request.user 
         if str(sender.id) == str(receiver_id):
             return Response({"error": SAME_SENDER_RECEIVER}, status=status.HTTP_400_BAD_REQUEST)
         
@@ -121,11 +122,14 @@ class ApproveFriendRequestView(CheckIdMixin, views.APIView):
         if error_response:
             return error_response
         
+        receiver = request.user
+        if str(receiver.id) == str(sender_id):
+            return Response({"error": SAME_SENDER_RECEIVER}, status=status.HTTP_400_BAD_REQUEST)
+        
         sender = check_if_object_exists(CustomUser, sender_id)
         if sender is None:
             return Response({"error": NO_SENDER}, status=status.HTTP_404_NOT_FOUND)
         
-        receiver = request.user
         friendship = get_friendship_pending(sender, receiver)
         if friendship is None:
             return Response({"error": NO_PENDING}, status=status.HTTP_404_NOT_FOUND)
@@ -145,6 +149,9 @@ class FriendRemoveView(CheckIdMixin, views.APIView):
         error_response = self.check_id(remove_user_id, 'remove_user_id')
         if error_response:
             return error_response
+        
+        if str(request.user.id) == str(remove_user_id):
+            return Response({"error": SAME_ID_REMOVE}, status=status.HTTP_400_BAD_REQUEST)
         
         remove_user = check_if_object_exists(CustomUser, remove_user_id)
         if remove_user is None:
@@ -229,8 +236,6 @@ class GetLastChatsView(views.APIView):
         user = request.user
         last_chat_users = get_last_chat_users(user)
 
-
-
         user_ids = set()
         for sender_id, receiver_id in last_chat_users:
             user_ids.add(sender_id)
@@ -286,13 +291,11 @@ class GetUserByDisplayName(views.APIView):
 class GetFriendsByDisplayName(views.APIView):
     def get(self, display_name, format=None):
 
-        try:
-            user = CustomUser.objects.get(display_name=display_name)
-        except CustomUser.DoesNotExist:
-            return Response({"error": "User does not exist"}, status=status.HTTP_404_NOT_FOUND)
+        user = check_if_exists_by_str(CustomUser, display_name)
+        if user is None:
+            return Response({"error": NO_USER}, status=status.HTTP_404_NOT_FOUND)
         
         friendships = get_friendships_db(user)
-
         friend_ids = set()
         for friendship in friendships:
             friend_ids.add(friendship.sender_id)
@@ -381,7 +384,7 @@ class UserMatchHistoryView(views.APIView):
 class MatchCreateView(views.APIView):
     def post(self, request):
         if not request.data:
-            return Response({'error': 'Empty request body'}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({'error': EMPTY}, status=status.HTTP_400_BAD_REQUEST)
 
         player1_id = request.data.get('player1_id')
         player2_id = request.data.get('player2_id')
@@ -429,7 +432,7 @@ class UserGetStatsView(views.APIView):
 class AvatarUploadView(views.APIView):
     def post(self, request):
         if not request.data:
-            return Response({'error': 'Empty request body'}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({'error': EMPTY}, status=status.HTTP_400_BAD_REQUEST)
         serializer = serializers.AvatarUploadSerializer(request.user, data=request.data, partial=True)
         if serializer.is_valid():
             serializer.save()
