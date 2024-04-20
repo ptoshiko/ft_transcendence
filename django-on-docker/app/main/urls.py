@@ -46,6 +46,7 @@ urlpatterns = [
 	path('api/unblockuser/', views.UnblockUserView.as_view(), name='unblock_user'),
 
 	path('api/chat/getmessages/', views.GetMessagesView.as_view(), name='get_messages'),
+	path('api/chat/getmessages/<str:display_name>', views.GetMessagesByDisplayNameView.as_view()),
 	path('api/chat/getlast/', views.GetLastChatsView.as_view(), name='get_lastchats'),
 
 	path('api/setup-2fa/', views.SetupTwoFactorAuthView.as_view(), name='setup_2fa'),

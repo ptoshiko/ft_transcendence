@@ -224,10 +224,22 @@ class UnblockUserView(CheckIdMixin, views.APIView):
         return Response({'message': 'User unblocked'}, status=status.HTTP_200_OK)
 
 ### CHAT ###
-class GetMessagesView(views.APIView):
-    def get(self, request):
-        user_id = request.user.id
-        messages = get_messages_db(user_id)
+# class GetMessagesView(views.APIView):
+#     def get(self, request):
+#         user_id = request.user.id
+#         messages = get_messages_db(user_id)
+#         serializer = serializers.ChatMessageSerializer(messages, many=True)
+#         return Response(serializer.data, status=status.HTTP_200_OK)
+    
+class GetMessagesByDisplayNameView(views.APIView):
+    def get(self, request, display_name):
+        chat_user = check_if_exists_by_str(CustomUser, display_name)
+        if chat_user is None:
+            return Response({"error": NO_USER}, status=status.HTTP_404_NOT_FOUND)
+
+        user = request.user
+        messages = get_messages(user, chat_user)
+
         serializer = serializers.ChatMessageSerializer(messages, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
 

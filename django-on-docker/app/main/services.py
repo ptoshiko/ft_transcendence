@@ -52,8 +52,12 @@ def approve_pending_friend_request(friendship):
     friendship.status = Friendship.APPROVED
     friendship.save()
 
-def get_messages_db(user_id):
-    messages = ChatMessage.objects.filter(models.Q(sender_id=user_id) | models.Q(receiver_id=user_id)).order_by('-date_added')[:25]
+def get_messages(user_1, user_2):
+    messages = ChatMessage.objects.filter(
+        (models.Q(sender=user_1) & models.Q(receiver=user_2)) |
+        (models.Q(receiver=user_1) & models.Q(sender=user_2))
+    ).order_by('date_added')[:25]
+    
     return messages
 
 def get_friendship_pending(sender, receiver):
