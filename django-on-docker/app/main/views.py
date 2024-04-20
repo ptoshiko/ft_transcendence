@@ -8,6 +8,7 @@ from .permissions import IsOwnerOrReadOnly,  IsAdminOrReadnly
 from django.shortcuts import render
 from django.http import Http404
 from .views_utils import *
+from .error_messages import *
 from .services import *
 
 class RegisterView(generics.CreateAPIView): 
@@ -46,6 +47,7 @@ class CuestomUserAPIDetailView(generics.RetrieveUpdateDestroyAPIView): #to delet
 
 ### FRIENDS ###
 
+### returns not blocked friends
 class FriendsListView(views.APIView):
     def get(self, request):
         user = request.user
@@ -56,8 +58,9 @@ class FriendsListView(views.APIView):
             friend_ids.add(friendship.receiver_id)
 
         friend_ids.discard(user.id)
+        blocked_user_ids = get_blocked_user_ids(user)
 
-        friends = CustomUser.objects.filter(id__in=friend_ids)
+        friends = CustomUser.objects.filter(id__in=friend_ids).exclude(id__in=blocked_user_ids)
         serializer = serializers.CustomUserSerializer(friends, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
@@ -65,7 +68,7 @@ class FriendsListView(views.APIView):
 class FriendshipRequestsView(views.APIView):
     def get(self, request):
         user = request.user
-        friendship_requests = get_friendship_request_db(user)
+        friendship_requests = get_friendship_requests(user)
         serializer = serializers.FriendshipRequestSerializer(friendship_requests, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
@@ -73,7 +76,7 @@ class FriendshipRequestsView(views.APIView):
 class SendFriendRequestView(CheckIdMixin, views.APIView):
     def post(self, request):
         if not request.data:
-            return Response({'error': 'Empty request body'}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({'error': EMPTY}, status=status.HTTP_400_BAD_REQUEST)
         
         sender = request.user 
         receiver_id = request.data.get('receiver_id')
@@ -82,19 +85,21 @@ class SendFriendRequestView(CheckIdMixin, views.APIView):
             return error_response
         
         if str(sender.id) == str(receiver_id):
-            return Response({"error":"Sender and receiver cannot be the same user"}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({"error": SAME_SENDER_RECEIVER}, status=status.HTTP_400_BAD_REQUEST)
         
         receiver = check_if_object_exists(CustomUser, receiver_id)
         if receiver is None:
-            return Response({"error": "Receiver does not exist"}, status=status.HTTP_404_NOT_FOUND)
+            return Response({"error": NO_RECEIVER}, status=status.HTTP_404_NOT_FOUND)
 
-        if are_already_friends(sender, receiver):
-            return Response({"error": "Users are already friends"}, status=status.HTTP_400_BAD_REQUEST)
+        if are_friends(sender, receiver):
+            return Response({"error": ARE_FRIENDS}, status=status.HTTP_400_BAD_REQUEST)
 
-        if is_friend_request_already_sent(sender, receiver):
-            return Response({"error": "Friend request is already sent"}, status=status.HTTP_400_BAD_REQUEST)
+        if get_friendship_pending(sender, receiver):
+            return Response({"error": REQUEST_ALREADY_SENT}, status=status.HTTP_400_BAD_REQUEST)
 
-        if approve_pending_friend_request(sender, receiver):
+        friendship = get_friendship_pending(receiver, sender)
+        if friendship:
+            approve_pending_friend_request(friendship)
             return Response({'message': 'Pending request from user approved'}, status=status.HTTP_200_OK)
 
         friendship_data = {'sender': sender.id, 'receiver': receiver.id}
@@ -107,9 +112,10 @@ class SendFriendRequestView(CheckIdMixin, views.APIView):
 
 
 class ApproveFriendRequestView(CheckIdMixin, views.APIView):
-    def put(self, request, *args, **kwargs):
+    def put(self, request):
         if not request.data:
-            return Response({'error': 'Empty request body'}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({'error': EMPTY}, status=status.HTTP_400_BAD_REQUEST)
+        
         sender_id = request.data.get('sender_id')
         error_response = self.check_id(sender_id, 'sender_id')
         if error_response:
@@ -117,22 +123,23 @@ class ApproveFriendRequestView(CheckIdMixin, views.APIView):
         
         sender = check_if_object_exists(CustomUser, sender_id)
         if sender is None:
-            return Response({"error": "Sender does not exist"}, status=status.HTTP_404_NOT_FOUND)
-        try:
-            friendship = Friendship.objects.get(sender_id=sender_id, receiver=request.user, status=Friendship.PENDING)
-        except Friendship.DoesNotExist:
-            return Response({"error": "No pending request from user found"}, status=status.HTTP_404_NOT_FOUND)
+            return Response({"error": NO_SENDER}, status=status.HTTP_404_NOT_FOUND)
+        
+        receiver = request.user
+        friendship = get_friendship_pending(sender, receiver)
+        if friendship is None:
+            return Response({"error": NO_PENDING}, status=status.HTTP_404_NOT_FOUND)
 
-        friendship.status = Friendship.APPROVED 
-        friendship.save()
+        approve_pending_friend_request(friendship)
+
         serializer = serializers.FriendshipSerializer(friendship)
         return Response(serializer.data)
 
 
 class FriendRemoveView(CheckIdMixin, views.APIView):
-    def post(self, request, *args, **kwargs):
+    def post(self, request):
         if not request.data:
-            return Response({'error': 'Empty request body'}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({'error': EMPTY}, status=status.HTTP_400_BAD_REQUEST)
         
         remove_user_id = request.data.get('remove_user_id')
         error_response = self.check_id(remove_user_id, 'remove_user_id')
@@ -141,20 +148,13 @@ class FriendRemoveView(CheckIdMixin, views.APIView):
         
         remove_user = check_if_object_exists(CustomUser, remove_user_id)
         if remove_user is None:
-            return Response({"error": "User does not exist"}, status=status.HTTP_404_NOT_FOUND)
+            return Response({"error": NO_REMOVE_USER}, status=status.HTTP_404_NOT_FOUND)
         
-        try:
-            sender_friendship = Friendship.objects.get(sender=request.user, receiver_id=remove_user_id, status=Friendship.APPROVED)
-        except Friendship.DoesNotExist:
-            sender_friendship = None
-        
-        try:
-            receiver_friendship = Friendship.objects.get(sender_id=remove_user_id, receiver=request.user, status=Friendship.APPROVED)
-        except Friendship.DoesNotExist:
-            receiver_friendship = None
+        sender_friendship = get_friendship_approved(request.user, remove_user)
+        receiver_friendship = get_friendship_approved(remove_user, request.user)
     
         if not sender_friendship and not receiver_friendship:
-            return Response({"error": "Friendship does not exist"}, status=status.HTTP_404_NOT_FOUND)
+            return Response({"error": NO_FRIENDSHIP}, status=status.HTTP_404_NOT_FOUND)
 
         if sender_friendship:
             sender_friendship.delete()
@@ -172,65 +172,64 @@ class FriendRemoveView(CheckIdMixin, views.APIView):
 class BlockUserView(CheckIdMixin, views.APIView):
     def post(self, request):
         if not request.data:
-            return Response({'error': 'Empty request body'}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({'error': EMPTY}, status=status.HTTP_400_BAD_REQUEST)
         
         blocked_by_id = request.user.id
         blocked_user_id = request.data.get('blocked_user_id')
+
         error_response = self.check_id(blocked_user_id, 'blocked_user_id')
         if error_response:
             return error_response
+        
+        if str(blocked_by_id) == str(blocked_user_id):
+            return Response({"error": SAME_ID_BLOCKING}, status=status.HTTP_400_BAD_REQUEST)
 
-        if not CustomUser.objects.filter(id=blocked_user_id).exists():
-            return Response({'error': 'User to block does not exist'}, status=status.HTTP_404_NOT_FOUND)
+        blocked_user = check_if_object_exists(CustomUser, blocked_user_id)
+        if blocked_user is None:
+            return Response({"error": NO_BLOCK_USER}, status=status.HTTP_404_NOT_FOUND)
 
-        if BlockUser.objects.filter(blocked_by_id=blocked_by_id, blocked_user_id=blocked_user_id).exists():
+        if check_is_blocked(blocked_by_id, blocked_user_id):
             return Response({'error': 'User is already blocked'}, status=status.HTTP_400_BAD_REQUEST)
 
-        block_user_obj = BlockUser.objects.create(blocked_by_id=blocked_by_id, blocked_user_id=blocked_user_id)
-        serializer = serializers.BlockUserSerializer(block_user_obj)
-        return Response({'message': 'User blocked', 'block_record': serializer.data}, status=status.HTTP_200_OK)
+        create_blocking_record(blocked_by_id, blocked_user_id)
+        return Response({'message': 'User blocked'}, status=status.HTTP_200_OK)
     
 class UnblockUserView(CheckIdMixin, views.APIView):
     def post(self, request):
         if not request.data:
-            return Response({'error': 'Empty request body'}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({'error': EMPTY}, status=status.HTTP_400_BAD_REQUEST)
+        
         blocked_by_id = request.user.id
         blocked_user_id = request.data.get('blocked_user_id')
+
         error_response = self.check_id(blocked_user_id, 'blocked_user_id')
         if error_response:
             return error_response
-        # if blocked_user_id == None:
-        #     return Response({'error': 'Key blocked_user_id is missing'}, status=status.HTTP_400_BAD_REQUEST)
-        # try:
-        #     blocked_user_id = int(blocked_user_id)
-        # except ValueError:
-        #     return Response({'error': 'Invalid value for blocked_user_id'}, status=status.HTTP_400_BAD_REQUEST)
-
-        try:
-            blocking_relationship = BlockUser.objects.get(blocked_by_id=blocked_by_id, blocked_user_id=blocked_user_id)
-        except BlockUser.DoesNotExist:
+        
+        if str(blocked_by_id) == str(blocked_user_id):
+            return Response({"error": SAME_ID_BLOCKING}, status=status.HTTP_400_BAD_REQUEST)
+        
+        blocking_record= check_is_blocked(blocked_by_id, blocked_user_id)
+        if blocking_record is None:
             return Response({'error': 'User is not blocked'}, status=status.HTTP_400_BAD_REQUEST)
 
-        blocking_relationship.delete()
+        blocking_record.delete()
         return Response({'message': 'User unblocked'}, status=status.HTTP_200_OK)
 
 ### CHAT ###
 class GetMessagesView(views.APIView):
-    def get(self, request, *args, **kwargs):
+    def get(self, request):
         user_id = request.user.id
         messages = get_messages_db(user_id)
-        # messages = ChatMessage.objects.filter(models.Q(sender_id=user_id) | models.Q(receiver_id=user_id)).order_by('-date_added')[:25]
         serializer = serializers.ChatMessageSerializer(messages, many=True)
-        
         return Response(serializer.data, status=status.HTTP_200_OK)
 
 class GetLastChatsView(views.APIView):
-    def get(self, request, *args, **kwargs):
+    def get(self, request):
+        user = request.user
+        last_chat_users = get_last_chat_users(user)
 
-        user = request.user 
-        last_chat_users = ChatMessage.objects.filter(
-            models.Q(sender=user) | models.Q(receiver=user)
-        ).order_by('-date_added').values_list('sender', 'receiver').distinct()[:10]
+
 
         user_ids = set()
         for sender_id, receiver_id in last_chat_users:
@@ -285,15 +284,14 @@ class GetUserByDisplayName(views.APIView):
             raise Http404
 
 class GetFriendsByDisplayName(views.APIView):
-    def get(self, request, display_name, format=None):
+    def get(self, display_name, format=None):
 
         try:
             user = CustomUser.objects.get(display_name=display_name)
         except CustomUser.DoesNotExist:
             return Response({"error": "User does not exist"}, status=status.HTTP_404_NOT_FOUND)
-            
-        friendships = Friendship.objects.filter(
-            models.Q(sender=user, status=Friendship.APPROVED) | models.Q(receiver=user, status=Friendship.APPROVED))
+        
+        friendships = get_friendships_db(user)
 
         friend_ids = set()
         for friendship in friendships:
@@ -376,15 +374,12 @@ class ConfirmTwoFactorAuthView(views.APIView):
 class UserMatchHistoryView(views.APIView):
     def get(self, request):
         user_id = request.user.id
-        match_history = MatchHistory.objects.filter(models.Q(player1=user_id) | models.Q(player2=user_id)).order_by('-match_date')
+        match_history = get_match_history(user_id)
         serializer = serializers.MatchHistorySerializer(match_history, many=True)
-        
         return Response(serializer.data, status=status.HTTP_200_OK)
 
-
-
 class MatchCreateView(views.APIView):
-    def post(self, request, *args, **kwargs):
+    def post(self, request):
         if not request.data:
             return Response({'error': 'Empty request body'}, status=status.HTTP_400_BAD_REQUEST)
 
@@ -395,14 +390,12 @@ class MatchCreateView(views.APIView):
         player1_score = request.data.get('player1_score')
         player2_score = request.data.get('player2_score')
 
-        try:
-            player1 = CustomUser.objects.get(id=player1_id)
-        except CustomUser.DoesNotExist:
+        player1 = check_if_object_exists(CustomUser, player1_id)
+        if player1 is None:
             return Response({"error": "Player1 does not exist"}, status=status.HTTP_404_NOT_FOUND)
-        
-        try:
-            player2 = CustomUser.objects.get(id=player2_id)
-        except CustomUser.DoesNotExist:
+
+        player2 = check_if_object_exists(CustomUser, player2_id)
+        if player2 is None:
             return Response({"error": "Player2 does not exist"}, status=status.HTTP_404_NOT_FOUND)
 
         match_data = {
@@ -413,6 +406,7 @@ class MatchCreateView(views.APIView):
             'player1_score': player1_score,
             'player2_score': player2_score
         }
+
         serializer = serializers.MatchCreateSerializer(data=match_data)
         if serializer.is_valid():
             serializer.save()
@@ -423,12 +417,9 @@ class MatchCreateView(views.APIView):
 class UserGetStatsView(views.APIView):
     def get(self, request):
         user = request.user
-        wins = MatchHistory.objects.filter(player1=user, player1_result=1).count() + \
-               MatchHistory.objects.filter(player2=user, player2_result=1).count()
-        
-        losses = MatchHistory.objects.filter(player1=user, player1_result=0).count() + \
-                 MatchHistory.objects.filter(player2=user, player2_result=0).count()
-                 
+        wins = get_wins(user)
+        losses = get_loses(user)
+
         stats = {
             'wins': wins,
             'losses': losses
@@ -436,7 +427,7 @@ class UserGetStatsView(views.APIView):
         return Response(stats, status=status.HTTP_200_OK)
 
 class AvatarUploadView(views.APIView):
-    def post(self, request, *args, **kwargs):
+    def post(self, request):
         if not request.data:
             return Response({'error': 'Empty request body'}, status=status.HTTP_400_BAD_REQUEST)
         serializer = serializers.AvatarUploadSerializer(request.user, data=request.data, partial=True)
