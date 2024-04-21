@@ -9,12 +9,10 @@ export default class extends HTMLElement {
     connectedCallback() {
         this.render();
 
-        this.username  = this.getAttribute("username");
-
         this.profileLink.addEventListener("click", (e)=>{
             e.preventDefault();
              getMe().then(me=>{
-                 navigateTo(`/profiles/${me.username}`)
+                 navigateTo(`/profiles/${me.display_name}`)
              })
         });
 
@@ -83,13 +81,7 @@ export default class extends HTMLElement {
             this.searchResultsList.innerHTML = ``;
 
             searchUsers(this.searchInput.value).then(users=> {
-                let max = 3
-                for (let i = 0; i < users.length && i < max; i++) {
-                    if (users[i].display_name===this.username) {
-                        max++;
-                        continue;
-                    }
-
+                for (let i = 0; i < users.length && i < 3; i++) {
                     const friendElement = document.createElement("tr-user-small");
                     friendElement.setAttribute("avatar", users[i].avatar);
                     friendElement.setAttribute("display-name", users[i].display_name);

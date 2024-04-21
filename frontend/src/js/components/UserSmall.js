@@ -14,8 +14,14 @@ export default class extends HTMLElement {
         console.log(avatar)
         this.render(avatar, displayName);
 
-        this.goToUserPage.addEventListener('click', e => {
-            navigateTo(`/profiles/${displayName}`)
+        // this.goToUserPage.addEventListener('click', e => {
+        //     e.preventDefault();
+        //     navigateTo(`/profiles/${displayName}`)
+        // })
+
+        this.addEventListener('click', e => {
+            e.preventDefault();
+            navigateTo(`/profiles/${displayName}`);
         })
     }
 

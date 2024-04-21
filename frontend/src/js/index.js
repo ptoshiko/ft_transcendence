@@ -4,12 +4,20 @@ import FourZeroFor from "./components/404.js"
 import { isLoggedIn } from "./service/auth.js"
 import NavBar from "./components/NavBar.js";
 import UserSmall from "./components/UserSmall.js";
+import Chat from "./components/Chat.js";
+import ChatFriend from "./components/ChatFriend.js";
+import ChatMessageToMe from "./components/ChatMessageToMe.js";
+import MyChatMessage from "./components/MyChatMessage.js";
 
 customElements.define('tr-login', Login);
 customElements.define('tr-not-found', FourZeroFor);
 customElements.define('tr-nav', NavBar);
 customElements.define('tr-profile', Profile);
+customElements.define('tr-chat', Chat);
 customElements.define('tr-user-small', UserSmall);
+customElements.define('tr-chat-msg-to-me', ChatMessageToMe);
+customElements.define('tr-chat-my-msg', MyChatMessage);
+customElements.define('tr-chat-friend', ChatFriend);
 
 const app = document.querySelector("#app");
 
@@ -35,6 +43,8 @@ export default async function router() {
         // { path: "/", component: "tr-profile"},
         { path: "/login", component: "tr-login"},
         { path: "/profiles/:username", component: "tr-profile"},
+        { path: "/chat", component: "tr-chat"},
+        { path: "/chat/:username", component: "tr-chat"},
     ];
 
     let result = null;

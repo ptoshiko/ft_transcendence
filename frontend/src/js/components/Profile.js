@@ -1,5 +1,13 @@
 import { navigateTo, redirectTo } from "../helpers.js";
-import {getFriends, getMe, getUserByDisplayName, uploadAvatar, updateInfo} from "../service/users.js";
+import {
+    getFriends,
+    getMe,
+    getUserByDisplayName,
+    uploadAvatar,
+    updateInfo,
+    unblockUser,
+    sendFriendRequest, blockUser, approveFriendRequest, getFriendsOfUser, removeFriend
+} from "../service/users.js";
 
 export default class extends HTMLElement {
     constructor() {
@@ -7,27 +15,24 @@ export default class extends HTMLElement {
     }
     
     async connectedCallback() {
-        this.username  = this.getAttribute("username");
-
         // Checking if user exists, otherwise - 404 page
-        const user = await getUserByDisplayName(this.username);
-        if (!user) {
+        this.user = await getUserByDisplayName(this.getAttribute("username"));
+        if (!this.user) {
             this.innerHTML = `<tr-not-found><tr-not-found>`
             return;
         }
 
-        this.email = user.email;
+        this.render(this.user.username, this.user.email);
+        this.avatar.setAttribute("src", this.user.avatar);
 
-        this.render(this.username, this.email);
-        this.avatar.setAttribute("src", user.avatar);
         this.initAvatarChangeComponents();
         this.initInfoChangeComponents();
 
-        if (user.is_me > 0) {
+        if (this.user.is_me > 0) {
             this.avatarEditIcon.style.display = "inline-block";
             this.profileEditInfoBtn.style.display = "inline-block";
         } else {
-
+            this.initStatusBadge();
         }
 
         this.renderSmallFriendsList();
@@ -35,24 +40,30 @@ export default class extends HTMLElement {
         document.title = "Profile";
     }
 
-    render(username, email) {
+    render() {
         this.innerHTML = `
-            <tr-nav username=${username}></tr-nav>
+            <tr-nav></tr-nav>
             <div class="container">
             <!-- First Row -->
             <div class="row mt-3">
                 <!-- Avatar -->
                 <div style="position: relative;" class="col-6">
                     <img id="profile-avatar" class="d-block m-auto rounded-circle" width="200" height="200" alt="avatar">
+                    <div id="profile-status-badge"></div>
                     <a data-toggle="modal" data-target="#change-avatar-modal" href="#" style="position: absolute; top:0; right:0;"><i style="display:none;" id="profile-image-edit-icon" class="fa-solid fa-pencil"></i></a>
+                    <button style="display: none;" id="send_friend_request_btn" class="btn btn-success">Send Friend Request</button>
+                    <button style="display: none;" id="approve_friend_request_btn" class="btn btn-success">Approve Friend Request</button>
+                    <button style="display: none;" id="remove_friend_btn" class="btn btn-danger">Remove Friend</button>
+                    <button style="display: none;" id="block_btn" class="btn btn-danger">Block</button>
+                    <button style="display: none;" id="unblock_btn" class="btn btn-warning">Unblock</button>
                 </div>
                 <!-- Info -->
                 <div class="col-6">
                     <div class="card h-100">
                         <h5 class="card-header">Personal Info</h5>
                         <div class="card-body">
-                            <h5 class="card-title">${username}</h5>
-                            <p class="card-text"><i class="fa-solid fa-envelope mr-1"></i>${email}</p>
+                            <h5 class="card-title">${this.user.display_name}</h5>
+                            <p class="card-text"><i class="fa-solid fa-envelope mr-1"></i>${this.user.email}</p>
                             <a data-toggle="modal" data-target="#edit-info-modal" id="profile-edit-info-btn" style="display:none;" href="#" class="btn btn-primary">Edit</a>
                         </div>
                     </div>
@@ -146,7 +157,6 @@ export default class extends HTMLElement {
                         <div id="profile-big-friends-list" class="list-group list-group-flush"></div>  
                     </div>
                     <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary">Edit</button>
                         <button type="button" class="btn btn-danger" data-dismiss="modal">Close</button>
                     </div>
                 </div>
@@ -189,8 +199,18 @@ export default class extends HTMLElement {
     </div>
         `;
 
+        // Avatar
         this.avatar = this.querySelector("#profile-avatar");
         this.avatarEditIcon = this.querySelector("#profile-image-edit-icon");
+
+        // Status and Action Buttons
+        this.profileStatusBadge = this.querySelector("#profile-status-badge");
+        this.sendFriendReqBtn = this.querySelector("#send_friend_request_btn");
+        this.approveFriendReqBtn = this.querySelector("#approve_friend_request_btn");
+        this.removeFriendBtn = this.querySelector("#remove_friend_btn");
+        this.blockBtn = this.querySelector("#block_btn");
+        this.unblockBtn = this.querySelector("#unblock_btn");
+
         this.profileEditInfoBtn = this.querySelector("#profile-edit-info-btn");
         this.profileSmallFriendsList = this.querySelector("#profile-small-friends-list");
         this.changeAvatarInput = this.querySelector("#change-avatar-input");
@@ -200,6 +220,7 @@ export default class extends HTMLElement {
         // Friends Info
         this.noFriendsTitle = this.querySelector("#no-friends-title");
         this.profileViewAllFriendsBtn = this.querySelector("#profile-view-all-friends-btn");
+        this.profileBigFriendsList = this.querySelector("#profile-big-friends-list");
 
         // Update Info
         this.profileEditEmailInput = this.querySelector("#profile-edit-email-input");
@@ -209,14 +230,125 @@ export default class extends HTMLElement {
         this.profileUpdateInfoBtn = this.querySelector("#profile-update-info-btn");
     }
 
+    initStatusBadge() {
+        this.sendFriendReqBtn.addEventListener('click', async (e) => {
+            e.preventDefault();
+            await sendFriendRequest(this.user.id);
+            this.user = await getUserByDisplayName(this.user.display_name);
+            this.initStatusBadge(this.user);
+        });
+        this.blockBtn.addEventListener('click', async (e) => {
+           e.preventDefault();
+            await blockUser(this.user.id);
+            this.user = await getUserByDisplayName(this.user.display_name);
+            this.initStatusBadge(this.user);
+        });
+        this.unblockBtn.addEventListener('click', async (e) => {
+           e.preventDefault();
+           await unblockUser(this.user.id);
+           this.user = await getUserByDisplayName(this.user.display_name);
+           this.initStatusBadge(this.user);
+        });
+        if ((this.user.blocked_me === true && this.user.is_blocked_by_me === true) || this.user.is_blocked_by_me === true ) {
+            this.profileStatusBadge.innerHTML = `<span class="badge badge-pill badge-danger" style="position: absolute; top:0; right:0;">Blocked</span>`
+            this.unblockBtn.style.display = "inline-block";
+            this.blockBtn.style.display = "none";
+            this.removeFriendBtn.style.display = "none";
+            this.sendFriendReqBtn.style.display = "none";
+            this.approveFriendReqBtn.style.display = "none";
+            return;
+        }
+        this.approveFriendReqBtn.addEventListener('click', async (e) => {
+           e.preventDefault();
+            await approveFriendRequest(this.user.id);
+            this.user = await getUserByDisplayName(this.user.display_name);
+            this.initStatusBadge(this.user);
+        });
+
+        this.removeFriendBtn.addEventListener('click', async (e) => {
+            e.preventDefault();
+            await removeFriend(this.user.id);
+            this.user = await getUserByDisplayName(this.user.display_name);
+            this.initStatusBadge(this.user);
+        });
+
+        if (this.user.blocked_me === true) {
+            this.profileStatusBadge.innerHTML = `<span class="badge badge-pill badge-danger" style="position: absolute; top:0; right:0;">Blocked You</span>`
+            this.blockBtn.style.display = "none";
+            this.unblockBtn.style.display = "none";
+            this.sendFriendReqBtn.style.display = "none";
+            this.approveFriendReqBtn.style.display = "none";
+            this.removeFriendBtn.style.display = "none";
+            return;
+        }
+
+        if (this.user.friend_status === "PENDING" && this.user.friend_request_sent_by_me === true) {
+            this.profileStatusBadge.innerHTML = `<span class="badge badge-pill badge-primary" style="position: absolute; top:0; right:0;">Pending Friend Request</span>`
+            this.blockBtn.style.display = "none";
+            this.unblockBtn.style.display = "none";
+            this.sendFriendReqBtn.style.display = "none";
+            this.approveFriendReqBtn.style.display = "none";
+            this.removeFriendBtn.style.display = "none";
+            return;
+        }
+
+        if (this.user.friend_status === "PENDING" && this.user.friend_request_sent_by_me === false) {
+            this.profileStatusBadge.innerHTML = ``;
+            this.approveFriendReqBtn.style.display = "inline-block";
+            this.blockBtn.style.display = "inline-block";
+            this.unblockBtn.style.display = "none";
+            this.sendFriendReqBtn.style.display = "none";
+            this.removeFriendBtn.style.display = "none";
+            return;
+        }
+
+        if (this.user.friend_status === "APPROVED") {
+            this.profileStatusBadge.innerHTML = `<span class="badge badge-pill badge-success" style="position: absolute; top:0; right:0;">Friend</span>`
+            this.blockBtn.style.display = "inline-block";
+            this.removeFriendBtn.style.display = "inline-block";
+            this.unblockBtn.style.display = "none";
+            this.sendFriendReqBtn.style.display = "none";
+            this.approveFriendReqBtn.style.display = "none";
+            return;
+        }
+
+        this.profileStatusBadge.innerHTML = ``;
+        this.sendFriendReqBtn.style.display = "inline-block";
+        this.blockBtn.style.display = "inline-block";
+        this.unblockBtn.style.display = "none";
+        this.approveFriendReqBtn.style.display = "none";
+        this.removeFriendBtn.style.display = "none";
+    }
 
     async renderSmallFriendsList() {
-        const friends = await getFriends(3, 0);
+        $('#view-all-friends-modal').on('hide.bs.modal', (e) => {
+            this.profileBigFriendsList.innerHTML = ``;
+        });
+
+
+        this.profileViewAllFriendsBtn.addEventListener('click', async (e) => {
+            e.preventDefault();
+            const friends = await getFriendsOfUser(this.user.display_name);
+            for (let friend of friends) {
+                const friendElement = document.createElement("tr-user-small");
+                friendElement.setAttribute("avatar", friend.avatar);
+                friendElement.setAttribute("display-name", friend.display_name);
+                friendElement.addEventListener('click', e =>{
+                    $('#view-all-friends-modal').modal('hide');
+                    navigateTo(`/profiles/${friend.display_name}`);
+                })
+                this.profileBigFriendsList.appendChild(friendElement);
+            }
+        })
+
+        const friends = await getFriendsOfUser(this.user.display_name, 3, 0);
 
         if (friends.length <= 0) {
             this.profileSmallFriendsList.innerHTML = ``;
             this.profileViewAllFriendsBtn.style.display = "none";
-            this.noFriendsTitle.style.display = "block";
+            if (this.user.is_me) {
+                this.noFriendsTitle.style.display = "block";
+            }
         } else {
             this.profileViewAllFriendsBtn.style.display = "inline-block";
             for (let friend of friends) {
@@ -275,11 +407,11 @@ export default class extends HTMLElement {
     }
 
     initInfoChangeComponents() {
-        this.profileEditDisplayNameInput.value = this.username;
-        this.profileEditEmailInput.value = this.email;
+        this.profileEditDisplayNameInput.value = this.user.username;
+        this.profileEditEmailInput.value = this.user.email;
 
         this.profileEditDisplayNameInput.addEventListener("input", (e)=>{
-            if (this.profileEditDisplayNameInput.value.length > 0 && this.profileEditDisplayNameInput.value != this.username) {
+            if (this.profileEditDisplayNameInput.value.length > 0 && this.profileEditDisplayNameInput.value != this.user.username) {
                 this.profileUpdateInfoBtn.removeAttribute('disabled')
             } else {
                 this.profileUpdateInfoBtn.setAttribute('disabled', "");
@@ -287,7 +419,7 @@ export default class extends HTMLElement {
         });
 
         this.profileEditEmailInput.addEventListener("input", (e)=>{
-            if (this.profileEditEmailInput.value.length > 0 && this.profileEditEmailInput.value != this.email) {
+            if (this.profileEditEmailInput.value.length > 0 && this.profileEditEmailInput.value != this.user.email) {
                 this.profileUpdateInfoBtn.removeAttribute('disabled')
             } else {
                 this.profileUpdateInfoBtn.setAttribute('disabled', "");
@@ -295,8 +427,8 @@ export default class extends HTMLElement {
         });
 
         $('#edit-info-modal').on('hide.bs.modal', (e) => {
-            this.profileEditDisplayNameInput.value = this.username;
-            this.profileEditEmailInput.value = this.email;
+            this.profileEditDisplayNameInput.value = this.user.username;
+            this.profileEditEmailInput.value = this.user.email;
         });
 
         // !!! check that it is clickable only when button is valid
@@ -308,11 +440,11 @@ export default class extends HTMLElement {
 
             let body = {};
 
-            if (this.profileEditEmailInput.value.length > 0 && this.profileEditEmailInput.value != this.email) {
+            if (this.profileEditEmailInput.value.length > 0 && this.profileEditEmailInput.value != this.user.email) {
                 body['email'] = this.profileEditEmailInput.value;
             }
 
-            if (this.profileEditDisplayNameInput.value.length > 0 && this.profileEditDisplayNameInput.value != this.username) {
+            if (this.profileEditDisplayNameInput.value.length > 0 && this.profileEditDisplayNameInput.value != this.user.username) {
                 body['display_name'] = this.profileEditDisplayNameInput.value;
             }
 
