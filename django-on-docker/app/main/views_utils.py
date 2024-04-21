@@ -12,9 +12,5 @@ class CheckIdMixin:
         
         return None
 
-def check_if_object_exists(model, object_id):
-    try:
-        obj = model.objects.get(id=object_id)
-        return obj
-    except model.DoesNotExist:
-        return None
+
+    
