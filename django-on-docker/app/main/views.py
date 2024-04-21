@@ -247,13 +247,16 @@ class GetLastChatsView(views.APIView):
     def get(self, request):
         user = request.user
         last_chat_users = get_last_chat_users(user)
+        # if not last_chat_users:
+        #     return last_chat_users
+        #     return Response({"error": NO_CHATS}, status=status.HTTP_404_NOT_FOUND)
 
         user_ids = set()
         for sender_id, receiver_id in last_chat_users:
             user_ids.add(sender_id)
             user_ids.add(receiver_id)
 
-        user_ids.remove(user.id)
+        user_ids.discard(user.id)
         result_users = CustomUser.objects.filter(id__in=user_ids)
 
         serializer = serializers.CustomUserSerializer(result_users, many=True)
