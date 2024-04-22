@@ -5,7 +5,7 @@ export function initSocket() {
 }
 
 function getSocket() {
-    if (!socket) {
+    if (!socket || (socket && socket.readyState)) {
         const accessToken = localStorage.getItem('access-token');
         socket = new WebSocket("wss://localhost:8080/wss/?token="+accessToken);
         socket.onmessage = (e) => {
@@ -15,6 +15,14 @@ function getSocket() {
                 },
             ));
         };
+    }
+
+    socket.onclose = (e) => {
+        getSocket();
+    }
+
+    socket.onerror = (e) => {
+        getSocket();
     }
 
     return socket
