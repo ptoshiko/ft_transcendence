@@ -8,13 +8,8 @@
     <div id="notifications"></div> 
     <textarea id="chat-log" cols="100" rows="20"></textarea><br>
     <input id="chat-message-input" type="text" size="100"><br>
+    <input id="receiverid-input" type="text" size="100" placeholder="Enter receiver ID"><br> <!-- Added input for receiver ID -->
     <input id="chat-message-submit" type="button" value="Send">
-
-    <!-- New input fields for game invitation -->
-    <input id="game-type-input" type="text" placeholder="Enter Game Type">
-    <input id="invitation-submit" type="button" value="Send Invitation">
-
-    <div id="invitations"></div>
 
     <script>
         function parseJwt(token) {
@@ -30,26 +25,32 @@
         const token = localStorage.getItem('access_token');
         const decodedToken = parseJwt(token);
         const username = decodedToken.username;
-        const receiver_id = "{{ receiver_id }}";
+
+
+        // const chatSocket = new WebSocket(
+        //     'wss://' + window.location.host + '/wss/chat/' + receiver_id + '/?token=' + token
+        // );
 
 
         const chatSocket = new WebSocket(
-            'wss://' + window.location.host + '/wss/chat/' + receiver_id + '/?token=' + token
+            'wss://' + window.location.host + '/wss/chat/?token=' + token
         );
 
-        function displayInvitation(invitationMessage) {
-            const invitationsDiv = document.querySelector('#invitations');
-            invitationsDiv.innerHTML += '<p>' + invitationMessage + '</p>';
-        }
+        // const chatSocket = new WebSocket(
+        //     'wss://' + window.location.host + '/wss/?token=' + token
+        // );
+
+
+        // function displayInvitation(invitationMessage) {
+        //     const invitationsDiv = document.querySelector('#invitations');
+        //     invitationsDiv.innerHTML += '<p>' + invitationMessage + '</p>';
+        // }
 
         chatSocket.onmessage = function(e) {
             const data = JSON.parse(e.data);
 
             if (data.notification) {
                 document.querySelector('#notifications').innerHTML += '<p>' + data.notification + '</p>';
-            } else if (data.invitation) {
-            // Handle invitation
-                displayInvitation(data);
             } else {
                 document.querySelector('#chat-log').value += (data.sender + ': ' + data.message + '\n');
             }
@@ -66,31 +67,21 @@
             }
         };
 
+
         document.querySelector('#chat-message-submit').onclick = function(e) {
             const messageInputDom = document.querySelector('#chat-message-input');
             const message = messageInputDom.value;
+            const receiverId = document.querySelector('#receiverid-input').value; // Get receiver ID from input field
             chatSocket.send(JSON.stringify({
-                'username': username,
-                'message': message
+                'event_type': 'chat_message',
+                'data': {
+                    'to': receiverId, // Include receiver ID in the data
+                    'message': message
+                }
             }));
             messageInputDom.value = '';
         };
 
-        document.querySelector('#invitation-submit').onclick = function(e) {
-            const gameTypeInput = document.querySelector('#game-type-input');
-            const gameType = gameTypeInput.value.trim();
-            if (gameType) {
-                chatSocket.send(JSON.stringify({
-                    'type': 'invitation',
-                    'receiver_id': receiver_id,
-                    'sender_id': sender_id,
-                    'game_type': gameType
-                }));
-                gameTypeInput.value = '';
-            } else {
-                alert('Please enter a valid game type.');
-            }
-        };
     </script>
 </body>
 </html>

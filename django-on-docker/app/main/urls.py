@@ -10,9 +10,7 @@ from rest_framework_simplejwt.views import (
 urlpatterns = [
 
 	path("login/", views.login, name ="login"),
-	
-	path("chat/", views.index, name="index"),
-	path("chat/<str:receiver_id>/", views.room, name="room"),
+	path("chat/", views.room, name="room"),
 
 	path('api/register/', views.RegisterView.as_view()),   # registration: required display_name, email and username 
 	path('api/userslist/', views.CustomUserAPIList.as_view()), # returns info for every user in db

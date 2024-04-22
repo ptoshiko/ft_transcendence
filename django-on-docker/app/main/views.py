@@ -464,15 +464,13 @@ class UserSearchView(views.APIView):
 def login(request):
     return render(request, "chat/login.html")
 
-def index(request):
-    return render(request, "chat/index.html")
 
-def room(request, receiver_id):
-    messages = ChatMessage.objects.filter(
-        (models.Q(sender=request.user.id) | models.Q(sender__id=receiver_id)) &
-        (models.Q(receiver=request.user.id) | models.Q(receiver__id=receiver_id))
-    ).order_by('-date_added')[:25]
+def room(request):
+    # messages = ChatMessage.objects.filter(
+    #     (models.Q(sender=request.user.id) | models.Q(sender__id=receiver_id)) &
+    #     (models.Q(receiver=request.user.id) | models.Q(receiver__id=receiver_id))
+    # ).order_by('-date_added')[:25]
 
-    return render(request, "chat/room.html", {"receiver_id": receiver_id, "messages": messages})
+    return render(request, "chat/room.html")
 
     
