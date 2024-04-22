@@ -1,4 +1,4 @@
-import { navigateTo, redirectTo } from "../helpers.js";
+import {formatAvatar, navigateTo, redirectTo} from "../helpers.js";
 import {
     getFriends,
     getMe,
@@ -8,6 +8,7 @@ import {
     unblockUser,
     sendFriendRequest, blockUser, approveFriendRequest, getFriendsOfUser, removeFriend
 } from "../service/users.js";
+import {initSocket} from "../service/socket.js";
 
 export default class extends HTMLElement {
     constructor() {
@@ -15,15 +16,28 @@ export default class extends HTMLElement {
     }
     
     async connectedCallback() {
-        // Checking if user exists, otherwise - 404 page
-        this.user = await getUserByDisplayName(this.getAttribute("username"));
-        if (!this.user) {
-            this.innerHTML = `<tr-not-found><tr-not-found>`
-            return;
+        const username = this.getAttribute("username");
+        const firstMe = this.getAttribute("first-me");
+        if (username) {
+            this.user = await getUserByDisplayName(username);
+            if (!this.user) {
+                this.innerHTML = `<tr-not-found><tr-not-found>`
+                return;
+            }
+        } else {
+            this.user = JSON.parse(firstMe);
+            this.user = await getUserByDisplayName(this.user.display_name);
+            history.pushState(null, null, `/profiles/${this.user.display_name}`)
         }
 
+        initSocket();
+
+        this.addEventListener('msgReceived', (e)=>{
+            console.log(e.detail.data);
+        })
+
         this.render(this.user.username, this.user.email);
-        this.avatar.setAttribute("src", this.user.avatar);
+        this.avatar.setAttribute("src", formatAvatar(this.user.avatar));
 
         this.initAvatarChangeComponents();
         this.initInfoChangeComponents();
@@ -54,8 +68,9 @@ export default class extends HTMLElement {
                     <button style="display: none;" id="send_friend_request_btn" class="btn btn-success">Send Friend Request</button>
                     <button style="display: none;" id="approve_friend_request_btn" class="btn btn-success">Approve Friend Request</button>
                     <button style="display: none;" id="remove_friend_btn" class="btn btn-danger">Remove Friend</button>
-                    <button style="display: none;" id="block_btn" class="btn btn-danger">Block</button>
+                    <button style="display: none;" id="block_btn" class="btn btn-danger">Block <i class="fa-solid fa-ban"></i></button>
                     <button style="display: none;" id="unblock_btn" class="btn btn-warning">Unblock</button>
+                    <button style="display: none"  id="profile_send_msg_btn" class="btn btn-primary float-right">Send Message</button>
                 </div>
                 <!-- Info -->
                 <div class="col-6">
@@ -210,6 +225,7 @@ export default class extends HTMLElement {
         this.removeFriendBtn = this.querySelector("#remove_friend_btn");
         this.blockBtn = this.querySelector("#block_btn");
         this.unblockBtn = this.querySelector("#unblock_btn");
+        this.profileSendMsgBtn = this.querySelector("#profile_send_msg_btn");
 
         this.profileEditInfoBtn = this.querySelector("#profile-edit-info-btn");
         this.profileSmallFriendsList = this.querySelector("#profile-small-friends-list");
@@ -231,6 +247,10 @@ export default class extends HTMLElement {
     }
 
     initStatusBadge() {
+        this.profileSendMsgBtn.addEventListener('click', () => {
+            navigateTo(`/chat/${this.user.display_name}`)
+        });
+
         this.sendFriendReqBtn.addEventListener('click', async (e) => {
             e.preventDefault();
             await sendFriendRequest(this.user.id);
@@ -249,17 +269,8 @@ export default class extends HTMLElement {
            this.user = await getUserByDisplayName(this.user.display_name);
            this.initStatusBadge(this.user);
         });
-        if ((this.user.blocked_me === true && this.user.is_blocked_by_me === true) || this.user.is_blocked_by_me === true ) {
-            this.profileStatusBadge.innerHTML = `<span class="badge badge-pill badge-danger" style="position: absolute; top:0; right:0;">Blocked</span>`
-            this.unblockBtn.style.display = "inline-block";
-            this.blockBtn.style.display = "none";
-            this.removeFriendBtn.style.display = "none";
-            this.sendFriendReqBtn.style.display = "none";
-            this.approveFriendReqBtn.style.display = "none";
-            return;
-        }
         this.approveFriendReqBtn.addEventListener('click', async (e) => {
-           e.preventDefault();
+            e.preventDefault();
             await approveFriendRequest(this.user.id);
             this.user = await getUserByDisplayName(this.user.display_name);
             this.initStatusBadge(this.user);
@@ -272,6 +283,19 @@ export default class extends HTMLElement {
             this.initStatusBadge(this.user);
         });
 
+
+
+        if ((this.user.blocked_me === true && this.user.is_blocked_by_me === true) || this.user.is_blocked_by_me === true ) {
+            this.profileStatusBadge.innerHTML = `<span class="badge badge-pill badge-danger" style="position: absolute; top:0; right:0;">Blocked</span>`
+            this.unblockBtn.style.display = "inline-block";
+            this.blockBtn.style.display = "none";
+            this.removeFriendBtn.style.display = "none";
+            this.sendFriendReqBtn.style.display = "none";
+            this.approveFriendReqBtn.style.display = "none";
+            this.profileSendMsgBtn.style.display = "none";
+            return;
+        }
+
         if (this.user.blocked_me === true) {
             this.profileStatusBadge.innerHTML = `<span class="badge badge-pill badge-danger" style="position: absolute; top:0; right:0;">Blocked You</span>`
             this.blockBtn.style.display = "none";
@@ -279,6 +303,7 @@ export default class extends HTMLElement {
             this.sendFriendReqBtn.style.display = "none";
             this.approveFriendReqBtn.style.display = "none";
             this.removeFriendBtn.style.display = "none";
+            this.profileSendMsgBtn.style.display = "none";
             return;
         }
 
@@ -289,6 +314,7 @@ export default class extends HTMLElement {
             this.sendFriendReqBtn.style.display = "none";
             this.approveFriendReqBtn.style.display = "none";
             this.removeFriendBtn.style.display = "none";
+            this.profileSendMsgBtn.style.display = "inline-block";
             return;
         }
 
@@ -299,6 +325,7 @@ export default class extends HTMLElement {
             this.unblockBtn.style.display = "none";
             this.sendFriendReqBtn.style.display = "none";
             this.removeFriendBtn.style.display = "none";
+            this.profileSendMsgBtn.style.display = "inline-block";
             return;
         }
 
@@ -309,6 +336,7 @@ export default class extends HTMLElement {
             this.unblockBtn.style.display = "none";
             this.sendFriendReqBtn.style.display = "none";
             this.approveFriendReqBtn.style.display = "none";
+            this.profileSendMsgBtn.style.display = "inline-block";
             return;
         }
 
@@ -318,6 +346,7 @@ export default class extends HTMLElement {
         this.unblockBtn.style.display = "none";
         this.approveFriendReqBtn.style.display = "none";
         this.removeFriendBtn.style.display = "none";
+        this.profileSendMsgBtn.style.display = "inline-block";
     }
 
     async renderSmallFriendsList() {

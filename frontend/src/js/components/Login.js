@@ -1,7 +1,7 @@
-import { redirectTo } from "../helpers.js";
+import {redirectTo} from "../helpers.js";
 import { withJSONContent } from "../middleware.js";
-import { isLoggedIn } from "../service/auth.js";
 import { getMe } from "../service/users.js";
+import router from "../index.js";
 
 export default class extends HTMLElement {
     constructor() {
@@ -9,12 +9,15 @@ export default class extends HTMLElement {
     }
 
     async connectedCallback() {
-        if (isLoggedIn()) {
-            const user = await getMe();
-            redirectTo(`/profiles/${user.display_name}`)
+        const firstMe = this.getAttribute('first-me');
+        if (firstMe) {
+            const me = JSON.parse(firstMe)
+            history.pushState(null, null,`/profiles/${me.display_name}`);
+            router(me);
             return;
         }
 
+        localStorage.clear();
         this.render();
 
         this.mainBtn.addEventListener("click", (e)=>{

@@ -1,13 +1,14 @@
 import Profile from "./components/Profile.js"
 import Login from "./components/Login.js"
 import FourZeroFor from "./components/404.js"
-import { isLoggedIn } from "./service/auth.js"
 import NavBar from "./components/NavBar.js";
 import UserSmall from "./components/UserSmall.js";
 import Chat from "./components/Chat.js";
 import ChatFriend from "./components/ChatFriend.js";
 import ChatMessageToMe from "./components/ChatMessageToMe.js";
 import MyChatMessage from "./components/MyChatMessage.js";
+import {getMe} from "./service/users.js";
+import {redirectTo} from "./helpers.js";
 
 customElements.define('tr-login', Login);
 customElements.define('tr-not-found', FourZeroFor);
@@ -38,20 +39,23 @@ function getParams(result, path) {
     }));
 }
 
-export default async function router() {
+export default async function router(firstMe) {
+    // if user is not authenticated - always redirect to login page
+    // otherwise keep the route as intended, but on login page we redirect to profile
+
+    let route = null;
+    let result = null;
     const routes = [
-        // { path: "/", component: "tr-profile"},
+        { path: "/", component: "tr-profile"},
         { path: "/login", component: "tr-login"},
         { path: "/profiles/:username", component: "tr-profile"},
         { path: "/chat", component: "tr-chat"},
         { path: "/chat/:username", component: "tr-chat"},
     ];
 
-    let result = null;
-    let route = null;
     for (const r of routes) {
         result = location.pathname.match(pathToRegex(r.path));
-        if (result !==null) {
+        if (result !== null) {
             route = r;
             break;
         }
@@ -59,7 +63,7 @@ export default async function router() {
 
     if (!route) {
         route = {path: location.pathname, component: "tr-not-found"};
-    };
+    }
 
     app.innerHTML=``;
     let component = document.createElement(route.component);
@@ -70,12 +74,22 @@ export default async function router() {
             component.setAttribute(key, value);
         }
     }
-    
+
+    if (firstMe) {
+        component.setAttribute('first-me', JSON.stringify(firstMe));
+    }
+
     app.appendChild(component);
 }
 
 window.addEventListener('popstate', router)
 
-document.addEventListener("DOMContentLoaded", () => {
-    router();
+document.addEventListener("DOMContentLoaded",async () => {
+    const me = await getMe();
+    if (!me) {
+        redirectTo("/login");
+    } else {
+        // start socket connection?
+        router(me);
+    }
 })

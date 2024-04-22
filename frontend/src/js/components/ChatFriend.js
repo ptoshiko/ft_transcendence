@@ -12,7 +12,7 @@ export default class extends HTMLElement {
 
     render(avatar, displayName) {
         this.innerHTML = `
-            <a href="#" class="list-group-item list-group-item-action">
+            <a id="chat-friend-link" href="#" class="list-group-item list-group-item-action">
                 <div class="container">
                     <div class="row align-items-center">
                         <div class="col-5">

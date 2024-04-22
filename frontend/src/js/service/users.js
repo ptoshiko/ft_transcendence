@@ -29,9 +29,17 @@ export async function getMe() {
         headers: withJSONContent(authHeader)
     });
 
+    if (!resp.ok) {
+        switch (resp.status) {
+            case 401:
+                return null
+        }
+    }
+
     const user = await resp.json();
 
     return user;
+
 }
 
 export async function getUserByDisplayName(displayName) {

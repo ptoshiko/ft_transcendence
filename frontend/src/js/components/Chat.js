@@ -9,7 +9,7 @@ export default class extends HTMLElement {
 
     async connectedCallback() {
         const username = this.getAttribute('username');
-        let user;
+        let user = null;
         if (username !== null) {
             user = await getUserByDisplayName(username);
             if (user === null) {
@@ -22,7 +22,7 @@ export default class extends HTMLElement {
         if (user === null) {
             this.initFriendsList();
         } else {
-            this.initPredefinedFriendsList(username);
+            this.initPredefinedFriendsList(user);
         }
 
 
@@ -67,6 +67,11 @@ export default class extends HTMLElement {
     async initFriendsList() {
         const chatFriends = await getChatFriendsList();
 
+        if (chatFriends.length === 0) {
+            this.chatSendMsgBtn.setAttribute('disabled',"");
+            this.chatMessageInput.setAttribute('disabled',"");
+        }
+
         for (const friend of chatFriends) {
             let friendComponent = document.createElement("tr-chat-friend")
             friendComponent.setAttribute("avatar", formatAvatar(friend.avatar));
@@ -102,11 +107,6 @@ export default class extends HTMLElement {
     async initPredefinedFriendsList(user) {
         const chatFriends = await getChatFriendsList();
 
-        // if user exists but not in getLast - add to the list on front
-        // if users exists and in the list - just show the chat
-        // make active the chosen user from beginning
-        // make others inactive on click
-
         let chatFriendsWithIsActive = [];
         let found = false;
         for (const friend of chatFriends) {
@@ -127,7 +127,7 @@ export default class extends HTMLElement {
         }
 
         if (!found) {
-            chatFriends.push({
+            chatFriendsWithIsActive.push({
                 avatar: user.avatar,
                 display_name: user.display_name,
                 is_active: true,
@@ -135,15 +135,14 @@ export default class extends HTMLElement {
         }
 
         for (const friend of chatFriendsWithIsActive) {
-            let friendComponent = document.createElement("tr-chat-friend")
+            let friendComponent= document.createElement("tr-chat-friend")
             friendComponent.setAttribute("avatar", formatAvatar(friend.avatar));
             friendComponent.setAttribute("displayName", friend.display_name);
+            this.chatFriendsList.appendChild(friendComponent);
 
             friendComponent.addEventListener('click', async (e) => {
                 const myID = getMyID();
-                const displayName = e.target.getAttribute('displayName');
-                const avatar = e.target.getAttribute('avatar');
-                const messages = await getChatMessages(displayName);
+                const messages = await getChatMessages(friend.display_name);
 
                 this.chatMessagesList.innerHTML = ``;
                 for (const message of messages) {
@@ -154,15 +153,13 @@ export default class extends HTMLElement {
                         messageComponent = document.createElement('tr-chat-msg-to-me');
                     }
 
-                    messageComponent.setAttribute('displayName', displayName);
-                    messageComponent.setAttribute('avatar', avatar);
+                    messageComponent.setAttribute('displayName', friend.display_name);
+                    messageComponent.setAttribute('avatar', formatAvatar(friend.avatar));
                     messageComponent.setAttribute('msg', message.content);
 
                     this.chatMessagesList.appendChild(messageComponent);
                 }
             })
-
-            this.chatFriendsList.appendChild(friendComponent);
         }
     }
 }
