@@ -22,7 +22,7 @@
             return JSON.parse(jsonPayload);
         }
         
-        const token = localStorage.getItem('access_token');
+        // const token = localStorage.getItem('access_token');
         const decodedToken = parseJwt(token);
         const username = decodedToken.username;
 
