@@ -39,13 +39,6 @@ class ChatConsumer(AsyncWebsocketConsumer):
             case _:
                 await self.send_error_message("Unknown event type")
 
-        # event_type = text_data_json.get("type")
-        # if event_type == "game_invitation":
-        #     await self.handle_game_invitation(text_data_json)
-        # else:
-        #     await self.handle_private_message(text_data_json)
-
-
     # Handle private messages
     async def handle_private_message(self, data):    
         message = data.get('message')
@@ -59,8 +52,12 @@ class ChatConsumer(AsyncWebsocketConsumer):
         if is_blocked:
             await self.send_blocked_notification(sender_id, receiver_id)
             return
-
-        await self.save_message(message, self.sender.id, receiver_id) 
+        try:
+            await self.save_message(message, self.sender.id, receiver_id) 
+        except ValueError as e:
+            error_message = {"error": str(e)}
+            await self.send_json(error_message)
+            return
 
         # send message to receiver's room
         await self.channel_layer.group_send(
@@ -94,7 +91,8 @@ class ChatConsumer(AsyncWebsocketConsumer):
 
 
 
-    # Handle inviatations
+
+    # Handle inviatations -- in progress
     # async def handle_game_invitation(self, data):
     #     receiver_id = data.get("receiver_id")
     #     sender_id = self.sender.id
@@ -103,8 +101,12 @@ class ChatConsumer(AsyncWebsocketConsumer):
     #     # if is_blocked:
     #     #     await self.send_blocked_notification(sender_id, receiver_id)
     #     #     return
-
-    #     invitation = await self.save_invitation(self.sender.id, receiver_id)
+    #     try:
+    #         invitation = await self.save_invitation(self.sender.id, receiver_id)
+    #     except ValueError as e:
+    #         error_message = {"error": str(e)}
+    #         await self.send_json(error_message)
+    #         return
     #     await self.send_invitation_notification(sender_id, receiver_id, invitation)
 
     # async def send_invitation_notification(self, sender_id, receiver_id):
@@ -123,27 +125,26 @@ class ChatConsumer(AsyncWebsocketConsumer):
     #         }
     #     )
     # async def chat_invitation(self, event):
-    #     # This method sends the invitation message to WebSocket
-    #     await self.send(text_data=json.dumps({
-    #         "sender": event["sender"],
-    #         "receiver": event["receiver"]
 
-    #         "invitation": True  # Flag to indicate this is an invitation message
-    #     }))
+    #     sender_id = event["sender"]
+    #     receiver_id = event["receiver"]
+    #     meta_data = event["meta_data"]
+    # # Send the invitation data to the client
+    #     await self.send_json({
+    #         "sender": sender_id,
+    #         "receiver": receiver_id,
+    #         "meta_data": meta_data
+    #     })
     
-    # async def handle_invitation_response(self, response_data):
-    #     # Handle receiver's response to the invitation
-    #     # Your implementation goes here
-    #     pass
 
 
-    # async def send_blocked_notification(self, sender_id, receiver_id):
+    async def send_blocked_notification(self, sender_id, receiver_id):
     
-    #     notification_message = f"You have been blocked by user {receiver_id}."
-    #     # Send the notification to the sender
-    #     await self.send(text_data=json.dumps({
-    #         "notification": notification_message
-    #     }))
+        notification_message = f"You have been blocked by user {receiver_id}."
+        # Send the notification to the sender
+        await self.send(text_data=json.dumps({
+            "notification": notification_message
+        }))
 
 # # paddle movement
 #     async def handle_move_paddle(self, data):
@@ -167,6 +168,9 @@ class ChatConsumer(AsyncWebsocketConsumer):
 #         # Send the current game state to the client
 #         self.send(text_data=json.dumps(game_state))
 
+          
+    async def send_json(self, content):
+        await self.send(text_data=json.dumps(content))
 
     # DB functions
     
@@ -177,8 +181,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
         try:
             receiver = CustomUser.objects.get(id=receiver_id)
         except ObjectDoesNotExist:
-            print(("Receiver does not exist"))
-            # raise ValueError("Receiver does not exist")
+            raise ValueError("Receiver does not exist")
         ChatMessage.objects.create(content=message, sender=sender, receiver=receiver)
 
     # Checking in database if the user is blocked 
@@ -198,7 +201,6 @@ class ChatConsumer(AsyncWebsocketConsumer):
         try:
             receiver_id = CustomUser.objects.get(id=receiver_id)
         except ObjectDoesNotExist:
-            print ("No receiver user")
-            return
+            raise ValueError("Receiver does not exist")
         invitation = GameInvitation.objects.create(sender=sender, receiver=receiver)
         return invitation
