@@ -81,11 +81,17 @@ class BlockUser(models.Model):
         ]
 
 
-# class Game(models.Model):
+# class GameInvitation(models.Model):
+#     sender = models.ForeignKey(AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='invitation_sender')
+#     receiver = models.ForeignKey(AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='invitation_receiver')
+#     is_active = models.BooleanField(default=True)
+#     invitation_id = models.CharField(max_length=32, unique=True)
+#     created_at = models.DateTimeField(auto_now_add=True)
 
-# class UserStatus(models.Model):
-#     user = models.OneToOneField(AUTH_USER_MODEL, on_delete=models.CASCADE)
-#     is_online = models.BooleanField(default=False)
+#     def is_valid(self):
+#         time_difference = timezone.now() - self.created_at
+#         return time_difference.total_seconds() <= 15 * 60
+
 
 # for 2FA
 from typing import Optional
