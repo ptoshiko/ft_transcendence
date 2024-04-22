@@ -97,10 +97,10 @@ class ChatConsumer(AsyncWebsocketConsumer):
     #     receiver_id = data.get("receiver_id")
     #     sender_id = self.sender.id
     
-    #     # is_blocked = await self.is_blocked(receiver_id, sender_id)
-    #     # if is_blocked:
-    #     #     await self.send_blocked_notification(sender_id, receiver_id)
-    #     #     return
+    #     is_blocked = await self.is_blocked(receiver_id, sender_id)
+    #     if is_blocked:
+    #         await self.send_blocked_notification(sender_id, receiver_id)
+    #         return
     #     try:
     #         invitation = await self.save_invitation(self.sender.id, receiver_id)
     #     except ValueError as e:

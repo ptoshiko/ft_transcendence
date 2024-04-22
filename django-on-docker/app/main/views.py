@@ -304,7 +304,7 @@ class GetUserByDisplayName(views.APIView):
             raise Http404
 
 class GetFriendsByDisplayName(views.APIView):
-    def get(self, display_name, format=None):
+    def get(self, request, display_name, format=None):
 
         user = check_if_exists_by_str(CustomUser, display_name)
         if user is None:
