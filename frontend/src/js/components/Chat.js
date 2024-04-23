@@ -1,6 +1,7 @@
 import {getChatFriendsList, getChatMessages} from "../service/chat.js";
 import {formatAvatar, getMyID, redirectTo} from "../helpers.js";
 import {getUserByDisplayName} from "../service/users.js";
+import {sendMessage} from "../service/socket.js";
 
 export default class extends HTMLElement {
     constructor() {
@@ -72,12 +73,20 @@ export default class extends HTMLElement {
             this.chatMessageInput.setAttribute('disabled',"");
         }
 
+        // TODO: add input event listener and make button active only if there is at least one character
+
+        this.chatMessageInput.addEventListener('click', (e) => {
+           e.preventDefault();
+           sendMessage();
+        });
+
         for (const friend of chatFriends) {
             let friendComponent = document.createElement("tr-chat-friend")
             friendComponent.setAttribute("avatar", formatAvatar(friend.avatar));
             friendComponent.setAttribute("displayName", friend.display_name);
 
             friendComponent.addEventListener('click', async (e) => {
+                e.preventDefault();
                 const myID = getMyID();
                 const displayName = e.target.getAttribute('displayName');
                 const avatar = e.target.getAttribute('avatar');
@@ -141,8 +150,15 @@ export default class extends HTMLElement {
             this.chatFriendsList.appendChild(friendComponent);
 
             friendComponent.addEventListener('click', async (e) => {
+                e.preventDefault();
                 const myID = getMyID();
                 const messages = await getChatMessages(friend.display_name);
+                if (this.activeFriend && this.activeFriend !== friendComponent) {
+                    this.activeFriend.classList.remove("active-chat-friend");
+                }
+
+                this.activeFriend = friendComponent;
+                this.activeFriend.classList.add("active-chat-friend");
 
                 this.chatMessagesList.innerHTML = ``;
                 for (const message of messages) {
@@ -159,7 +175,30 @@ export default class extends HTMLElement {
 
                     this.chatMessagesList.appendChild(messageComponent);
                 }
+
+                this.chatFriendsList.addEventListener('chat_message', (e)=>{
+                    console.log(e.detail.data);
+                    let messageComponent;
+                    if (e.detail.data.sender === myID) {
+                        messageComponent = document.createElement('tr-chat-my-msg');
+                    } else {
+                        messageComponent = document.createElement('tr-chat-msg-to-me');
+                    }
+
+                    messageComponent.setAttribute('displayName', friend.display_name);
+                    messageComponent.setAttribute('avatar', formatAvatar(friend.avatar));
+                    messageComponent.setAttribute('msg', e.detail.data.content);
+
+                    this.chatMessagesList.appendChild(messageComponent);
+                })
             })
         }
+
+        this.chatMessageInput.addEventListener('click', (e) => {
+            e.preventDefault();
+            sendMessage(this.activeFriend.getAttribute('displayName'), this.chatMessageInput.value);
+        });
+
+
     }
 }

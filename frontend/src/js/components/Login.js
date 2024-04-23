@@ -2,6 +2,7 @@ import {redirectTo} from "../helpers.js";
 import { withJSONContent } from "../middleware.js";
 import { getMe } from "../service/users.js";
 import router from "../index.js";
+import {initSocket} from "../service/socket.js";
 
 export default class extends HTMLElement {
     constructor() {
@@ -151,6 +152,7 @@ export default class extends HTMLElement {
 
             const user = await getMe();
 
+            initSocket();
             redirectTo(`/profiles/${user.display_name}`);
         } catch(e) {
             this.showErr("There is some server error");

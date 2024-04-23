@@ -30,8 +30,6 @@ export default class extends HTMLElement {
             history.pushState(null, null, `/profiles/${this.user.display_name}`)
         }
 
-        initSocket();
-
         this.addEventListener('msgReceived', (e)=>{
             console.log(e.detail.data);
         })

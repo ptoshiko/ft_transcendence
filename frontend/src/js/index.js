@@ -9,6 +9,7 @@ import ChatMessageToMe from "./components/ChatMessageToMe.js";
 import MyChatMessage from "./components/MyChatMessage.js";
 import {getMe} from "./service/users.js";
 import {redirectTo} from "./helpers.js";
+import {initSocket} from "./service/socket.js";
 
 customElements.define('tr-login', Login);
 customElements.define('tr-not-found', FourZeroFor);
@@ -89,7 +90,7 @@ document.addEventListener("DOMContentLoaded",async () => {
     if (!me) {
         redirectTo("/login");
     } else {
-        // start socket connection?
+        initSocket();
         router(me);
     }
 })

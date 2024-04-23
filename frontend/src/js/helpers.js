@@ -1,5 +1,6 @@
 import router from "./index.js"
 import {AVATAR_ADDRESS} from "./constants.js";
+import {closeSocket} from "./service/socket.js";
 
 export function navigateTo(url) {
     history.pushState(null, null, url)
@@ -12,8 +13,8 @@ export function redirectTo(url) {
 }
 
 export function quit() {
-    localStorage.removeItem("access-token");
-    localStorage.removeItem("refresh-token");
+    localStorage.clear();
+    closeSocket();
     history.replaceState(null, null, "/login");
     history.pushState(null, null, "/login");
     router();
