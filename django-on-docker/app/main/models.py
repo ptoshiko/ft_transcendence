@@ -4,6 +4,7 @@ from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 from .utils import validate_display_name
 from .managers import CustomUserManager
+import uuid
 
 class CustomUser(AbstractBaseUser, PermissionsMixin):
     email = models.EmailField(_("email address"), unique=True)
@@ -81,16 +82,21 @@ class BlockUser(models.Model):
         ]
 
 
-# class GameInvitation(models.Model):
-#     sender = models.ForeignKey(AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='invitation_sender')
-#     receiver = models.ForeignKey(AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='invitation_receiver')
-#     is_active = models.BooleanField(default=True)
-#     invitation_id = models.CharField(max_length=32, unique=True)
-#     created_at = models.DateTimeField(auto_now_add=True)
+class GameInvitation(models.Model):
+    sender = models.ForeignKey(AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='invitation_sender')
+    receiver = models.ForeignKey(AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='invitation_receiver')
+    is_active = models.BooleanField(default=True)
+    invitation_id = models.CharField(max_length=32, unique=True)
+    created_at = models.DateTimeField(auto_now_add=True)
 
-#     def is_valid(self):
-#         time_difference = timezone.now() - self.created_at
-#         return time_difference.total_seconds() <= 15 * 60
+    def is_valid(self):
+        time_difference = timezone.now() - self.created_at
+        return time_difference.total_seconds() <= 15 * 60
+    
+    def save(self, *args, **kwargs):
+        if not self.invitation_id:
+            self.invitation_id = str(uuid.uuid4().hex)[:32]  # Generate a unique ID
+        super().save(*args, **kwargs)
 
 
 # for 2FA
