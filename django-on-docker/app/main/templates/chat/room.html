@@ -22,15 +22,9 @@
             return JSON.parse(jsonPayload);
         }
         
-        // const token = localStorage.getItem('access_token');
+        const token = localStorage.getItem('access_token');
         const decodedToken = parseJwt(token);
         const username = decodedToken.username;
-
-
-        // const chatSocket = new WebSocket(
-        //     'wss://' + window.location.host + '/wss/chat/' + receiver_id + '/?token=' + token
-        // );
-
 
         const chatSocket = new WebSocket(
             'wss://' + window.location.host + '/wss/chat/?token=' + token
@@ -41,10 +35,25 @@
         // );
 
 
-        // function displayInvitation(invitationMessage) {
-        //     const invitationsDiv = document.querySelector('#invitations');
-        //     invitationsDiv.innerHTML += '<p>' + invitationMessage + '</p>';
-        // }
+        // chatSocket.onmessage = function(e) {
+        //     const data = JSON.parse(e.data);
+
+        //     if (data.notification) {
+        //         document.querySelector('#notifications').innerHTML += '<p>' + data.notification + '</p>';
+        //     } else if (data.meta_data && data.meta_data.is_active !== undefined) {
+        //         // Handle game invitation
+        //         const invitation = data.meta_data;
+        //         //if (invitation.is_active) {
+        //             // Display invitation to user
+        //         document.querySelector('#invitation-sender').textContent = 'Sender: ' + data.sender;
+        //         document.querySelector('#invitation-receiver').textContent = 'Receiver: ' + data.receiver;
+        //         document.querySelector('#invitation-id').textContent = 'Invitation ID: ' + invitation.id;
+        //             // Handle inactive invitation if needed
+        //        // }
+        //     } else {
+        //         document.querySelector('#chat-log').value += (data.sender + ': ' + data.message + '\n');
+        //     }
+        // };
 
         chatSocket.onmessage = function(e) {
             const data = JSON.parse(e.data);
@@ -81,6 +90,22 @@
             }));
             messageInputDom.value = '';
         };
+
+        // document.querySelector('#send-invitation').onclick = function() {
+        //     const sender = document.querySelector('#sender-input').value;
+        //     const receiver = document.querySelector('#receiver-input').value;
+        //     const invitationId = document.querySelector('#invitation-id-input').value;
+
+        //     // Send invitation data to the server
+        //     chatSocket.send(JSON.stringify({
+        //         'event_type': 'send_invitation',
+        //         'data': {
+        //             'to': receiver,
+
+        //         }
+        //     }));
+        // };
+
 
     </script>
 </body>
