@@ -81,9 +81,12 @@ class ChatConsumer(AsyncWebsocketConsumer):
         )
         # send message to sender's room - echo 
         await self.send(text_data=json.dumps({
-        "message": message,
-        "sender": self.sender.id,
-        "receiver": receiver_id
+            "event_type": "chat_message",
+            "data": {
+                "message": message,
+                "sender": self.sender.id,
+                "receiver": receiver_id
+            }
     }))
 
     # Receive message from room group
@@ -94,9 +97,12 @@ class ChatConsumer(AsyncWebsocketConsumer):
 
         # Send message to WebSocket
         await self.send(text_data=json.dumps({
-            "message": message,
-            "sender": sender,
-            "receiver": receiver
+            "event_type": "chat_message",
+            "data": {
+                "message": message,
+                "sender": sender,
+                "receiver": receiver
+            }
         }))
 
 
