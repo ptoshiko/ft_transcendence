@@ -50,7 +50,7 @@ export default class extends HTMLElement {
             return;
         }
 
-        this.classList.remove("active");
+        this.link.classList.remove("active");
     }
 
 }

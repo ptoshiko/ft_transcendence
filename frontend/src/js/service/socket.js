@@ -2,7 +2,6 @@ let socket;
 let selfClose = false;
 
 export function initSocket() {
-    console.log("init called");
     getSocket();
 }
 
@@ -52,7 +51,7 @@ export function sendMessage(toDisplayName, msg) {
         event_type: 'chat_message',
         data: {
             to: toDisplayName,
-            message: msg,
+            content: msg,
         }
     }
 

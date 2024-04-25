@@ -13,10 +13,9 @@ export default class extends HTMLElement {
         let user = null;
         if (username !== null) {
             user = await getUserByDisplayName(username);
-        }
-
-        if (user === null) {
-            redirectTo("/chat");
+            if (user === null) {
+                redirectTo("/chat");
+            }
         }
 
         this.render();
@@ -72,6 +71,7 @@ export default class extends HTMLElement {
 
         chatFriends = this.appendPredefinedExistingUserIfNeeded(predefinedExistingUser, chatFriends);
 
+        this.chatFriendsList.innerHTML = ``;
         for (const friend of chatFriends) {
             const friendComponent= document.createElement("tr-chat-friend");
             friendComponent.setAttribute("avatar", formatAvatar(friend.avatar));
@@ -104,8 +104,15 @@ export default class extends HTMLElement {
         return async (e) => {
             e.preventDefault();
 
+            history.replaceState(null, null, `/chat/${props.friend.display_name}`)
+            if (this.currentActiveFriendComponent) {
+                this.currentActiveFriendComponent.setAttribute("is_active", "false");
+                const upToDateList = await getChatFriendsList()
+                if (!upToDateList.find((f) => f.id === this.currentActiveSpeaker.id)) {
+                    this.chatFriendsList.removeChild(this.currentActiveFriendComponent);
+                }
+            }
             this.currentActiveSpeaker = props.friend;
-            this.currentActiveFriendComponent.setAttribute("is_active", "false");
             this.currentActiveFriendComponent = props.friendComponent;
             this.currentActiveFriendComponent.setAttribute("is_active", "true");
             const messages = await getChatMessages(props.friend.display_name);
@@ -116,10 +123,10 @@ export default class extends HTMLElement {
 
     getChatMessageHandler() {
         return (e) => {
-            if (e.detail.sender === this.currentMe.id || e.detail.receiver === this.currentMe.id) {
+            if (e.detail.sender === this.currentActiveSpeaker.id || e.detail.receiver === this.currentActiveSpeaker.id) {
                 this.drawMessage(e.detail, this.currentMe, this.currentActiveSpeaker);
             }
-            // TODO: also update friends list
+            this.initFriendsAndChat(this.currentActiveSpeaker);
         };
     }
 
@@ -127,6 +134,7 @@ export default class extends HTMLElement {
         return (e) => {
             e.preventDefault();
             sendMessage(this.currentActiveSpeaker.display_name, this.chatMessageInput.value);
+            this.chatMessageInput.value = ``;
         };
     }
 
