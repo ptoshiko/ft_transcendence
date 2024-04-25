@@ -7,7 +7,12 @@ export function initSocket() {
 
 function getSocket() {
     if (!socket || (socket && socket.readyState === 3)) {
-        socket = new WebSocket(`wss://localhost:8081/wss/chat/?token=${localStorage.getItem('access-token')}`);
+        const accessToken = localStorage.getItem('access-token')
+        if (!accessToken) {
+            return;
+        }
+
+        socket = new WebSocket(`wss://localhost:8081/wss/chat/?token=${accessToken}`);
 
         socket.onmessage = (e) => {
             const data = JSON.parse(e.data);
@@ -24,12 +29,16 @@ function getSocket() {
         };
 
         socket.onclose = (e) => {
+            console.log("some socket close: ", e)
             if (!selfClose) {
                 getSocket();
             }
+
+            selfClose = false;
         }
 
         socket.onerror = (e) => {
+            console.log("some socket error: ", e)
             getSocket();
         }
     }

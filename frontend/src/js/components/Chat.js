@@ -37,6 +37,7 @@ export default class extends HTMLElement {
             <div class="container" >
                 <div class="row">
                     <div class="mt-3 d-flex w-100" style="height: calc(100vh - 72px);">
+                        <div id="chat-error-alert" class="alert alert-danger collapse" role="alert"></div>
                         <!-- Friends List -->
                         <div id="chat-friends-list" class="list-group list-group-flush" style="flex-basis: 200px; flex-shrink: 0; overflow-y: scroll;"></div>
                         <!-- Messages Zone -->
@@ -64,6 +65,7 @@ export default class extends HTMLElement {
         this.chatMessagesList = this.querySelector("#chat-messages-list");
         this.chatMessageInput = this.querySelector("#chat-msg-input");
         this.chatSendMsgBtn = this.querySelector("#chat-send-msg-btn");
+        this.chatErrorAlert = this.querySelector("#chat-error-alert")
     }
 
     async initFriendsAndChat(predefinedExistingUser) {
@@ -123,6 +125,18 @@ export default class extends HTMLElement {
 
     getChatMessageHandler() {
         return (e) => {
+            if (e.detail.error) {
+                this.chatErrorAlert.innerHTML = e.detail.error;
+
+                $("#chat-error-alert").show();
+                setTimeout(()=>{
+                    $("#chat-error-alert").hide();
+                    this.chatErrorAlert.innerHTML;
+                }, 5000);
+
+                return;
+            }
+
             if (e.detail.sender === this.currentActiveSpeaker.id || e.detail.receiver === this.currentActiveSpeaker.id) {
                 this.drawMessage(e.detail, this.currentMe, this.currentActiveSpeaker);
             }
