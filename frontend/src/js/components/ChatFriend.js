@@ -3,11 +3,21 @@ export default class extends HTMLElement {
         super();
     }
 
+    static observedAttributes = ["is_active"];
+
     connectedCallback() {
         const avatar = this.getAttribute('avatar');
         const displayName = this.getAttribute('displayName')
 
         this.render(avatar, displayName);
+    }
+
+    attributeChangedCallback(name, oldValue, newValue) {
+        switch (name) {
+            case "is_active":
+                this.handleIsActiveChanged(oldValue, newValue);
+                break;
+        }
     }
 
     render(avatar, displayName) {
@@ -26,5 +36,21 @@ export default class extends HTMLElement {
                 </div>
             </a>
         `;
+
+        this.link = this.querySelector("#chat-friend-link");
     }
+
+    handleIsActiveChanged(oldValue, newValue) {
+        if (newValue === oldValue || !this.link) {
+            return;
+        }
+
+        if (newValue === "true") {
+            this.link.classList.add("active");
+            return;
+        }
+
+        this.classList.remove("active");
+    }
+
 }

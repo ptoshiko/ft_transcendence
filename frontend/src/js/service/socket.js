@@ -11,9 +11,16 @@ function getSocket() {
         socket = new WebSocket(`wss://localhost:8081/wss/chat/?token=${localStorage.getItem('access-token')}`);
 
         socket.onmessage = (e) => {
-            switch (e.data.event_type) {
+            const data = JSON.parse(e.data);
+            switch (data.event_type) {
                 case "chat_message":
-                    document.dispatchEvent(new CustomEvent("chat_message", {detail: e.data}));
+                    const chatComponent = document.querySelector("#app").querySelector("tr-chat");
+                    if (chatComponent) {
+                        chatComponent.dispatchEvent(new CustomEvent("chat-message", {
+                            detail: data.data,
+                        }));
+                    }
+                    break;
             }
         };
 

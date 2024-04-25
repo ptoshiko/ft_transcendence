@@ -1,6 +1,6 @@
 import {getChatFriendsList, getChatMessages} from "../service/chat.js";
-import {formatAvatar, getMyID, redirectTo} from "../helpers.js";
-import {getUserByDisplayName} from "../service/users.js";
+import {formatAvatar, redirectTo} from "../helpers.js";
+import {getMe, getUserByDisplayName} from "../service/users.js";
 import {sendMessage} from "../service/socket.js";
 
 export default class extends HTMLElement {
@@ -13,19 +13,21 @@ export default class extends HTMLElement {
         let user = null;
         if (username !== null) {
             user = await getUserByDisplayName(username);
-            if (user === null) {
-                redirectTo("/chat");
-            }
+        }
+
+        if (user === null) {
+            redirectTo("/chat");
         }
 
         this.render();
 
-        if (user === null) {
-            this.initFriendsList();
-        } else {
-            this.initPredefinedFriendsList(user);
-        }
+        await this.initFriendsAndChat(user);
 
+        this.addEventListener("chat-message", this.getChatMessageHandler());
+
+        this.chatMessageInput.addEventListener('input', this.getMessageInputHandler());
+
+        this.chatSendMsgBtn.addEventListener('click', this.getSendMessageBtnClickHandler());
 
         document.title = "Chat";
     }
@@ -47,7 +49,7 @@ export default class extends HTMLElement {
                                         <input id="chat-msg-input" type="text" class="form-control" placeholder="Message">
                                     </div>
                                     <div class="col-3">
-                                        <button id="chat-send-msg-btn" type="submit" class="btn btn-primary w-100">Send</button>
+                                        <button id="chat-send-msg-btn" type="submit" class="btn btn-primary w-100" disabled>Send</button>
                                     </div>
                                 </div>
                             </form>
@@ -65,140 +67,119 @@ export default class extends HTMLElement {
         this.chatSendMsgBtn = this.querySelector("#chat-send-msg-btn");
     }
 
-    async initFriendsList() {
-        const chatFriends = await getChatFriendsList();
+    async initFriendsAndChat(predefinedExistingUser) {
+        let chatFriends = await getChatFriendsList();
 
-        if (chatFriends.length === 0) {
-            this.chatSendMsgBtn.setAttribute('disabled',"");
-            this.chatMessageInput.setAttribute('disabled',"");
-        }
-
-        // TODO: add input event listener and make button active only if there is at least one character
-
-        this.chatMessageInput.addEventListener('click', (e) => {
-           e.preventDefault();
-           sendMessage();
-        });
+        chatFriends = this.appendPredefinedExistingUserIfNeeded(predefinedExistingUser, chatFriends);
 
         for (const friend of chatFriends) {
-            let friendComponent = document.createElement("tr-chat-friend")
+            const friendComponent= document.createElement("tr-chat-friend");
             friendComponent.setAttribute("avatar", formatAvatar(friend.avatar));
             friendComponent.setAttribute("displayName", friend.display_name);
+            if (predefinedExistingUser && (friend.id === predefinedExistingUser.id)) {
+                this.currentActiveSpeaker = friend;
+                this.currentActiveFriendComponent = friendComponent;
+            }
 
-            friendComponent.addEventListener('click', async (e) => {
-                e.preventDefault();
-                const myID = getMyID();
-                const displayName = e.target.getAttribute('displayName');
-                const avatar = e.target.getAttribute('avatar');
-                const messages = await getChatMessages(displayName);
-
-                this.chatMessagesList.innerHTML = ``;
-                for (const message of messages) {
-                    let messageComponent;
-                    if (message.sender === myID) {
-                        messageComponent = document.createElement('tr-chat-my-msg');
-                    } else {
-                        messageComponent = document.createElement('tr-chat-msg-to-me');
-                    }
-
-                    messageComponent.setAttribute('displayName', displayName);
-                    messageComponent.setAttribute('avatar', avatar);
-                    messageComponent.setAttribute('msg', message.content);
-
-                    this.chatMessagesList.appendChild(messageComponent);
-                }
-            })
+            friendComponent.addEventListener('click', this.getFriendComponentClickHandler({
+                    friend: friend,
+                    friendComponent: friendComponent,
+                }),
+            )
 
             this.chatFriendsList.appendChild(friendComponent);
+        }
+
+        if (this.currentActiveFriendComponent) {
+            // TODO: we should also scroll to the active, because it might me beneath a lot of other friends
+            this.currentActiveFriendComponent.setAttribute("is_active", "true");
+            const messages = await getChatMessages(this.currentActiveSpeaker.display_name);
+            this.currentMe = await getMe();
+            this.drawMessages(messages, this.currentMe, this.currentActiveSpeaker);
+        }
+
+    }
+
+    getFriendComponentClickHandler(props) {
+        return async (e) => {
+            e.preventDefault();
+
+            this.currentActiveSpeaker = props.friend;
+            this.currentActiveFriendComponent.setAttribute("is_active", "false");
+            this.currentActiveFriendComponent = props.friendComponent;
+            this.currentActiveFriendComponent.setAttribute("is_active", "true");
+            const messages = await getChatMessages(props.friend.display_name);
+            this.currentMe = await getMe();
+            this.drawMessages(messages, this.currentMe, props.friend);
+        };
+    }
+
+    getChatMessageHandler() {
+        return (e) => {
+            if (e.detail.sender === this.currentMe.id || e.detail.receiver === this.currentMe.id) {
+                this.drawMessage(e.detail, this.currentMe, this.currentActiveSpeaker);
+            }
+            // TODO: also update friends list
+        };
+    }
+
+    getSendMessageBtnClickHandler() {
+        return (e) => {
+            e.preventDefault();
+            sendMessage(this.currentActiveSpeaker.display_name, this.chatMessageInput.value);
+        };
+    }
+
+    getMessageInputHandler() {
+        return (e) => {
+            if (e.target.value.length > 0) {
+                this.chatSendMsgBtn.removeAttribute('disabled');
+            } else {
+                this.chatSendMsgBtn.setAttribute('disabled', '');
+            }
+        };
+    }
+
+    drawMessages(messages, me, friend) {
+        this.chatMessagesList.innerHTML = ``;
+
+        for (const message of messages) {
+            this.drawMessage(message, me, friend);
         }
     }
 
-    async initPredefinedFriendsList(user) {
-        const chatFriends = await getChatFriendsList();
+    drawMessage(message, me, friend) {
+        let messageComponent;
+        if (message.sender === me.id) {
+            messageComponent = document.createElement('tr-chat-my-msg');
+            messageComponent.setAttribute('displayName', me.display_name);
+            messageComponent.setAttribute('avatar', formatAvatar(me.avatar));
+        } else {
+            messageComponent = document.createElement('tr-chat-msg-to-me');
+            messageComponent.setAttribute('displayName', friend.display_name);
+            messageComponent.setAttribute('avatar', formatAvatar(friend.avatar));
+        }
 
-        let chatFriendsWithIsActive = [];
+
+        messageComponent.setAttribute('msg', message.content);
+
+        this.chatMessagesList.appendChild(messageComponent);
+    }
+
+    appendPredefinedExistingUserIfNeeded(predefinedExistingUser, chatFriends) {
+        if (!predefinedExistingUser) {
+            return chatFriends
+        }
+
         let found = false;
-        for (const friend of chatFriends) {
-            if (friend.display_name === user.display_name) {
-                found = true;
-                chatFriendsWithIsActive.push({
-                    avatar: user.avatar,
-                    display_name: user.display_name,
-                    is_active: true,
-                })
-            } else {
-                chatFriendsWithIsActive.push({
-                    avatar: user.avatar,
-                    display_name: user.display_name,
-                    is_active: false,
-                })
+        for (const chatFriend of chatFriends) {
+            if (chatFriend.id === predefinedExistingUser.id) {
+                return chatFriends;
             }
         }
 
-        if (!found) {
-            chatFriendsWithIsActive.push({
-                avatar: user.avatar,
-                display_name: user.display_name,
-                is_active: true,
-            });
-        }
+        chatFriends.unshift(predefinedExistingUser);
 
-        for (const friend of chatFriendsWithIsActive) {
-            let friendComponent= document.createElement("tr-chat-friend")
-            friendComponent.setAttribute("avatar", formatAvatar(friend.avatar));
-            friendComponent.setAttribute("displayName", friend.display_name);
-            this.chatFriendsList.appendChild(friendComponent);
-
-            friendComponent.addEventListener('click', async (e) => {
-                e.preventDefault();
-                const myID = getMyID();
-                const messages = await getChatMessages(friend.display_name);
-                if (this.activeFriend && this.activeFriend !== friendComponent) {
-                    this.activeFriend.classList.remove("active-chat-friend");
-                }
-
-                this.activeFriend = friendComponent;
-                this.activeFriend.classList.add("active-chat-friend");
-
-                this.chatMessagesList.innerHTML = ``;
-                for (const message of messages) {
-                    let messageComponent;
-                    if (message.sender === myID) {
-                        messageComponent = document.createElement('tr-chat-my-msg');
-                    } else {
-                        messageComponent = document.createElement('tr-chat-msg-to-me');
-                    }
-
-                    messageComponent.setAttribute('displayName', friend.display_name);
-                    messageComponent.setAttribute('avatar', formatAvatar(friend.avatar));
-                    messageComponent.setAttribute('msg', message.content);
-
-                    this.chatMessagesList.appendChild(messageComponent);
-                }
-
-                this.chatFriendsList.addEventListener('chat_message', (e)=>{
-                    console.log(e.detail.data);
-                    let messageComponent;
-                    if (e.detail.data.sender === myID) {
-                        messageComponent = document.createElement('tr-chat-my-msg');
-                    } else {
-                        messageComponent = document.createElement('tr-chat-msg-to-me');
-                    }
-
-                    messageComponent.setAttribute('displayName', friend.display_name);
-                    messageComponent.setAttribute('avatar', formatAvatar(friend.avatar));
-                    messageComponent.setAttribute('msg', e.detail.data.content);
-
-                    this.chatMessagesList.appendChild(messageComponent);
-                })
-            })
-        }
-
-        this.chatMessageInput.addEventListener('click', (e) => {
-            e.preventDefault();
-            sendMessage(this.activeFriend.getAttribute('displayName'), this.chatMessageInput.value);
-        });
-
-
+        return chatFriends;
     }
 }
