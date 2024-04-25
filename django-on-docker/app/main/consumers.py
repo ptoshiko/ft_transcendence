@@ -60,7 +60,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
 
         is_blocked = await self.is_blocked(receiver_id, sender_id)
         if is_blocked:
-            await self.send_blocked_notification(sender_id, receiver_id)
+            await self.send_blocked_notification(receiver_display_name)
             return
         try:
             await self.save_message(content, self.sender.id, receiver_id) 
@@ -154,9 +154,9 @@ class ChatConsumer(AsyncWebsocketConsumer):
     
 
 
-    async def send_blocked_notification(self, sender_id, receiver_id):
+    async def send_blocked_notification(self, receiver_display_name):
     
-        error = f"You have been blocked by user {receiver_id}."
+        error = f"You have been blocked by user {receiver_display_name}."
         # Send the notification to the sender
         await self.send(text_data=json.dumps({
             "event_type": "chat_message",
