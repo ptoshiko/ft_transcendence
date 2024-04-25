@@ -243,23 +243,31 @@ class GetMessagesByDisplayNameView(views.APIView):
         serializer = serializers.ChatMessageSerializer(messages, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
+from collections import OrderedDict
+
 class GetLastChatsView(views.APIView):
     def get(self, request):
         user = request.user
         last_chat_users = get_last_chat_users(user)
-        # if not last_chat_users:
-        #     return last_chat_users
-        #     return Response({"error": NO_CHATS}, status=status.HTTP_404_NOT_FOUND)
+        user_ids_in_order = []
 
-        user_ids = set()
+        unique_user_ids = OrderedDict()
+
         for sender_id, receiver_id in last_chat_users:
-            user_ids.add(sender_id)
-            user_ids.add(receiver_id)
+            if sender_id != user.id:
+                unique_user_ids[sender_id] = None
+            if receiver_id != user.id:
+                unique_user_ids[receiver_id] = None
 
-        user_ids.discard(user.id)
-        result_users = CustomUser.objects.filter(id__in=user_ids)
+        user_ids_in_order = list(unique_user_ids.keys())
 
-        serializer = serializers.CustomUserSerializer(result_users, many=True)
+        result_users = CustomUser.objects.filter(id__in=user_ids_in_order)
+
+        users_map = {user.id: user for user in result_users}
+
+        ordered_users = [users_map[user_id] for user_id in user_ids_in_order]
+
+        serializer = serializers.CustomUserSerializer(ordered_users, many=True)
 
         return Response(serializer.data, status=status.HTTP_200_OK)
 
