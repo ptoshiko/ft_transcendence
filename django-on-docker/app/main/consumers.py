@@ -42,7 +42,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
 
     # Handle private messages
     async def handle_private_message(self, data):    
-        message = data.get('message')
+        content = data.get('content')
         receiver_display_name = data.get('to')
         sender_id = self.sender.id
 
@@ -55,7 +55,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
         
         receiver_id = receiver.id
 
-        if not message:
+        if not content:
             return
 
         is_blocked = await self.is_blocked(receiver_id, sender_id)
@@ -63,7 +63,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
             await self.send_blocked_notification(sender_id, receiver_id)
             return
         try:
-            await self.save_message(message, self.sender.id, receiver_id) 
+            await self.save_message(content, self.sender.id, receiver_id) 
         except ValueError as e:
             error_message = {"error": str(e)}
             await self.send_json(error_message)
@@ -74,7 +74,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
             f"{receiver_id}",
             {
                 "type": "chat.message",
-                "message": message,
+                "content": content,
                 "sender": self.sender.id,
                 "receiver": receiver_id
             }
@@ -83,7 +83,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
         await self.send(text_data=json.dumps({
             "event_type": "chat_message",
             "data": {
-                "message": message,
+                "content": content,
                 "sender": self.sender.id,
                 "receiver": receiver_id
             }
@@ -91,7 +91,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
 
     # Receive message from room group
     async def chat_message(self, event):
-        message = event["message"]
+        content = event["content"]
         sender = event["sender"]
         receiver = event["receiver"]
 
@@ -99,7 +99,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
         await self.send(text_data=json.dumps({
             "event_type": "chat_message",
             "data": {
-                "message": message,
+                "content": content,
                 "sender": sender,
                 "receiver": receiver
             }
@@ -192,13 +192,13 @@ class ChatConsumer(AsyncWebsocketConsumer):
     
     # Save massages to database
     @database_sync_to_async
-    def save_message(self, message, sender_id, receiver_id):
+    def save_message(self, content, sender_id, receiver_id):
         sender = CustomUser.objects.get(id=sender_id)
         try:
             receiver = CustomUser.objects.get(id=receiver_id)
         except ObjectDoesNotExist:
             raise ValueError("Receiver does not exist")
-        ChatMessage.objects.create(content=message, sender=sender, receiver=receiver)
+        ChatMessage.objects.create(content=content, sender=sender, receiver=receiver)
 
     # Checking in database if the user is blocked 
     @database_sync_to_async
