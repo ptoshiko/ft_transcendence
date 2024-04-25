@@ -156,10 +156,14 @@ class ChatConsumer(AsyncWebsocketConsumer):
 
     async def send_blocked_notification(self, sender_id, receiver_id):
     
-        notification_message = f"You have been blocked by user {receiver_id}."
+        error = f"You have been blocked by user {receiver_id}."
         # Send the notification to the sender
         await self.send(text_data=json.dumps({
-            "notification": notification_message
+            "event_type": "chat_message",
+            "data": {
+                "error": error,
+            }
+            # "notification": notification_message
         }))
 
 # # paddle movement
