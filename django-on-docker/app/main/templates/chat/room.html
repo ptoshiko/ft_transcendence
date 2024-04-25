@@ -61,7 +61,7 @@
             if (data.notification) {
                 document.querySelector('#notifications').innerHTML += '<p>' + data.notification + '</p>';
             } else {
-                document.querySelector('#chat-log').value += (data.sender + ': ' + data.message + '\n');
+                document.querySelector('#chat-log').value += (data.data.sender + ': ' + data.data.content + '\n');
             }
         };
 
@@ -79,13 +79,13 @@
 
         document.querySelector('#chat-message-submit').onclick = function(e) {
             const messageInputDom = document.querySelector('#chat-message-input');
-            const message = messageInputDom.value;
+            const content = messageInputDom.value;
             const receiverId = document.querySelector('#receiverid-input').value; // Get receiver ID from input field
             chatSocket.send(JSON.stringify({
                 'event_type': 'chat_message',
                 'data': {
                     'to': receiverId, // Include receiver ID in the data
-                    'message': message
+                    'content': content
                 }
             }));
             messageInputDom.value = '';
