@@ -56,7 +56,7 @@ def get_messages(user_1, user_2):
     messages = ChatMessage.objects.filter(
         (models.Q(sender=user_1) & models.Q(receiver=user_2)) |
         (models.Q(receiver=user_1) & models.Q(sender=user_2))
-    ).order_by('date_added')[:25]
+    ).order_by('date_added')
     
     return messages
 
