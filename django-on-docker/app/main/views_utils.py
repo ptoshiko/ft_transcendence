@@ -12,5 +12,12 @@ class CheckIdMixin:
         
         return None
 
+class CheckGameIdMixin:
+    def check_game_id(self, id_value, id_type):
+        if id_value is None:
+            return Response({'error': f'Key "{id_type}" is missing'}, status=status.HTTP_400_BAD_REQUEST)
+        if not isinstance(id_value, str) or len(id_value) != 32:
+             return Response({'error': f'Invalid value for "{id_type}"'}, status=status.HTTP_400_BAD_REQUEST)
 
+        return None
     
