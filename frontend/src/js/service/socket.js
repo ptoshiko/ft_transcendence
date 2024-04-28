@@ -16,12 +16,19 @@ function getSocket() {
 
         socket.onmessage = (e) => {
             const data = JSON.parse(e.data);
+            const chatComponent = document.querySelector("#app").querySelector("tr-chat");
             switch (data.event_type) {
                 case "chat_message":
-                    const chatComponent = document.querySelector("#app").querySelector("tr-chat");
                     if (chatComponent) {
                         chatComponent.dispatchEvent(new CustomEvent("chat-message", {
-                            detail: data.data,
+                            detail: data.data
+                        }));
+                    }
+                    break;
+                case "game_link":
+                    if (chatComponent) {
+                        chatComponent.dispatchEvent(new CustomEvent("chat-message", {
+                            detail: data.data
                         }));
                     }
                     break;

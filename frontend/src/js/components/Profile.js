@@ -8,7 +8,6 @@ import {
     unblockUser,
     sendFriendRequest, blockUser, approveFriendRequest, getFriendsOfUser, removeFriend
 } from "../service/users.js";
-import {initSocket} from "../service/socket.js";
 
 export default class extends HTMLElement {
     constructor() {
@@ -30,11 +29,7 @@ export default class extends HTMLElement {
             history.pushState(null, null, `/profiles/${this.user.display_name}`)
         }
 
-        this.addEventListener('msgReceived', (e)=>{
-            console.log(e.detail.data);
-        })
-
-        this.render(this.user.username, this.user.email);
+        this.render(this.user.display_name, this.user.email);
         this.avatar.setAttribute("src", formatAvatar(this.user.avatar));
 
         this.initAvatarChangeComponents();
@@ -45,6 +40,11 @@ export default class extends HTMLElement {
             this.profileEditInfoBtn.style.display = "inline-block";
         } else {
             this.initStatusBadge();
+            if (this.user.is_online) {
+                this.profileSmallOnOffStatus.classList.remove("bg-secondary");
+                this.profileSmallOnOffStatus.classList.add("bg-success");
+            }
+            this.profileSmallOnOffStatus.style.display = "block";
         }
 
         this.renderSmallFriendsList();
@@ -60,6 +60,7 @@ export default class extends HTMLElement {
             <div class="row mt-3">
                 <!-- Avatar -->
                 <div style="position: relative;" class="col-6">
+                    <div id="profile-small-on-off-status" style="display: none; width: 10px; height: 10px;" class="rounded-circle bg-secondary"></div>
                     <img id="profile-avatar" class="d-block m-auto rounded-circle" width="200" height="200" alt="avatar">
                     <div id="profile-status-badge"></div>
                     <a data-toggle="modal" data-target="#change-avatar-modal" href="#" style="position: absolute; top:0; right:0;"><i style="display:none;" id="profile-image-edit-icon" class="fa-solid fa-pencil"></i></a>
@@ -217,6 +218,7 @@ export default class extends HTMLElement {
         this.avatarEditIcon = this.querySelector("#profile-image-edit-icon");
 
         // Status and Action Buttons
+        this.profileSmallOnOffStatus = this.querySelector("#profile-small-on-off-status");
         this.profileStatusBadge = this.querySelector("#profile-status-badge");
         this.sendFriendReqBtn = this.querySelector("#send_friend_request_btn");
         this.approveFriendReqBtn = this.querySelector("#approve_friend_request_btn");
@@ -360,6 +362,7 @@ export default class extends HTMLElement {
                 const friendElement = document.createElement("tr-user-small");
                 friendElement.setAttribute("avatar", friend.avatar);
                 friendElement.setAttribute("display-name", friend.display_name);
+                friendElement.setAttribute("is-online", friend.is_online);
                 friendElement.addEventListener('click', e =>{
                     $('#view-all-friends-modal').modal('hide');
                     navigateTo(`/profiles/${friend.display_name}`);
@@ -382,6 +385,7 @@ export default class extends HTMLElement {
                 const friendElement = document.createElement("tr-user-small");
                 friendElement.setAttribute("avatar", friend.avatar);
                 friendElement.setAttribute("display-name", friend.display_name);
+                friendElement.setAttribute("is-online", friend.is_online);
                 this.profileSmallFriendsList.appendChild(friendElement);
             }
         }
@@ -434,11 +438,11 @@ export default class extends HTMLElement {
     }
 
     initInfoChangeComponents() {
-        this.profileEditDisplayNameInput.value = this.user.username;
+        this.profileEditDisplayNameInput.value = this.user.display_name;
         this.profileEditEmailInput.value = this.user.email;
 
         this.profileEditDisplayNameInput.addEventListener("input", (e)=>{
-            if (this.profileEditDisplayNameInput.value.length > 0 && this.profileEditDisplayNameInput.value != this.user.username) {
+            if (this.profileEditDisplayNameInput.value.length > 0 && this.profileEditDisplayNameInput.value != this.user.display_name) {
                 this.profileUpdateInfoBtn.removeAttribute('disabled')
             } else {
                 this.profileUpdateInfoBtn.setAttribute('disabled', "");
@@ -454,7 +458,7 @@ export default class extends HTMLElement {
         });
 
         $('#edit-info-modal').on('hide.bs.modal', (e) => {
-            this.profileEditDisplayNameInput.value = this.user.username;
+            this.profileEditDisplayNameInput.value = this.user.display_name;
             this.profileEditEmailInput.value = this.user.email;
         });
 
@@ -471,7 +475,7 @@ export default class extends HTMLElement {
                 body['email'] = this.profileEditEmailInput.value;
             }
 
-            if (this.profileEditDisplayNameInput.value.length > 0 && this.profileEditDisplayNameInput.value != this.user.username) {
+            if (this.profileEditDisplayNameInput.value.length > 0 && this.profileEditDisplayNameInput.value != this.user.display_name) {
                 body['display_name'] = this.profileEditDisplayNameInput.value;
             }
 

@@ -1,3 +1,5 @@
+import {navigateTo} from "../helpers.js";
+
 export default class extends HTMLElement {
     constructor() {
         super();
@@ -7,12 +9,24 @@ export default class extends HTMLElement {
         const avatar = this.getAttribute('avatar');
         const displayName = this.getAttribute('displayName');
         const msg = this.getAttribute('msg')
+        const msgType = this.getAttribute('msgType');
 
-        this.render(avatar, displayName, msg);
+        this.render(avatar, displayName, msg, msgType);
     }
 
-    render(avatar, displayName, msg) {
-        this.innerHTML = `
+    render(avatar, displayName, msg, msgType) {
+        switch (msgType) {
+            case 'game-link':
+                this.renderGameLinkMsg(avatar, displayName, msg);
+                break;
+            default:
+                this.renderTextMsg(avatar, displayName, msg);
+                break;
+        }
+    }
+
+    renderTextMsg(avatar, displayName, msg) {
+        this.innerHTML =  `
             <!-- My Message -->
             <div class="right d-flex ml-auto flex-row-reverse mt-1" style="max-width: 75%; column-gap: 10px;">
                 <!-- Avatar -->
@@ -26,5 +40,30 @@ export default class extends HTMLElement {
                 </div>
             </div>
         `;
+    }
+
+    renderGameLinkMsg(avatar, displayName, gameID) {
+        this.innerHTML =  `
+            <!-- My Message -->
+            <div class="right d-flex ml-auto flex-row-reverse mt-1" style="max-width: 75%; column-gap: 10px;">
+                <!-- Avatar -->
+                <div class="">
+                    <img class="rounded-circle" width="50" height="50" src="${avatar}">
+                </div>
+                <!-- Text -->
+                <div class="bg-primary rounded p-2">
+                    <h5 class="mb-1">${displayName}</h5>
+                    <a id="my-msg-play-btn" href="" class="btn btn-success">Play</a>
+                </div>
+            </div>
+        `;
+
+        this.querySelector("#my-msg-play-btn").addEventListener('click', this.getGameLinkHandler(gameID))
+    }
+
+    getGameLinkHandler(gameID) {
+        return (e) => {
+            navigateTo(`games/${gameID}`)
+        };
     }
 }

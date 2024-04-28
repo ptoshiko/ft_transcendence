@@ -8,21 +8,22 @@ export default class extends HTMLElement {
     connectedCallback() {
         let avatar = this.getAttribute("avatar");
         const displayName = this.getAttribute("display-name");
+        const isOnline = this.getAttribute("is-online");
 
 
         avatar = "https://localhost:8081"+avatar
         console.log(avatar)
         this.render(avatar, displayName);
 
-        // this.goToUserPage.addEventListener('click', e => {
-        //     e.preventDefault();
-        //     navigateTo(`/profiles/${displayName}`)
-        // })
-
         this.addEventListener('click', e => {
             e.preventDefault();
             navigateTo(`/profiles/${displayName}`);
         })
+
+        if (isOnline==="true") {
+            this.userSmallOnOffStatus.classList.remove("bg-secondary");
+            this.userSmallOnOffStatus.classList.add("bg-success");
+        }
     }
 
     render(avatar, displayName) {
@@ -30,18 +31,20 @@ export default class extends HTMLElement {
             <a id="redirect-to-user" href="" class="list-group-item list-group-item-action">
                 <div class="container" style="min-width: 215px">
                     <div class="row align-items-center">
-                        <div class="col-5">
+                        <div class="col-4">
                             <img class="rounded-circle" width="50" height="50" src="${avatar}">
                         </div>
                         <div class="col-2"></div>
-                        <div class="col-5">
-                            <h5 class="card-sub-title">${displayName}</h5>
+                        <div class="col-4">
+                            <h5 class="mb-0">${displayName}</h5>
+                        </div>
+                        <div class="col-2">
+                            <div id="user-small-on-off-status" style="width: 10px; height: 10px;" class="rounded-circle bg-secondary"></div>
                         </div>
                     </div>
                 </div>
             </a> `;
 
-
-        this.goToUserPage = document.querySelector("#redirect-to-user");
+        this.userSmallOnOffStatus = this.querySelector("#user-small-on-off-status");
     }
 }

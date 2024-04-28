@@ -7,9 +7,15 @@ export default class extends HTMLElement {
 
     connectedCallback() {
         const avatar = this.getAttribute('avatar');
-        const displayName = this.getAttribute('displayName')
+        const displayName = this.getAttribute('displayName');
+        const isOnline = this.getAttribute("is-online");
 
         this.render(avatar, displayName);
+
+        if (isOnline==="true") {
+            this.chatFriendOnOffStatus.classList.remove("bg-secondary");
+            this.chatFriendOnOffStatus.classList.add("bg-success");
+        }
     }
 
     attributeChangedCallback(name, oldValue, newValue) {
@@ -28,9 +34,11 @@ export default class extends HTMLElement {
                         <div class="col-5">
                             <img class="rounded-circle" width="50" height="50" src="${avatar}">
                         </div>
-                        <div class="col-2"></div>
                         <div class="col-5">
-                            <h5 class="card-sub-title">${displayName}</h5>
+                            <h5 class="mb-0">${displayName}</h5>
+                        </div>
+                         <div class="col-2">
+                            <div id="chat-friend-on-off-status" style="width: 10px; height: 10px;" class="rounded-circle bg-secondary"></div>
                         </div>
                     </div>
                 </div>
@@ -38,6 +46,7 @@ export default class extends HTMLElement {
         `;
 
         this.link = this.querySelector("#chat-friend-link");
+        this.chatFriendOnOffStatus = this.querySelector("#chat-friend-on-off-status");
     }
 
     handleIsActiveChanged(oldValue, newValue) {

@@ -41,9 +41,6 @@ function getParams(result, path) {
 }
 
 export default async function router(firstMe) {
-    // if user is not authenticated - always redirect to login page
-    // otherwise keep the route as intended, but on login page we redirect to profile
-
     let route = null;
     let result = null;
     const routes = [
@@ -88,6 +85,8 @@ window.addEventListener('popstate', router)
 document.addEventListener("DOMContentLoaded",async () => {
     const me = await getMe();
     if (!me) {
+        // location.replace("/login");
+        // router();
         redirectTo("/login");
     } else {
         initSocket();

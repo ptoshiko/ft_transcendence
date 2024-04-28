@@ -85,6 +85,7 @@ export default class extends HTMLElement {
                     const friendElement = document.createElement("tr-user-small");
                     friendElement.setAttribute("avatar", users[i].avatar);
                     friendElement.setAttribute("display-name", users[i].display_name);
+                    friendElement.setAttribute("is-online", users[i].is_online);
                     this.searchResultsList.appendChild(friendElement);
                 }
             })
