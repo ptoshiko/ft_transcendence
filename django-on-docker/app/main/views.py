@@ -30,7 +30,7 @@ class CustomUserAPIUpdate(generics.UpdateAPIView): # [PUT] update owner's info
 
     def update(self, request, *args, **kwargs):
         if not request.data:
-            return Response({'error': 'Empty request body'}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({'error': EMPTY}, status=status.HTTP_400_BAD_REQUEST)
 
         partial = kwargs.pop('partial', True)
         instance = self.get_object()
@@ -488,6 +488,8 @@ class CreateGameView(CheckIdMixin, views.APIView):
         game = create_game_record(player1_id, player2_id)
         game_id = game.game_id
         create_message_gameid_type(game_id, player1, player2)
+
+        content_type = ChatMessage.GAMEID
         
         channel_layer = get_channel_layer()
         async_to_sync(channel_layer.group_send)(
@@ -496,7 +498,8 @@ class CreateGameView(CheckIdMixin, views.APIView):
                 'type': 'game.link', 
                 'player1_id': player1_id,
                 'player2_id': player2_id,
-                'game_id': game_id
+                'game_id': game_id,
+                'content_type': content_type
             }
         )
 
@@ -506,7 +509,8 @@ class CreateGameView(CheckIdMixin, views.APIView):
                 'type': 'game.link', 
                 'player1_id': player1_id,
                 'player2_id': player2_id,
-                'game_id': game_id
+                'game_id': game_id,
+                'content_type': content_type
             }
         )
 

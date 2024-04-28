@@ -119,4 +119,4 @@ def create_message_text_type(content, sender, receiver):
     ChatMessage.objects.create(content=content, sender=sender, receiver=receiver, content_type = ChatMessage.TEXT)
 
 def create_message_gameid_type(game_id, player1, player2):
-     ChatMessage.objects.create(content=game_id, sender=player1, receiver=player2, content_type = ChatMessage.GAMEID)
+    ChatMessage.objects.create(content=game_id, sender=player1, receiver=player2, content_type = ChatMessage.GAMEID)
