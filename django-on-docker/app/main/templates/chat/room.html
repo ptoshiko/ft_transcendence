@@ -6,6 +6,7 @@
 <body>
 
     <div id="notifications"></div> 
+    <!-- <div id="game-link"></div> -->
     <textarea id="chat-log" cols="100" rows="20"></textarea><br>
     <input id="chat-message-input" type="text" size="100"><br>
     <input id="receiverid-input" type="text" size="100" placeholder="Enter receiver ID"><br> <!-- Added input for receiver ID -->
@@ -61,7 +62,7 @@
             if (data.notification) {
                 document.querySelector('#notifications').innerHTML += '<p>' + data.notification + '</p>';
             } else {
-                document.querySelector('#chat-log').value += (data.data.sender + ': ' + data.data.content + '\n');
+                document.querySelector('#chat-log').value += (data.data.sender + ': ' + data.data.message + '\n');
             }
         };
 

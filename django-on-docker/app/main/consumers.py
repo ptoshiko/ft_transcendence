@@ -3,7 +3,7 @@ from channels.generic.websocket import AsyncWebsocketConsumer
 from channels.db import database_sync_to_async
 from .models import ChatMessage, CustomUser, BlockUser, GameInvitation
 from django.core.exceptions import ObjectDoesNotExist
-from .services import check_if_exists_by_str
+from .services import *
 
 # {
 #     "type":"invitation"
@@ -23,6 +23,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
         await self.channel_layer.group_add(self.room_name, self.channel_name)
         await self.update_user_status(self.sender, True)
         await self.accept()
+        # await self.group_add(self.room_name)
 
     async def disconnect(self, close_code):
         await self.update_user_status(self.sender, False)
@@ -37,6 +38,10 @@ class ChatConsumer(AsyncWebsocketConsumer):
                 await self.handle_private_message(text_data_json.get('data', {}))
             case 'game_invitation':
                 await self.handle_invitation(text_data_json.get('data', {}))
+            # case 'paddle_movement':
+            #     await self.handle_move_paddle(text_data_json.get('data, {}'))
+            # case 'game_link':
+            #     await self.handle_game_link(text_data_json.get('data', {}))
             case _:
                 await self.send_error_message("Unknown event type")
 
@@ -112,11 +117,11 @@ class ChatConsumer(AsyncWebsocketConsumer):
     async def handle_invitation(self, data):
         receiver_id = data.get("to")
         sender_id = self.sender.id
-    
-        # is_blocked = await self.is_blocked(receiver_id, sender_id)
-        # if is_blocked:
-        #     await self.send_blocked_notification(sender_id, receiver_id)
-        #     return
+
+        is_blocked = await self.is_blocked(receiver_id, sender_id)
+        if is_blocked:
+            await self.send_blocked_notification(receiver_display_name)
+            return
         try:
             invitation = await self.save_invitation(self.sender.id, receiver_id)
         except ValueError as e:
@@ -153,17 +158,43 @@ class ChatConsumer(AsyncWebsocketConsumer):
         })
     
 
+    # async def handle_game_link(self, data):
+    #     message = data.get('message')
+
+    #     await self.send(text_data=json.dumps({
+    #         "event_type": "game_link",
+    #         "data": {
+    #             "message": message,
+    #         }
+    #     }))
+
+    async def game_link(self, event):
+        player1_id = event["player1_id"]
+        player2_id = event["player2_id"]
+        game_id = event["game_id"]
+
+        # Send message to WebSocket
+        await self.send(text_data=json.dumps({
+            "event_type": "game_link",
+            "data": {
+                "player1_id": player1_id,
+                "player2_id": player2_id,
+                "game_id": game_id
+            }
+        }))
+
+
 
     async def send_blocked_notification(self, receiver_display_name):
     
         error = f"You have been blocked by user {receiver_display_name}."
-        # Send the notification to the sender
+
         await self.send(text_data=json.dumps({
             "event_type": "chat_message",
             "data": {
                 "error": error,
             }
-            # "notification": notification_message
+            # "notification": error
         }))
 
 # # paddle movement
@@ -183,10 +214,12 @@ class ChatConsumer(AsyncWebsocketConsumer):
 #             "game_status": "ongoing",
 #         }
 #         self.send_game_state(game_state)
+
+        
     
-#     async def send_game_state(self, game_state):
-#         # Send the current game state to the client
-#         self.send(text_data=json.dumps(game_state))
+    async def send_game_state(self, game_state):
+        # Send the current game state to the client
+        self.send(text_data=json.dumps(game_state))
 
           
     async def send_json(self, content):
@@ -202,7 +235,8 @@ class ChatConsumer(AsyncWebsocketConsumer):
             receiver = CustomUser.objects.get(id=receiver_id)
         except ObjectDoesNotExist:
             raise ValueError("Receiver does not exist")
-        ChatMessage.objects.create(content=content, sender=sender, receiver=receiver)
+        create_message_text_type(content, sender, receiver)
+        # ChatMessage.objects.create(content=content, sender=sender, receiver=receiver)
 
     # Checking in database if the user is blocked 
     @database_sync_to_async
