@@ -27,7 +27,7 @@ function getSocket() {
                     break;
                 case "game_link":
                     if (chatComponent) {
-                        chatComponent.dispatchEvent(new CustomEvent("chat-message", {
+                        chatComponent.dispatchEvent(new CustomEvent("game-link", {
                             detail: data.data
                         }));
                     }

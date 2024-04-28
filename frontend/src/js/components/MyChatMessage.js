@@ -16,7 +16,7 @@ export default class extends HTMLElement {
 
     render(avatar, displayName, msg, msgType) {
         switch (msgType) {
-            case 'game-link':
+            case "2":
                 this.renderGameLinkMsg(avatar, displayName, msg);
                 break;
             default:

@@ -2,6 +2,7 @@ import {getChatFriendsList, getChatMessages} from "../service/chat.js";
 import {formatAvatar, redirectTo} from "../helpers.js";
 import {getMe, getUserByDisplayName} from "../service/users.js";
 import {sendMessage} from "../service/socket.js";
+import {createGame} from "../service/game.js";
 
 export default class extends HTMLElement {
     constructor() {
@@ -47,7 +48,7 @@ export default class extends HTMLElement {
                             <!-- Input Part -->
                             <form class="p-1 position-static mt-2">
                                 <div class="form-row">
-                                    <div class="col-1"><a id="chat-game-link-btn" href="" class="btn btn-danger"><i class="fa-solid fa-table-tennis-paddle-ball"></i></a></div>
+                                    <div class="col-1"><a id="chat-game-link-btn" href="" class="btn btn-danger disabled"><i class="fa-solid fa-table-tennis-paddle-ball"></i></a></div>
                                     <div class="col-8">
                                         <input disabled id="chat-msg-input" type="text" class="form-control" placeholder="Message">
                                     </div>
@@ -86,6 +87,7 @@ export default class extends HTMLElement {
             if (predefinedExistingUser && (friend.id === predefinedExistingUser.id)) {
                 this.currentActiveSpeaker = friend;
                 this.chatMessageInput.removeAttribute('disabled');
+                this.chatGameLinkBtn.removeAttribute('disabled');
                 this.chatMessageInput.value = ``;
                 this.currentActiveFriendComponent = friendComponent;
             }
@@ -123,6 +125,7 @@ export default class extends HTMLElement {
             }
             this.currentActiveSpeaker = props.friend;
             this.chatMessageInput.removeAttribute('disabled');
+            this.chatGameLinkBtn.removeAttribute('disabled');
             this.chatMessageInput.value = ``;
             this.currentActiveFriendComponent = props.friendComponent;
             this.currentActiveFriendComponent.setAttribute("is_active", "true");
@@ -176,7 +179,10 @@ export default class extends HTMLElement {
 
     getGameLinkBtnHandler() {
         return (e) => {
-            // TODO: create game backend
+            e.preventDefault();
+            if (this.currentActiveSpeaker) {
+                createGame(this.currentActiveSpeaker.id);
+            }
         };
     }
 
