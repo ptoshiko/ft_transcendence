@@ -184,7 +184,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
         await self.send(text_data=json.dumps({
             "event_type": "game_link",
             "data": {
-                "type": content_type,
+                "content_type": content_type,
                 "sender": player1_id,
                 "receiver": player2_id,
                 "game_id": game_id
