@@ -133,7 +133,7 @@ class BlockUserSerializer(serializers.ModelSerializer):
         model = BlockUser
         fields = '__all__' 
 
-# class PairGameSerializer(serializers.ModelSerializer):
-#     class Meta:
-#         model = PairGame
-#         fields = ['player1', 'player2', 'game_id', 'date_created']
+class PairGameSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = PairGame
+        fields = ['player1', 'player2', 'game_id']
