@@ -544,11 +544,13 @@ class JoinGameView(CheckGameIdMixin, views.APIView):
         game.save()
         return Response({'success': True}, status=status.HTTP_200_OK)
 
-
-
-
-
-        
+class GetGameInfoView(views.APIView):
+    def get(self, request, game_id):
+        game = check_if_exists_game(game_id)
+        if game is None:
+            return Response({"error": NO_GAME}, status=status.HTTP_404_NOT_FOUND)
+        serializer = serializers.PairGameSerializer(game)
+        return Response(serializer.data)
 
 
         
