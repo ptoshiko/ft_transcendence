@@ -1,6 +1,6 @@
 from django.core.exceptions import ValidationError
 import pyotp
-from .models import UserTwoFactorAuthData, Friendship, ChatMessage, BlockUser, MatchHistory
+from .models import UserTwoFactorAuthData, Friendship, ChatMessage, BlockUser, MatchHistory, PairGame
 from django.db import models
 
 
@@ -16,6 +16,8 @@ def user_two_factor_auth_data_create(*, user) -> UserTwoFactorAuthData:
     )
 
     return two_factor_auth_data
+
+    
 
 def check_if_object_exists(model, object_id):
     try:
@@ -109,3 +111,12 @@ def get_last_chat_users(user):
             ).order_by('-date_added').values_list('sender', 'receiver').distinct()[:10]
     return last_chat_users
     
+def create_game_record(player1_id, player2_id):
+    game = PairGame.objects.create(player1_id = player1_id, player2_id = player2_id)
+    return game
+
+def create_message_text_type(content, sender, receiver):
+    ChatMessage.objects.create(content=content, sender=sender, receiver=receiver, content_type = ChatMessage.TEXT)
+
+def create_message_gameid_type(game_id, player1, player2):
+     ChatMessage.objects.create(content=game_id, sender=player1, receiver=player2, content_type = ChatMessage.GAMEID)

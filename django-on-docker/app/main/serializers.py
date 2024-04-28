@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import CustomUser, Friendship, ChatMessage, MatchHistory, BlockUser
+from .models import CustomUser, Friendship, ChatMessage, MatchHistory, BlockUser, PairGame
 
 from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
@@ -92,7 +92,7 @@ class UpdateSerializer(serializers.ModelSerializer):
 class ChatMessageSerializer(serializers.ModelSerializer):
     class Meta:
         model = ChatMessage
-        fields = ['sender', 'receiver', 'content', 'date_added']
+        fields = ['sender', 'receiver', 'content', 'date_added', 'content_type']
 
 
 class MatchHistorySerializer(serializers.ModelSerializer):
@@ -132,3 +132,8 @@ class BlockUserSerializer(serializers.ModelSerializer):
     class Meta:
         model = BlockUser
         fields = '__all__' 
+
+# class PairGameSerializer(serializers.ModelSerializer):
+#     class Meta:
+#         model = PairGame
+#         fields = ['player1', 'player2', 'game_id', 'date_created']

@@ -224,12 +224,7 @@ class UnblockUserView(CheckIdMixin, views.APIView):
         return Response({'message': 'User unblocked'}, status=status.HTTP_200_OK)
 
 ### CHAT ###
-# class GetMessagesView(views.APIView):
-#     def get(self, request):
-#         user_id = request.user.id
-#         messages = get_messages_db(user_id)
-#         serializer = serializers.ChatMessageSerializer(messages, many=True)
-#         return Response(serializer.data, status=status.HTTP_200_OK)
+
     
 class GetMessagesByDisplayNameView(views.APIView):
     def get(self, request, display_name):
@@ -467,6 +462,55 @@ class UserSearchView(views.APIView):
         users = CustomUser.objects.filter(display_name__startswith=string).exclude(id=request.user.id)
         serializer = serializers.CustomUserSerializer(users, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
+
+
+from channels.layers import get_channel_layer
+from asgiref.sync import async_to_sync
+
+class CreateGameView(CheckIdMixin, views.APIView):
+    def post(self, request):
+        if not request.data:
+            return Response({'error': EMPTY}, status=status.HTTP_400_BAD_REQUEST)
+
+        player1 = request.user
+        player1_id = player1.id
+        player2_id = request.data.get('player2_id')
+
+        error_response = self.check_id(player2_id, 'player2_id')
+        if error_response:
+            return error_response
+
+        player2 = check_if_object_exists(CustomUser, player2_id)
+        if player2 is None:
+            return Response({"error": "Player2 does not exist"}, status=status.HTTP_404_NOT_FOUND)
+
+
+        game = create_game_record(player1_id, player2_id)
+        game_id = game.game_id
+        create_message_gameid_type(game_id, player1, player2)
+        
+        channel_layer = get_channel_layer()
+        async_to_sync(channel_layer.group_send)(
+            f"{player1_id}",
+            {
+                'type': 'game.link', 
+                'player1_id': player1_id,
+                'player2_id': player2_id,
+                'game_id': game_id
+            }
+        )
+
+        async_to_sync(channel_layer.group_send)(
+            f"{player2_id}",
+            {
+                'type': 'game.link', 
+                'player1_id': player1_id,
+                'player2_id': player2_id,
+                'game_id': game_id
+            }
+        )
+
+        return Response({'success': True}, status=status.HTTP_200_OK)
 
 
 def login(request):
