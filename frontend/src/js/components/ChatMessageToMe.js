@@ -21,7 +21,7 @@ export default class extends HTMLElement {
                 return;
             case "2":
                 this.renderGameLinkMsg(avatar, displayName, msg);
-                return;;
+                return;
         }
     }
 
@@ -57,7 +57,7 @@ export default class extends HTMLElement {
                 <!-- Text -->
                 <div class="bg-primary rounded p-2">
                     <h5 class="mb-1">${displayName}</h5>
-                    <a id="to-me-msg-play-btn" href="" class="btn btn-success">Play</a>
+                    <a style="width: 120px"  id="to-me-msg-play-btn" href="" class="btn btn-danger">Play</a>
                 </div>
             </div>
         `;
@@ -67,7 +67,8 @@ export default class extends HTMLElement {
 
     getGameLinkHandler(gameID) {
         return (e) => {
-            navigateTo(`games/${gameID}`)
+            e.preventDefault();
+            navigateTo(`/games/${gameID}`);
         };
     }
 }

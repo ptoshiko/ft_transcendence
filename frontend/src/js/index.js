@@ -10,6 +10,7 @@ import MyChatMessage from "./components/MyChatMessage.js";
 import {getMe} from "./service/users.js";
 import {redirectTo} from "./helpers.js";
 import {initSocket} from "./service/socket.js";
+import DuelGame from "./components/DuelGame.js";
 
 customElements.define('tr-login', Login);
 customElements.define('tr-not-found', FourZeroFor);
@@ -20,6 +21,7 @@ customElements.define('tr-user-small', UserSmall);
 customElements.define('tr-chat-msg-to-me', ChatMessageToMe);
 customElements.define('tr-chat-my-msg', MyChatMessage);
 customElements.define('tr-chat-friend', ChatFriend);
+customElements.define('tr-duel-game', DuelGame);
 
 const app = document.querySelector("#app");
 
@@ -49,6 +51,7 @@ export default async function router(firstMe) {
         { path: "/profiles/:username", component: "tr-profile"},
         { path: "/chat", component: "tr-chat"},
         { path: "/chat/:username", component: "tr-chat"},
+        { path: "/games/:game_id", component: "tr-duel-game"},
     ];
 
     for (const r of routes) {

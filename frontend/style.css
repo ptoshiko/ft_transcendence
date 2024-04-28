@@ -1,0 +1,87 @@
+.game-container {
+    background-color: rgba(0, 0, 0, 0.3);
+}
+
+.paddle {
+    --position: 50;
+
+    position: absolute;
+    top: calc(var(--position) * 1vh);
+    transform: translateY(-50%);
+    width: 1vh;
+    height: 10vh;
+}
+
+.paddle.left {
+    left: 1vw;
+}
+
+.paddle.right {
+    right: 1vw;
+}
+
+.ball {
+    --x: 50;
+    --y: 50;
+
+    position: absolute;
+    left: calc(var(--x) * 1vw);
+    top: calc(var(--y) * 1vh);
+    border-radius: 50%;
+    transform: translate(-50%, -50%);
+    width: 2.5vh;
+    height: 2.5vh;
+}
+
+.score {
+    display: flex;
+    justify-content: center;
+    font-weight: bold;
+    font-size: 7vh;
+    /*color: var(--foreground-color);*/
+}
+
+.score > * {
+    flex-grow: 1;
+    flex-basis: 0;
+    padding: 0 2vh;
+    margin: 1vh 0;
+    opacity: .5;
+}
+
+.score > :first-child {
+    text-align: right;
+    border-right: .5vh solid var(--foreground-color);
+}
+
+.avatar {
+    position: absolute;
+    top: 10vh;
+    width: 5vh;
+    height: 5vh;
+}
+
+.avatar.left {
+    left: 2vw;
+}
+
+.avatar.right {
+    right: 2vw;
+}
+
+.temp-bg {
+    /*display: none;*/
+    display: flex;
+    justify-content: center;
+    align-items: end;
+    width: 100vw;
+    height: calc(100vh - 56px);
+    position: absolute;
+    background-color: rgba(0,0, 0, 0.7);
+    z-index: 1;
+}
+
+.temp-text {
+    text-align: center;
+    font-size: 12vh;
+}

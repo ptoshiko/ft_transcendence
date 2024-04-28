@@ -56,17 +56,18 @@ export default class extends HTMLElement {
                 <!-- Text -->
                 <div class="bg-primary rounded p-2">
                     <h5 class="mb-1">${displayName}</h5>
-                    <a id="my-msg-play-btn" href="" class="btn btn-success">Play</a>
+                    <a id="my-msg-play-btn" style="width: 120px" href="" class="btn btn-danger">Play</a>
                 </div>
             </div>
         `;
 
-        this.querySelector("#my-msg-play-btn").addEventListener('click', this.getGameLinkHandler(gameID))
+        this.querySelector("#my-msg-play-btn").addEventListener('click', this.getGameLinkHandler(gameID));
+
     }
 
     getGameLinkHandler(gameID) {
         return (e) => {
-            navigateTo(`games/${gameID}`)
+            navigateTo(`/games/${gameID}`)
         };
     }
 }

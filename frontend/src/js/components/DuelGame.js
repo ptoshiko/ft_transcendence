@@ -15,14 +15,21 @@ export default class extends HTMLElement {
 
     render() {
         this.innerHTML = `
-            <section class="not-found-container">
-                <div class="not-found-content">
-                    <h1> Не Нашла </h1>
-                    <div class="not-found-img">
-                        <img src="/images/404.jpeg" alt="not found">
-                    </div>
-                </div>
-            </section>
+        <tr-nav></tr-nav>
+        <div class="game-container" style="height: calc(100vh - 56px);">
+            <div class="temp-bg">
+                <div class="temp-text text-light">Waiting Opponent...</div>
+            </div>
+            <img class="avatar left rounded-circle" src="kanye.webp" alt="avatar">
+            <img class="avatar right rounded-circle" src="404.jpeg" alt="avatar">
+            <div class="score">
+                <div id="player-score">0</div>
+                <div id="computer-score">0</div>
+            </div>
+            <div class="ball bg-dark" id="ball"></div>
+            <div class="paddle left bg-danger" id="player-paddle"></div>
+            <div class="paddle right bg-danger" id="computer-paddle"></div>
+        </div>
         `;
     }
 }
