@@ -88,7 +88,7 @@ class SendFriendRequestView(CheckIdMixin, views.APIView):
         if str(sender.id) == str(receiver_id):
             return Response({"error": SAME_SENDER_RECEIVER}, status=status.HTTP_400_BAD_REQUEST)
         
-        receiver = check_if_object_exists(CustomUser, receiver_id)
+        receiver = check_if_exists_by_id(CustomUser, receiver_id)
         if receiver is None:
             return Response({"error": NO_RECEIVER}, status=status.HTTP_404_NOT_FOUND)
 
@@ -126,7 +126,7 @@ class ApproveFriendRequestView(CheckIdMixin, views.APIView):
         if str(receiver.id) == str(sender_id):
             return Response({"error": SAME_SENDER_RECEIVER}, status=status.HTTP_400_BAD_REQUEST)
         
-        sender = check_if_object_exists(CustomUser, sender_id)
+        sender = check_if_exists_by_id(CustomUser, sender_id)
         if sender is None:
             return Response({"error": NO_SENDER}, status=status.HTTP_404_NOT_FOUND)
         
@@ -153,7 +153,7 @@ class FriendRemoveView(CheckIdMixin, views.APIView):
         if str(request.user.id) == str(remove_user_id):
             return Response({"error": SAME_ID_REMOVE}, status=status.HTTP_400_BAD_REQUEST)
         
-        remove_user = check_if_object_exists(CustomUser, remove_user_id)
+        remove_user = check_if_exists_by_id(CustomUser, remove_user_id)
         if remove_user is None:
             return Response({"error": NO_REMOVE_USER}, status=status.HTTP_404_NOT_FOUND)
         
@@ -191,7 +191,7 @@ class BlockUserView(CheckIdMixin, views.APIView):
         if str(blocked_by_id) == str(blocked_user_id):
             return Response({"error": SAME_ID_BLOCKING}, status=status.HTTP_400_BAD_REQUEST)
 
-        blocked_user = check_if_object_exists(CustomUser, blocked_user_id)
+        blocked_user = check_if_exists_by_id(CustomUser, blocked_user_id)
         if blocked_user is None:
             return Response({"error": NO_BLOCK_USER}, status=status.HTTP_404_NOT_FOUND)
 
@@ -411,11 +411,11 @@ class MatchCreateView(views.APIView):
         player1_score = request.data.get('player1_score')
         player2_score = request.data.get('player2_score')
 
-        player1 = check_if_object_exists(CustomUser, player1_id)
+        player1 = check_if_exists_by_id(CustomUser, player1_id)
         if player1 is None:
             return Response({"error": "Player1 does not exist"}, status=status.HTTP_404_NOT_FOUND)
 
-        player2 = check_if_object_exists(CustomUser, player2_id)
+        player2 = check_if_exists_by_id(CustomUser, player2_id)
         if player2 is None:
             return Response({"error": "Player2 does not exist"}, status=status.HTTP_404_NOT_FOUND)
 
@@ -480,7 +480,7 @@ class CreateGameView(CheckIdMixin, views.APIView):
         if error_response:
             return error_response
 
-        player2 = check_if_object_exists(CustomUser, player2_id)
+        player2 = check_if_exists_by_id(CustomUser, player2_id)
         if player2 is None:
             return Response({"error": "Player2 does not exist"}, status=status.HTTP_404_NOT_FOUND)
 
@@ -516,6 +516,42 @@ class CreateGameView(CheckIdMixin, views.APIView):
 
         return Response({'success': True}, status=status.HTTP_200_OK)
 
+class JoinGameView(CheckGameIdMixin, views.APIView):
+    def put(self, request):
+        if not request.data:
+            return Response({'error': EMPTY}, status=status.HTTP_400_BAD_REQUEST)
+        
+        game_id = request.data.get('game_id')
+
+        error_response = self.check_game_id(game_id, 'game_id')
+        if error_response:
+            return error_response
+
+        game = check_if_exists_game(game_id)
+        if game is None:
+            return Response({"error": NO_GAME}, status=status.HTTP_404_NOT_FOUND)
+        
+        user_id = request.user.id
+
+        # if str(user_id) != str(game.player1_id) & str(user_id) != str(game.player2_id):
+        #     return Response({"error": NOT_ALLOWED_GAME}, status=status.HTTP_404_NOT_FOUND)
+        if str(user_id) == str(game.player1_id):
+            game.is_present_1 = True
+        elif str(user_id) == str(game.player2_id):
+            game.is_present_2 = True
+        else:
+            return Response({"error": NOT_ALLOWED_GAME}, status=status.HTTP_404_NOT_FOUND)
+        game.save()
+        return Response({'success': True}, status=status.HTTP_200_OK)
+
+
+
+
+
+        
+
+
+        
 
 def login(request):
     return render(request, "chat/login.html")

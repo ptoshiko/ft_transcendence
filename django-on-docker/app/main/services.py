@@ -17,14 +17,19 @@ def user_two_factor_auth_data_create(*, user) -> UserTwoFactorAuthData:
 
     return two_factor_auth_data
 
-    
-
-def check_if_object_exists(model, object_id):
+def check_if_exists_by_id(model, object_id):
     try:
         obj = model.objects.get(id=object_id)
         return obj
     except model.DoesNotExist:
-        return None
+        return None   
+
+# def check_if_object_exists(model, object_id):
+#     try:
+#         obj = model.objects.get(id=object_id)
+#         return obj
+#     except model.DoesNotExist:
+#         return None
     
 def check_if_exists_by_str(model, display_name):
     try:
@@ -32,7 +37,13 @@ def check_if_exists_by_str(model, display_name):
         return obj
     except model.DoesNotExist:
         return None
-        
+
+def check_if_exists_game(game_id):
+    try:
+        obj = PairGame.objects.get(game_id=game_id)
+        return obj
+    except PairGame.DoesNotExist:
+        return None
 
 def get_friendships_db(user):
     friendships = Friendship.objects.filter(
