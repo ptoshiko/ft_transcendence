@@ -540,7 +540,7 @@ class JoinGameView(CheckGameIdMixin, views.APIView):
         elif str(user_id) == str(game.player2_id):
             game.is_present_2 = True
         else:
-            return Response({"error": NOT_ALLOWED_GAME}, status=status.HTTP_404_NOT_FOUND)
+            return Response({"error": NOT_ALLOWED_GAME}, status=status.HTTP_405_METHOD_NOT_ALLOWED)
         game.save()
         return Response({'success': True}, status=status.HTTP_200_OK)
 
