@@ -15,17 +15,19 @@ export default class extends HTMLElement {
     }
 
     render(avatar, displayName, msg, msgType) {
+        console.log(msgType);
         switch (msgType) {
+            case "1":
+                this.renderTextMsg(avatar, displayName, msg);
+                return;
             case "2":
                 this.renderGameLinkMsg(avatar, displayName, msg);
-                break;
-            default:
-                this.renderTextMsg(avatar, displayName, msg);
-                break;
+                return;
         }
     }
 
     renderTextMsg(avatar, displayName, msg) {
+        console.log(msg);
         this.innerHTML =  `
             <!-- My Message -->
             <div class="right d-flex ml-auto flex-row-reverse mt-1" style="max-width: 75%; column-gap: 10px;">
@@ -43,6 +45,7 @@ export default class extends HTMLElement {
     }
 
     renderGameLinkMsg(avatar, displayName, gameID) {
+        console.log(gameID);
         this.innerHTML =  `
             <!-- My Message -->
             <div class="right d-flex ml-auto flex-row-reverse mt-1" style="max-width: 75%; column-gap: 10px;">

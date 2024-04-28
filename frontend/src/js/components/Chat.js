@@ -87,7 +87,7 @@ export default class extends HTMLElement {
             if (predefinedExistingUser && (friend.id === predefinedExistingUser.id)) {
                 this.currentActiveSpeaker = friend;
                 this.chatMessageInput.removeAttribute('disabled');
-                this.chatGameLinkBtn.removeAttribute('disabled');
+                this.chatGameLinkBtn.classList.remove('disabled');
                 this.chatMessageInput.value = ``;
                 this.currentActiveFriendComponent = friendComponent;
             }
@@ -125,7 +125,7 @@ export default class extends HTMLElement {
             }
             this.currentActiveSpeaker = props.friend;
             this.chatMessageInput.removeAttribute('disabled');
-            this.chatGameLinkBtn.removeAttribute('disabled');
+            this.chatGameLinkBtn.classList.remove('disabled');
             this.chatMessageInput.value = ``;
             this.currentActiveFriendComponent = props.friendComponent;
             this.currentActiveFriendComponent.setAttribute("is_active", "true");
@@ -207,7 +207,7 @@ export default class extends HTMLElement {
         }
 
         messageComponent.setAttribute('msg', message.content);
-        messageComponent.setAttribute('msgType', message.type);
+        messageComponent.setAttribute('msgType', message.content_type);
 
         this.chatMessagesList.appendChild(messageComponent);
     }

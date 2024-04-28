@@ -16,12 +16,12 @@ export default class extends HTMLElement {
 
     render(avatar, displayName, msg, msgType) {
         switch (msgType) {
+            case "1":
+                this.renderTextMsg(avatar, displayName, msg);
+                return;
             case "2":
                 this.renderGameLinkMsg(avatar, displayName, msg);
-                break;
-            default:
-                this.renderTextMsg(avatar, displayName, msg);
-                break;
+                return;;
         }
     }
 
