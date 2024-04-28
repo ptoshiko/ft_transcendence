@@ -74,6 +74,8 @@ class ChatConsumer(AsyncWebsocketConsumer):
             await self.send_json(error_message)
             return
 
+        content_type = ChatMessage.TEXT
+
         # send message to receiver's room
         await self.channel_layer.group_send(
             f"{receiver_id}",
@@ -81,7 +83,8 @@ class ChatConsumer(AsyncWebsocketConsumer):
                 "type": "chat.message",
                 "content": content,
                 "sender": self.sender.id,
-                "receiver": receiver_id
+                "receiver": receiver_id,
+                "content_type" : content_type
             }
         )
         # send message to sender's room - echo 
@@ -90,7 +93,8 @@ class ChatConsumer(AsyncWebsocketConsumer):
             "data": {
                 "content": content,
                 "sender": self.sender.id,
-                "receiver": receiver_id
+                "receiver": receiver_id,
+                "content_type" : content_type
             }
     }))
 
@@ -99,6 +103,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
         content = event["content"]
         sender = event["sender"]
         receiver = event["receiver"]
+        content_type = event["content_type"]
 
         # Send message to WebSocket
         await self.send(text_data=json.dumps({
@@ -106,7 +111,8 @@ class ChatConsumer(AsyncWebsocketConsumer):
             "data": {
                 "content": content,
                 "sender": sender,
-                "receiver": receiver
+                "receiver": receiver,
+                "content_type": content_type
             }
         }))
 
@@ -172,13 +178,15 @@ class ChatConsumer(AsyncWebsocketConsumer):
         player1_id = event["player1_id"]
         player2_id = event["player2_id"]
         game_id = event["game_id"]
+        content_type = event["content_type"]
 
         # Send message to WebSocket
         await self.send(text_data=json.dumps({
             "event_type": "game_link",
             "data": {
-                "player1_id": player1_id,
-                "player2_id": player2_id,
+                "type": content_type,
+                "sender": player1_id,
+                "receiver": player2_id,
                 "game_id": game_id
             }
         }))
