@@ -84,9 +84,9 @@ export function closeSocket() {
 
 export function sendMessage(toDisplayName, msg) {
     let socket = getSocket();
-    while (socket.readyState !== 1) {
-        socket = getSocket();
-    }
+    // while (socket.readyState !== 1) {
+    //     socket = getSocket();
+    // }
 
     const data = {
         event_type: 'chat_message',
@@ -101,9 +101,9 @@ export function sendMessage(toDisplayName, msg) {
 
 export function joinGame(gameID) {
     let socket = getSocket();
-    while (socket.readyState !== 1) {
-        socket = getSocket();
-    }
+    // while (socket.readyState !== 1) {
+    //     socket = getSocket();
+    // }
 
     const data = {
         event_type: 'join_game',
@@ -117,9 +117,9 @@ export function joinGame(gameID) {
 
 export function duelUpKey() {
     let socket = getSocket();
-    while (socket.readyState !== 1) {
-        socket = getSocket();
-    }
+    // while (socket.readyState !== 1) {
+    //     socket = getSocket();
+    // }
 
     const data = {
         event_type: 'up_key',
@@ -130,9 +130,9 @@ export function duelUpKey() {
 
 export function duelDownKey() {
     let socket = getSocket();
-    while (socket.readyState !== 1) {
-        socket = getSocket();
-    }
+    // while (socket.readyState !== 1) {
+    //     socket = getSocket();
+    // }
 
     const data = {
         event_type: 'down_key',
