@@ -51,6 +51,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
         except ValueError as e:
             error_message = {"error": str(e)}
             await self.send_json(error_message)
+
             return
         
         receiver_id = receiver.id
@@ -121,7 +122,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
             game = await self.check_exists_game(game_id)
         except ValueError as e:
             error_message = {"error": str(e)}
-            await self.send_json(error_message)
+            await self.send_game_error(error_message)
             return        
 
         success = await self.set_player_presence(game, user_id)
@@ -135,6 +136,14 @@ class ChatConsumer(AsyncWebsocketConsumer):
             await self.send_not_allowed()
             return
 
+
+    async def send_game_error(self, error):
+        await self.send(text_data=json.dumps({
+            "event_type": "join_game",
+            "data": {
+                "error": error,
+            }
+        }))        
 
 
 
@@ -189,13 +198,6 @@ class ChatConsumer(AsyncWebsocketConsumer):
             }
         }))
 
-
-
-        
-    
-    async def send_game_state(self, game_state):
-        # Send the current game state to the client
-        self.send(text_data=json.dumps(game_state))
 
           
     async def send_json(self, content):
