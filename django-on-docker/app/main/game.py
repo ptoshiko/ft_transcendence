@@ -57,7 +57,7 @@ class Ball:
             self.direction.x = math.cos(heading)
             self.direction.y = math.sin(heading)
 
-    def update(self, delta):
+    def update(self):
         self.x = self.x + (self.direction.x * self.velocity)
         self.y = self.y + (self.direction.y * self.velocity)
         self.velocity += 0.0001
