@@ -36,9 +36,9 @@ class ChatConsumer(AsyncWebsocketConsumer):
             case 'join_game':
                 await self.handle_join_game(text_data_json.get('data', {}))
             case 'up_key':
-                await self.handle_up_key(text_data_json.get('data', {}))
+                await self.handle_up_key()
             case 'down_key':
-                await self.handle_down_key(text_data_json.get('data', {}))
+                await self.handle_down_key()
             case _:
                 await self.send_error_message("Unknown event type")
 
