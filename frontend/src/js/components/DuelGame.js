@@ -55,7 +55,7 @@ export default class extends HTMLElement {
         this.innerHTML = `
         <tr-nav></tr-nav>
         <div class="game-container" style="height: calc(100vh - 56px);">
-            <div class="temp-bg">
+            <div id="duel-temp-bg" class="temp-bg">
                 <div id="duel-temp-text" class="temp-text text-light">Waiting opponent</div>
             </div>
             <img id="duel-left-avatar" class="avatar left rounded-circle" src="${formatAvatar(this.me.avatar)}" alt="avatar">
@@ -64,7 +64,7 @@ export default class extends HTMLElement {
                 <div id="player-score">0</div>
                 <div id="computer-score">0</div>
             </div>
-            <div class="ball bg-dark" id="ball"></div>
+            <div class="ball bg-dark" id="duel-ball"></div>
             <div class="paddle left bg-danger" id="player-paddle"></div>
             <div class="paddle right bg-danger" id="computer-paddle"></div>
         </div>
@@ -73,6 +73,8 @@ export default class extends HTMLElement {
         this.leftAvatar = this.querySelector("#duel-left-avatar");
         this.rightAvatar = this.querySelector("#duel-right-avatar");
         this.tempText = this.querySelector("#duel-temp-text")
+        this.tempBg = this.querySelector("#duel-temp-bg")
+        this.ball = this.querySelector("#duel-ball")
     }
 
     renderErrorPage() {
@@ -86,7 +88,10 @@ export default class extends HTMLElement {
 
     getGameStateEventHandler() {
         return (e) => {
-            console.log(e.detail)
+            this.tempText.style.display = 'none';
+            this.tempBg.style.display = 'none';
+            this.ball.style.setProperty("--x", e.detail.ball_x)
+            this.ball.style.setProperty("--y", e.detail.ball_y)
         }
     }
 
