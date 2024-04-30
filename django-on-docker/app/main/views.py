@@ -10,6 +10,7 @@ from django.http import Http404
 from .views_utils import *
 from .error_messages import *
 from .services import *
+from .game import *
 
 class RegisterView(generics.CreateAPIView): 
     queryset = CustomUser.objects.all()
@@ -484,7 +485,6 @@ class CreateGameView(CheckIdMixin, views.APIView):
         if player2 is None:
             return Response({"error": "Player2 does not exist"}, status=status.HTTP_404_NOT_FOUND)
 
-
         game = create_game_record(player1_id, player2_id)
         game_id = game.game_id
         create_message_gameid_type(game_id, player1, player2)
@@ -516,33 +516,37 @@ class CreateGameView(CheckIdMixin, views.APIView):
 
         return Response({'success': True}, status=status.HTTP_200_OK)
 
-class JoinGameView(CheckGameIdMixin, views.APIView):
-    def put(self, request):
-        if not request.data:
-            return Response({'error': EMPTY}, status=status.HTTP_400_BAD_REQUEST)
+# class JoinGameView(CheckGameIdMixin, views.APIView):
+#     def put(self, request):
+#         if not request.data:
+#             return Response({'error': EMPTY}, status=status.HTTP_400_BAD_REQUEST)
         
-        game_id = request.data.get('game_id')
+#         game_id = request.data.get('game_id')
 
-        error_response = self.check_game_id(game_id, 'game_id')
-        if error_response:
-            return error_response
+#         error_response = self.check_game_id(game_id, 'game_id')
+#         if error_response:
+#             return error_response
 
-        game = check_if_exists_game(game_id)
-        if game is None:
-            return Response({"error": NO_GAME}, status=status.HTTP_404_NOT_FOUND)
+#         game = check_if_exists_game(game_id)
+#         if game is None:
+#             return Response({"error": NO_GAME}, status=status.HTTP_404_NOT_FOUND)
         
-        user_id = request.user.id
+#         user_id = request.user.id
 
-        # if str(user_id) != str(game.player1_id) & str(user_id) != str(game.player2_id):
-        #     return Response({"error": NOT_ALLOWED_GAME}, status=status.HTTP_404_NOT_FOUND)
-        if str(user_id) == str(game.player1_id):
-            game.is_present_1 = True
-        elif str(user_id) == str(game.player2_id):
-            game.is_present_2 = True
-        else:
-            return Response({"error": NOT_ALLOWED_GAME}, status=status.HTTP_405_METHOD_NOT_ALLOWED)
-        game.save()
-        return Response({'success': True}, status=status.HTTP_200_OK)
+
+#         if str(user_id) == str(game.player1_id):
+#             game.is_present_1 = True
+#         elif str(user_id) == str(game.player2_id):
+#             game.is_present_2 = True
+#         else:
+#             return Response({"error": NOT_ALLOWED_GAME}, status=status.HTTP_405_METHOD_NOT_ALLOWED)
+#         game.save()
+
+#         # if game.is_present_1 == True & game.is_present_2 == True:
+#         #    game = game_manager.create_game(game_id, game.player1_id, game.player2_id)
+#         #    game.start_game()
+#         return Response({'success': True}, status=status.HTTP_200_OK)
+
 
 class GetGameInfoView(views.APIView):
     def get(self, request, game_id):
@@ -551,8 +555,6 @@ class GetGameInfoView(views.APIView):
             return Response({"error": NO_GAME}, status=status.HTTP_404_NOT_FOUND)
         serializer = serializers.PairGameSerializer(game)
         return Response(serializer.data)
-
-
         
 
 def login(request):

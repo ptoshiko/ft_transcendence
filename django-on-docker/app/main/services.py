@@ -24,13 +24,6 @@ def check_if_exists_by_id(model, object_id):
     except model.DoesNotExist:
         return None   
 
-# def check_if_object_exists(model, object_id):
-#     try:
-#         obj = model.objects.get(id=object_id)
-#         return obj
-#     except model.DoesNotExist:
-#         return None
-    
 def check_if_exists_by_str(model, display_name):
     try:
         obj = model.objects.get(display_name=display_name)
