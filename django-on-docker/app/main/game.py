@@ -20,15 +20,19 @@ class Ball:
         self.y = 50
         self.direction = Direction()
         self.velocity = 0.025
-        while (abs(self.direction.x) <= 0.2 or abs(self.direction.y) >= 0.9):
-            heading = random.uniform(0, 2 * math.pi)
-            self.direction.x = math.cos(heading)
-            self.direction.y = math.sin(heading)
+        self.direction.x = 0
+        self.direction.y = 0.5
+#         while (abs(self.direction.x) <= 0.2 or abs(self.direction.y) >= 0.9):
+#             heading = random.uniform(0, 2 * math.pi)
+#             self.direction.x = math.cos(heading)
+#             self.direction.y = math.sin(heading)
+
+
 
     def update(self, delta):
-        self.x = self.x + (self.direction.x * self.velocity * delta)
-        self.y = self.y + (self.direction.y * self.velocity * delta)
-        self.velocity = self.velocity + (0.00001 * delta)
+        self.x = self.x + (self.direction.x * self.velocity)
+        self.y = self.y + (self.direction.y * self.velocity)
+        self.velocity += 0.0001
         if self.y <= 0 or self.y >= 100:
             self.direction.y *= -1
 

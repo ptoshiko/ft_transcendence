@@ -1,7 +1,7 @@
 import {getGameByID} from "../service/game.js";
 import {getMe, getUserByID} from "../service/users.js";
 import {formatAvatar} from "../helpers.js";
-import {joinGame} from "../service/socket.js";
+import {duelDownKey, duelUpKey, joinGame} from "../service/socket.js";
 
 export default class extends HTMLElement {
     constructor() {
@@ -44,6 +44,14 @@ export default class extends HTMLElement {
 
         joinGame(this.gameID);
 
+        window.addEventListener('keyup', (e) => {
+            if (e.key === `ArrowUp`) {
+                duelUpKey()
+            } else if (e.key === `ArrowDown`) {
+                duelDownKey()
+            }
+        })
+
         document.title = "Game";
     }
 
@@ -61,12 +69,12 @@ export default class extends HTMLElement {
             <img id="duel-left-avatar" class="avatar left rounded-circle" src="${formatAvatar(this.me.avatar)}" alt="avatar">
             <img id="duel-right-avatar" class="avatar right rounded-circle" src="404.jpeg" alt="avatar">
             <div class="score">
-                <div id="player-score">0</div>
-                <div id="computer-score">0</div>
+                <div id="duel-left-score">0</div>
+                <div id="duel-right-score">0</div>
             </div>
             <div class="ball bg-dark" id="duel-ball"></div>
-            <div class="paddle left bg-danger" id="player-paddle"></div>
-            <div class="paddle right bg-danger" id="computer-paddle"></div>
+            <div class="paddle left bg-danger" id="duel-left-paddle"></div>
+            <div class="paddle right bg-danger" id="duel-right-paddle"></div>
         </div>
         `;
 
@@ -75,6 +83,10 @@ export default class extends HTMLElement {
         this.tempText = this.querySelector("#duel-temp-text")
         this.tempBg = this.querySelector("#duel-temp-bg")
         this.ball = this.querySelector("#duel-ball")
+        this.leftPaddle = this.querySelector("#duel-left-paddle")
+        this.rightPaddle = this.querySelector("#duel-right-paddle")
+        this.leftScore = this.querySelector("#duel-left-score")
+        this.rightScore = this.querySelector("#duel-right-score")
     }
 
     renderErrorPage() {
@@ -88,10 +100,33 @@ export default class extends HTMLElement {
 
     getGameStateEventHandler() {
         return (e) => {
+            if (!this.tempText) {
+                this.render()
+            }
+
+            if (e.detail.is_left_won) {
+                this.tempText.style.display = 'block';
+                this.tempBg.style.display = 'flex';
+                this.tempText.innerHTML = "You Won 🎉"
+                return;
+            }
+
+            if (e.detail.is_right_won) {
+                this.tempText.style.display = 'block';
+                this.tempBg.style.display = 'flex';
+                this.tempText.innerHTML = "You Lost 💀"
+                return;
+            }
+
+
             this.tempText.style.display = 'none';
             this.tempBg.style.display = 'none';
             this.ball.style.setProperty("--x", e.detail.ball_x)
             this.ball.style.setProperty("--y", e.detail.ball_y)
+            this.leftPaddle.style.setProperty("--position", e.detail.left_paddle_y)
+            this.rightPaddle.style.setProperty("--position", e.detail.right_paddle_y)
+            this.leftScore.innerHTML = e.detail.left_score
+            this.rightScore.innerHTML = e.detail.right_score
         }
     }
 
@@ -105,6 +140,9 @@ export default class extends HTMLElement {
 
     getGameTickEventHandler() {
         return (e) => {
+            if (!this.tempText) {
+                this.render()
+            }
             this.tempText.innerHTML = e.detail.tick;
         };
     }

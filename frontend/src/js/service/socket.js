@@ -83,7 +83,10 @@ export function closeSocket() {
 }
 
 export function sendMessage(toDisplayName, msg) {
-    const socket = getSocket();
+    let socket = getSocket();
+    while (socket.readyState !== 1) {
+        socket = getSocket();
+    }
 
     const data = {
         event_type: 'chat_message',
@@ -107,6 +110,32 @@ export function joinGame(gameID) {
         data: {
             game_id: gameID,
         }
+    }
+
+    socket.send(JSON.stringify(data));
+}
+
+export function duelUpKey() {
+    let socket = getSocket();
+    while (socket.readyState !== 1) {
+        socket = getSocket();
+    }
+
+    const data = {
+        event_type: 'up_key',
+    }
+
+    socket.send(JSON.stringify(data));
+}
+
+export function duelDownKey() {
+    let socket = getSocket();
+    while (socket.readyState !== 1) {
+        socket = getSocket();
+    }
+
+    const data = {
+        event_type: 'down_key',
     }
 
     socket.send(JSON.stringify(data));
