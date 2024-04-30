@@ -26,9 +26,9 @@ class Ball:
             self.direction.y = math.sin(heading)
 
     def update(self, delta):
-        self.x += self.direction.x * self.velocity * delta
-        self.y += self.direction.y * self.velocity * delta
-        self.velocity += 0.00001 * delta
+        self.x = self.x + (self.direction.x * self.velocity * delta)
+        self.y = self.y + (self.direction.y * self.velocity * delta)
+        self.velocity = self.velocity + (0.00001 * delta)
         if self.y <= 0 or self.y >= 100:
             self.direction.y *= -1
 
