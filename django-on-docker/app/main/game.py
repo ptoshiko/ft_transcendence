@@ -108,6 +108,9 @@ class Game:
         self.start = time.time()
 
         while (self.not_finished):
+            
+            tm = time.time()-self.start
+            await self.update_game(tm)
             channel_layer = get_channel_layer()
             await asyncio.gather(channel_layer.group_send(
                 f"{self.left_paddle.player_id}",
@@ -136,8 +139,6 @@ class Game:
                     'is_right_won': self.is_right_won,
                 }
             ))
-            tm = time.time()-self.start
-            await self.update_game(tm)
             await asyncio.sleep(0.02)
     
     async def update_game(self, tm):
