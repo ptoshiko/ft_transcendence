@@ -176,6 +176,17 @@ class ChatConsumer(AsyncWebsocketConsumer):
             }
         }))
 
+    async def game_state(self, event):
+        ball_x = event["ball_x"]
+        ball_y = event["ball_y"]
+
+        await self.send(text_data=json.dumps({
+            "event_type":"game_state",
+            "data": {
+                "ball_x": ball_x,
+                "ball_y": ball_y
+            }
+        }))
 
     async def send_blocked_notification(self, receiver_display_name):
     
