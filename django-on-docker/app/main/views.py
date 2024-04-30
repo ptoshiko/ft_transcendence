@@ -12,6 +12,11 @@ from .error_messages import *
 from .services import *
 from .game import *
 
+from collections import OrderedDict
+
+from channels.layers import get_channel_layer
+from asgiref.sync import async_to_sync
+
 class RegisterView(generics.CreateAPIView): 
     queryset = CustomUser.objects.all()
     permission_classes = [AllowAny]
@@ -239,7 +244,7 @@ class GetMessagesByDisplayNameView(views.APIView):
         serializer = serializers.ChatMessageSerializer(messages, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
-from collections import OrderedDict
+
 
 class GetLastChatsView(views.APIView):
     def get(self, request):
@@ -465,8 +470,7 @@ class UserSearchView(views.APIView):
         return Response(serializer.data, status=status.HTTP_200_OK)
 
 
-from channels.layers import get_channel_layer
-from asgiref.sync import async_to_sync
+
 
 class CreateGameView(CheckIdMixin, views.APIView):
     def post(self, request):

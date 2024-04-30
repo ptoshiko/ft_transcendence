@@ -183,7 +183,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
     
         error = f"You are not allowed to join game."
         await self.send(text_data=json.dumps({
-            "event_type": "chat_message",
+            "event_type": "join_game",
             "data": {
                 "error": error,
             }
