@@ -134,7 +134,8 @@ class ChatConsumer(AsyncWebsocketConsumer):
             return
 
         if success & game.is_present_1 == True & game.is_present_2 == True:
-           game = game_manager.create_game(game_id, game.player1_id, game.player2_id)
+           
+           game = game_manager.get_or_create_game(game_id, game.player1_id, game.player2_id)
            asyncio.create_task(game.start_game())
         #    await game.start_game()
 
@@ -227,8 +228,10 @@ class ChatConsumer(AsyncWebsocketConsumer):
         user_id = self.sender.id
         game = game_manager.get_game_by_user_id(user_id)
         if game is None:
-            return 
+            return
+        print("up key and game is found start")
         await game.up_paddle_by_user_id(user_id)
+        print("up key and game is found end")
 
     async def handle_down_key(self):
         user_id = self.sender.id
