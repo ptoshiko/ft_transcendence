@@ -35,7 +35,10 @@ class ChatConsumer(AsyncWebsocketConsumer):
                 await self.handle_private_message(text_data_json.get('data', {}))
             case 'join_game':
                 await self.handle_join_game(text_data_json.get('data', {}))
-
+            case 'up_key':
+                await self.handle_up_key(text_data_json.get('data', {}))
+            case 'down_key':
+                await self.handle_down_key(text_data_json.get('data', {}))
             case _:
                 await self.send_error_message("Unknown event type")
 
@@ -179,12 +182,24 @@ class ChatConsumer(AsyncWebsocketConsumer):
     async def game_state(self, event):
         ball_x = event["ball_x"]
         ball_y = event["ball_y"]
+        left_paddle_y = event["left_paddle_y"]
+        right_paddle_y = event["right_paddle_y"]
+        left_score = event["left_score"]
+        right_score = event["right_score"]
+        is_left_won = event["is_left_won"]
+        is_right_won = event["is_right_won"]
 
         await self.send(text_data=json.dumps({
             "event_type":"game_state",
             "data": {
                 "ball_x": ball_x,
-                "ball_y": ball_y
+                "ball_y": ball_y,
+                'left_paddle_y': left_paddle_y,
+                'right_paddle_y': right_paddle_y,
+                'left_score': left_score,
+                'right_score': right_score,
+                'is_left_won': is_left_won,
+                'is_right_won': is_right_won,
             }
         }))
 
@@ -208,6 +223,19 @@ class ChatConsumer(AsyncWebsocketConsumer):
             }
         }))
 
+    async def handle_up_key(self):
+        user_id = self.sender.id
+        game = game_manager.get_game_by_user_id(user_id)
+        if game is None:
+            return 
+        game.up_paddle_by_user_id(user_id)
+
+    async def handle_down_key(self):
+        user_id = self.sender.id
+        game = game_manager.get_game_by_user_id(user_id)
+        if game is None:
+            return 
+        game.down_paddle_by_user_id(user_id)
 
           
     async def send_json(self, content):
