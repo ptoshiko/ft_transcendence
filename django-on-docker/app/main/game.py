@@ -3,7 +3,7 @@ import random
 import math
 from channels.layers import get_channel_layer
 from asgiref.sync import async_to_sync
-from datetime import time
+import time
 
 class Direction:
     def __init__(self):
