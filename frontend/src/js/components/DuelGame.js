@@ -11,6 +11,8 @@ export default class extends HTMLElement {
         this.gameID = this.getAttribute("game_id");
         this.addEventListener();
 
+        // error
+
         try {
             const resp = await joinGame(this.gameID);
         } catch (status) {

@@ -73,3 +73,7 @@ export function sendMessage(toDisplayName, msg) {
 
     socket.send(JSON.stringify(data));
 }
+
+export function joinGame() {
+
+}
