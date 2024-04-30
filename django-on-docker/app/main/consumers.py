@@ -228,14 +228,14 @@ class ChatConsumer(AsyncWebsocketConsumer):
         game = game_manager.get_game_by_user_id(user_id)
         if game is None:
             return 
-        game.up_paddle_by_user_id(user_id)
+        await game.up_paddle_by_user_id(user_id)
 
     async def handle_down_key(self):
         user_id = self.sender.id
         game = game_manager.get_game_by_user_id(user_id)
         if game is None:
             return 
-        game.down_paddle_by_user_id(user_id)
+        await game.down_paddle_by_user_id(user_id)
 
           
     async def send_json(self, content):

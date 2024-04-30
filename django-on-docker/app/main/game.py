@@ -196,9 +196,10 @@ class GameManager:
         return None
     
     def get_game_by_user_id(self, user_id):
-        for game in self.games:
-            if (game.left_paddle.player_id == user_id | game.right_paddle.player_id == user_id):
-                return game
+        for i in range (len(self.games)):
+            if (self.games[i].left_paddle.player_id == user_id | self.games[i].right_paddle.player_id == user_id):
+                return self.games[i]
+        
         return None
 
         
