@@ -176,7 +176,7 @@ class Game:
             self.is_left_won = True
         else:
             self.is_right_won = True
-        self.nof_finished = False 
+        self.not_finished = False 
 
 class GameManager:
     def __init__(self):
