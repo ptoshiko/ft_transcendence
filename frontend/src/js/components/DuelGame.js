@@ -20,6 +20,12 @@ export default class extends HTMLElement {
         }
 
         this.me = await getMe();
+        if (this.game.player1 !== this.me.id && this.game.player2 !== this.me.id) {
+            this.renderErrorPage()
+            return
+        }
+
+        this.render();
 
         if (this.game.player1.id === this.me.id) {
             this.opponent = await getUserByID(this.game.player2);
@@ -35,8 +41,6 @@ export default class extends HTMLElement {
             this.rightAvatar.src = formatAvatar(this.me.avatar);
         }
 
-        this.render();
-
         joinGame(this.gameID);
 
         document.title = "Game";
@@ -51,7 +55,7 @@ export default class extends HTMLElement {
         <tr-nav></tr-nav>
         <div class="game-container" style="height: calc(100vh - 56px);">
             <div class="temp-bg">
-                <div class="temp-text text-light">3</div>
+                <div id="duel-temp-text" class="temp-text text-light">Waiting opponent</div>
             </div>
             <img id="duel-left-avatar" class="avatar left rounded-circle" src="${formatAvatar(this.me.avatar)}" alt="avatar">
             <img id="duel-right-avatar" class="avatar right rounded-circle" src="404.jpeg" alt="avatar">
@@ -67,6 +71,7 @@ export default class extends HTMLElement {
 
         this.leftAvatar = this.querySelector("#duel-left-avatar");
         this.rightAvatar = this.querySelector("#duel-right-avatar");
+        this.tempText = this.querySelector("#duel-temp-text")
     }
 
     renderErrorPage() {
@@ -88,7 +93,7 @@ export default class extends HTMLElement {
 
     getGameTickEventHandler() {
         return (e) => {
-
+            this.tempText.innerHTML = e.detail.tick;
         };
     }
 }
