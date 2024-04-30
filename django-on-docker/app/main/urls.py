@@ -31,7 +31,7 @@ urlpatterns = [
 	path('api/match/create/', views.MatchCreateView.as_view()),
 	
 	path('api/game/create/', views.CreateGameView.as_view()),
-	path('api/game/join/', views.JoinGameView.as_view()),
+	# path('api/game/join/', views.JoinGameView.as_view()),
 	path('api/game/getinfo/<str:game_id>/', views.GetGameInfoView.as_view()),
 
 	path('api/token/', TokenObtainPairView.as_view(), name='token_obtain_pair'), # get token pair: required pair email and password 
