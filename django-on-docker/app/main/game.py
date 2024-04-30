@@ -197,7 +197,7 @@ class GameManager:
     
     def get_game_by_user_id(self, user_id):
         for game in self.games:
-            if (game.player1_id == user_id | game.player2_id == user_id):
+            if (game.left_paddle.player_id == user_id | game.right_paddle.player_id == user_id):
                 return game
         return None
 
