@@ -3,6 +3,7 @@ import {withAuthorizationHeader, withJSONContent} from "../middleware.js";
 import {formatAvatar} from "../helpers.js";
 
 const GET_USER_API = API_ADDRESS+"/getuser/";
+const GET_USER_BY_ID_API = API_ADDRESS+"/userdetail/";
 const GET_ME_API = API_ADDRESS+"/me/";
 const GET_FRIENDS_API = API_ADDRESS+"/friends/showfriends/";
 const GET_USER_FRIENDS_API = API_ADDRESS+"/getfriends/";
@@ -65,6 +66,30 @@ export async function getUserByDisplayName(displayName) {
     
     return user;
 }
+
+export async function getUserByID(id) {
+    const accessToken = localStorage.getItem("access-token") || "";
+
+    let authHeader = {};
+    if (accessToken !== "") {
+        authHeader = withAuthorizationHeader({}, accessToken);
+    }
+
+    const resp = await fetch(GET_USER_BY_ID_API+id+"/", {
+        headers: withJSONContent(authHeader)
+    });
+
+    if (!resp.ok) {
+        if (resp.status === 404) {
+            return null;
+        }
+    }
+
+    const user = await resp.json();
+
+    return user;
+}
+
 
 export async function unblockUser(userID) {
     const accessToken = localStorage.getItem("access-token") || "";

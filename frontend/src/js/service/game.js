@@ -2,7 +2,8 @@ import {API_ADDRESS} from "../constants.js";
 import {withAuthorizationHeader, withJSONContent} from "../middleware.js";
 
 const CREATE_GAME_API = API_ADDRESS+"/game/create/";
-const JOIN_GAME_API = API_ADDRESS+"/game/join/"
+const JOIN_GAME_API = API_ADDRESS+"/game/join/";
+const GET_GAME_API = API_ADDRESS+"/game/getinfo/";
 
 export async function createGame(opponentID) {
     const accessToken = localStorage.getItem("access-token") || "";
@@ -52,5 +53,17 @@ export async function joinGame(gameID) {
 }
 
 export async function getGameByID(gameID) {
+    const accessToken = localStorage.getItem("access-token") || "";
 
+    let authHeader = {};
+    if (accessToken !== "") {
+        authHeader = withAuthorizationHeader({}, accessToken);
+    }
+
+    const resp = await fetch(GET_GAME_API+gameID+'/', {
+        headers: withJSONContent(authHeader),
+    });
+
+
+    return await resp.json();
 }

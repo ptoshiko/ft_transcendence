@@ -1,5 +1,5 @@
 import {getGameByID, joinGame} from "../service/game.js";
-import {getMe, getUserByDisplayName} from "../service/users.js";
+import {getMe, getUserByID} from "../service/users.js";
 import {formatAvatar} from "../helpers.js";
 
 export default class extends HTMLElement {
@@ -9,6 +9,8 @@ export default class extends HTMLElement {
 
     async connectedCallback() {
         this.gameID = this.getAttribute("game_id");
+        this.addEventListener();
+
         try {
             const resp = await joinGame(this.gameID);
         } catch (status) {
@@ -20,9 +22,9 @@ export default class extends HTMLElement {
         this.game = await getGameByID(this.gameID);
 
         if (this.game.player1.id === this.me.id) {
-            this.opponent = await getUserByDisplayName(this.game.player2.id);
+            this.opponent = await getUserByID(this.game.player2);
         } else {
-            this.opponent = await getUserByDisplayName(this.game.player1.id);
+            this.opponent = await getUserByID(this.game.player1);
         }
 
         this.render();
