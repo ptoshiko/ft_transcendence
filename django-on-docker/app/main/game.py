@@ -190,7 +190,10 @@ class GameManager:
         self.queue = asyncio.Queue(10)
         self.games = []  # Initialize an empty list to store games
         
-    def create_game(self, game_id, player1_id, player2_id):
+    def get_or_create_game(self, game_id, player1_id, player2_id):
+        for i in range (len(self.games)):
+            if (self.games[i].left_paddle.player_id == player1_id and self.games[i].right_paddle.player_id == player2_id):
+                return self.games[i]
         game = Game(game_id, player1_id, player2_id)
         self.games.append(game)
         # asyncio.create_task(game.start_game())
@@ -206,7 +209,6 @@ class GameManager:
         for i in range (len(self.games)):
             if (self.games[i].left_paddle.player_id == user_id | self.games[i].right_paddle.player_id == user_id):
                 return self.games[i]
-        
         return None
 
         
