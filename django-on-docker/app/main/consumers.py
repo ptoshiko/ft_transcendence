@@ -126,15 +126,14 @@ class ChatConsumer(AsyncWebsocketConsumer):
             return        
 
         success = await self.set_player_presence(game, user_id)
+        if not success:
+            await self.send_not_allowed()
+            return
 
         if success & game.is_present_1 == True & game.is_present_2 == True:
            game = game_manager.create_game(game_id, game.player1_id, game.player2_id)
            asyncio.create_task(game.start_game())
         #    await game.start_game()
-
-        else:
-            await self.send_not_allowed()
-            return
 
 
     async def send_game_error(self, error):
