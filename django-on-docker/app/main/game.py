@@ -144,15 +144,15 @@ class Game:
         if self.last_time is not None:
             delta = tm - self.last_time
             self.ball.update()
-            if (self.ball.x == 0 and self.left_paddle.isInColision(self.ball.y)) or (self.ball.x == 100 and self.right_paddle.isInColision(self.ball.y)):
+            if (self.ball.x <= 0 and self.left_paddle.isInColision(self.ball.y)) or (self.ball.x >= 100 and self.right_paddle.isInColision(self.ball.y)):
                 self.ball.direction.x *= -1
-            elif (self.ball.x == 0 and not self.left_paddle.isInColision(self.ball.y)):
+            elif (self.ball.x <= 0 and not self.left_paddle.isInColision(self.ball.y)):
                 self.right_paddle.add_score()
                 if self.right_paddle.score >= 1:
                     self.won()
                 else:
                     self.reset()
-            elif (self.ball.x == 100 and not self.right_paddle.isInColision(self.ball.y)):
+            elif (self.ball.x >= 100 and not self.right_paddle.isInColision(self.ball.y)):
                 self.left_paddle.add_score()
                 if self.left_paddle.score >= 1:
                     self.won()
