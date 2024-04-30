@@ -46,12 +46,14 @@ function getSocket() {
                             detail: data.data
                         }));
                     }
+                    break;
                 case "game_state":
                     if (duelGameComponent) {
                         duelGameComponent.dispatchEvent(new CustomEvent("game_state", {
                             detail: data.data
                         }));
                     }
+                    break;
             }
         };
 

@@ -42,7 +42,7 @@ class Game:
         self.player1_score = 0
         self.player2_score = 0
         self.current_tick = 3
-        self.not_finished = False
+        self.not_finished = True
         self.last_time = None
         
     async def tick(self):
