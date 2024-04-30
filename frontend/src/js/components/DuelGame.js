@@ -11,15 +11,16 @@ export default class extends HTMLElement {
     async connectedCallback() {
         this.addEventListener('join_game', this.getJoinGameEventHandler())
         this.addEventListener('game_tick', this.getGameTickEventHandler())
+        this.addEventListener('game_state', this.getGameStateEventHandler())
 
         this.gameID = this.getAttribute("game_id");
+        this.me = await getMe();
         this.game = await getGameByID(this.gameID);
         if (!this.game) {
             this.renderErrorPage()
             return
         }
 
-        this.me = await getMe();
         if (this.game.player1 !== this.me.id && this.game.player2 !== this.me.id) {
             this.renderErrorPage()
             return
@@ -27,13 +28,13 @@ export default class extends HTMLElement {
 
         this.render();
 
-        if (this.game.player1.id === this.me.id) {
+        if (this.game.player1 === this.me.id) {
             this.opponent = await getUserByID(this.game.player2);
         } else {
             this.opponent = await getUserByID(this.game.player1);
         }
 
-        if (this.game.player1.id === this.me.id) {
+        if (this.game.player1 === this.me.id) {
             this.leftAvatar.src = formatAvatar(this.me.avatar);
             this.rightAvatar.src = formatAvatar(this.opponent.avatar);
         } else {
@@ -81,6 +82,12 @@ export default class extends HTMLElement {
             <h1 style="font-size: 8vw" class="text-danger">No Games Today️🙁</h1>
         </div>
        `
+    }
+
+    getGameStateEventHandler() {
+        return (e) => {
+            console.log(e.detail)
+        }
     }
 
     getJoinGameEventHandler() {

@@ -46,6 +46,12 @@ function getSocket() {
                             detail: data.data
                         }));
                     }
+                case "game_state":
+                    if (duelGameComponent) {
+                        duelGameComponent.dispatchEvent(new CustomEvent("game_state", {
+                            detail: data.data
+                        }));
+                    }
             }
         };
 
@@ -89,7 +95,10 @@ export function sendMessage(toDisplayName, msg) {
 }
 
 export function joinGame(gameID) {
-    const socket = getSocket();
+    let socket = getSocket();
+    while (socket.readyState !== 1) {
+        socket = getSocket();
+    }
 
     const data = {
         event_type: 'join_game',
