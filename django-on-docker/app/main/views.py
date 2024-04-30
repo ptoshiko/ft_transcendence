@@ -369,7 +369,6 @@ from .models import UserTwoFactorAuthData
 
 class ConfirmTwoFactorAuthView(views.APIView):
     success_url = reverse_lazy("admin:index")
-GetGameInfoView
     class Form(forms.Form):
         otp = forms.CharField(required=True)
 
