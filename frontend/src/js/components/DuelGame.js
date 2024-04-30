@@ -1,6 +1,7 @@
-import {getGameByID, joinGame} from "../service/game.js";
+import {getGameByID} from "../service/game.js";
 import {getMe, getUserByID} from "../service/users.js";
 import {formatAvatar} from "../helpers.js";
+import {joinGame} from "../service/socket.js";
 
 export default class extends HTMLElement {
     constructor() {
@@ -8,28 +9,23 @@ export default class extends HTMLElement {
     }
 
     async connectedCallback() {
+        this.addEventListener('join_game', this.getJoinGameEventHandler())
+        this.addEventListener('game_tick', this.getGameTickEventHandler())
+
         this.gameID = this.getAttribute("game_id");
-        this.addEventListener();
-
-        // error
-
-        try {
-            const resp = await joinGame(this.gameID);
-        } catch (status) {
-            this.renderErrorPage();
-            return;
+        this.game = await getGameByID(this.gameID);
+        if (!this.game) {
+            this.renderErrorPage()
+            return
         }
 
         this.me = await getMe();
-        this.game = await getGameByID(this.gameID);
 
         if (this.game.player1.id === this.me.id) {
             this.opponent = await getUserByID(this.game.player2);
         } else {
             this.opponent = await getUserByID(this.game.player1);
         }
-
-        this.render();
 
         if (this.game.player1.id === this.me.id) {
             this.leftAvatar.src = formatAvatar(this.me.avatar);
@@ -38,6 +34,10 @@ export default class extends HTMLElement {
             this.leftAvatar.src = formatAvatar(this.opponent.avatar);
             this.rightAvatar.src = formatAvatar(this.me.avatar);
         }
+
+        this.render();
+
+        joinGame(this.gameID);
 
         document.title = "Game";
     }
@@ -51,7 +51,7 @@ export default class extends HTMLElement {
         <tr-nav></tr-nav>
         <div class="game-container" style="height: calc(100vh - 56px);">
             <div class="temp-bg">
-                <div class="temp-text text-light">Waiting Opponent...</div>
+                <div class="temp-text text-light">3</div>
             </div>
             <img id="duel-left-avatar" class="avatar left rounded-circle" src="${formatAvatar(this.me.avatar)}" alt="avatar">
             <img id="duel-right-avatar" class="avatar right rounded-circle" src="404.jpeg" alt="avatar">
@@ -76,5 +76,19 @@ export default class extends HTMLElement {
             <h1 style="font-size: 8vw" class="text-danger">No Games Today️🙁</h1>
         </div>
        `
+    }
+
+    getJoinGameEventHandler() {
+        return (e) => {
+            if (e.detail.error) {
+                this.renderErrorPage();
+            }
+        };
+    }
+
+    getGameTickEventHandler() {
+        return (e) => {
+
+        };
     }
 }

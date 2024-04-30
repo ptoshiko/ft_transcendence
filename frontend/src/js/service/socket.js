@@ -17,6 +17,7 @@ function getSocket() {
         socket.onmessage = (e) => {
             const data = JSON.parse(e.data);
             const chatComponent = document.querySelector("#app").querySelector("tr-chat");
+            const duelGameComponent = document.querySelector("#app").querySelector("tr-duel-game");
             switch (data.event_type) {
                 case "chat_message":
                     if (chatComponent) {
@@ -32,6 +33,19 @@ function getSocket() {
                         }));
                     }
                     break;
+                case "join_game":
+                    if (duelGameComponent) {
+                        duelGameComponent.dispatchEvent(new CustomEvent("join_game", {
+                            detail: data.data
+                        }))
+                    }
+                    break;
+                case "game_tick":
+                    if (duelGameComponent) {
+                        duelGameComponent.dispatchEvent(new CustomEvent("game_tick", {
+                            detail: data.data
+                        }));
+                    }
             }
         };
 
@@ -74,6 +88,15 @@ export function sendMessage(toDisplayName, msg) {
     socket.send(JSON.stringify(data));
 }
 
-export function joinGame() {
+export function joinGame(gameID) {
+    const socket = getSocket();
 
+    const data = {
+        event_type: 'join_game',
+        data: {
+            game_id: gameID,
+        }
+    }
+
+    socket.send(JSON.stringify(data));
 }

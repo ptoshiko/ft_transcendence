@@ -63,6 +63,11 @@ export async function getGameByID(gameID) {
     const resp = await fetch(GET_GAME_API+gameID+'/', {
         headers: withJSONContent(authHeader),
     });
+    if (!resp.ok) {
+        if (resp.status === 404) {
+            return null;
+        }
+    }
 
 
     return await resp.json();
