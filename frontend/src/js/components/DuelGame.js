@@ -66,20 +66,19 @@ export default class extends HTMLElement {
         <div class="game-wrapper">
         <div class="game-container">
             <div class="game-field">
-                <div id="duel-temp-bg" class="temp-bg">
-                    <div id="duel-temp-text" class="temp-text text-light">Waiting Opponent...</div>
-                </div>
-                <div class="ball bg-dark" id="ball"></div>
+                <div class="ball bg-dark" id="duel-ball"></div>
                 <div class="paddle left bg-danger" id="duel-left-paddle"></div>
                 <div class="paddle right bg-danger" id="duel-right-paddle"></div>
             </div>
         </div>
-        <img id=duel-left-avatar" class="avatar left rounded-circle" src="kanye.webp" alt="avatar">
-        <img id=duel-right-avatar" class="avatar right rounded-circle" src="404.jpeg" alt="avatar">
+        <div id="duel-temp-bg" class="temp-bg">
+            <div id="duel-temp-text" class="temp-text text-light">Waiting Opponent...</div>
+        </div>
+        <img id="duel-left-avatar" class="avatar left rounded-circle" alt="avatar">
+        <img id="duel-right-avatar" class="avatar right rounded-circle" alt="avatar">
         <div id="duel-left-score" class="score left">0</div>
         <div id="duel-right-score" class="score right">0</div>
-    </div>
-        `;
+    </div>`;
 
         this.leftAvatar = this.querySelector("#duel-left-avatar");
         this.rightAvatar = this.querySelector("#duel-right-avatar");
