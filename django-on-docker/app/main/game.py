@@ -18,11 +18,13 @@ class Paddle:
     async def up(self):
         if self.y > 8.5:
             self.y -= 1
-
+        if self.y <= 8.5:
+            self.y = 8.5
     async def down(self):
         if self.y < 91.5:
             self.y += 1
-
+        if self.y >= 91.5:
+            self.y = 91.5
     def isInColision(self, ball_y):
         if ball_y < (self.y + 7.5) and ball_y > (self.y - 7.5):
             return True
@@ -33,7 +35,7 @@ class Paddle:
         self.score += 1
     
     def reset(self):
-        self.y = 50
+        self.y = 50.0
         self.score = 0
 
 class Ball:
