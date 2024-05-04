@@ -16,13 +16,15 @@ class Paddle:
         self.reset()
 
     async def up(self):
-        if self.y > 0:
+        if self.y > 8.5:
             self.y -= 1
-
+        if self.y <= 8.5:
+            self.y = 8.5
     async def down(self):
-        if self.y < 100:
+        if self.y < 91.5:
             self.y += 1
-
+        if self.y >= 91.5:
+            self.y = 91.5
     def isInColision(self, ball_y):
         if ball_y < (self.y + 7.5) and ball_y > (self.y - 7.5):
             return True
@@ -33,7 +35,7 @@ class Paddle:
         self.score += 1
     
     def reset(self):
-        self.y = 50
+        self.y = 50.0
         self.score = 0
 
 class Ball:
@@ -54,7 +56,7 @@ class Ball:
             self.x = 98.5
 
         self.velocity = self.velocity + 0.00005
-        
+
         if self.velocity > 3.5:
             self.velocity = 3.5
 
@@ -159,14 +161,17 @@ class Game:
         if self.last_time is not None:
             delta = tm - self.last_time
             self.ball.update()
+            # check if ball touches a paddle
             if (self.ball.x <= 3.5 and self.left_paddle.isInColision(self.ball.y)) or (self.ball.x >= 96.5 and self.right_paddle.isInColision(self.ball.y)):
                 self.ball.direction.x *= -1
+            # check if ball goes beyond the left paddle and touches the wall
             elif (self.ball.x <= 1.5 and not self.left_paddle.isInColision(self.ball.y)):
                 self.right_paddle.add_score()
                 if self.right_paddle.score >= 1:
                     self.won()
                 else:
                     self.reset()
+            # check if ball goes beyond the right paddle and touches the wall
             elif (self.ball.x >= 98.5 and not self.right_paddle.isInColision(self.ball.y)):
                 self.left_paddle.add_score()
                 if self.left_paddle.score >= 1:
