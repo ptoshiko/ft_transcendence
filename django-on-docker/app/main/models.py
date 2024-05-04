@@ -90,18 +90,29 @@ class BlockUser(models.Model):
         ]
 
 class PairGame(models.Model):
+    # CREATED = 0
+    # STARTED = 1
+    # FINISHED = 2
+    # STATUS_CHOICES = (
+    #     (CREATED, 'Created'),
+    #     (STARTED, 'Started'),
+    #     (FINISHED, 'Finished'),
+    # )
+
     player1 = models.ForeignKey(AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='player1')
     player2 = models.ForeignKey(AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='player2')
     is_present_1 = models.BooleanField(default=False)
     is_present_2 = models.BooleanField(default=False)
     game_id =  models.CharField(max_length=32, unique=True)
-    date_created = models.DateTimeField(_("match date"), auto_now_add=True)
+    date_created = models.DateTimeField(_("date_created"), auto_now_add=True)
+    # status = models.IntegerField(choices = STATUS_CHOICES, default = CREATED)
+
 
     def save(self, *args, **kwargs):
         if not self.game_id:
             self.game_id = str(uuid.uuid4().hex)[:32]  # Generate a unique ID
-        super().save(*args, **kwargs)
 
+        super().save(*args, **kwargs)
 
 
 class GameInvitation(models.Model):
