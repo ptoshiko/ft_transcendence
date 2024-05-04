@@ -43,10 +43,20 @@ class Ball:
         self.reset()
 
     def update(self):
-        if self.y > 1.5 and self.y < 98.5:
+        if self.y - self.velocity > 1.5 and self.y + self.velocity < 98.5:
             self.y = self.y + (self.direction.y * self.velocity)
-        if self.x > 1.5 and self.y < 98.5:
+        else:
+            if self.direction > 0:
+                self.y = 98.5
+            else:
+                self.y = 1.5
+        if self.x - self.velocity > 1.5 and self.x + self.velocity < 98.5:
             self.x = self.x + (self.direction.x * self.velocity)
+        else:
+            if self.direction > 0:
+                self.x = 98.5
+            else:
+                self.x = 1.5
         
         if self.y <= 1.5:
             self.y = 1.5
