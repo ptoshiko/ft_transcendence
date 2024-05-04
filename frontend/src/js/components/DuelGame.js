@@ -62,20 +62,23 @@ export default class extends HTMLElement {
     render() {
         this.innerHTML = `
         <tr-nav></tr-nav>
-        <div class="game-container" style="height: calc(100vh - 56px);">
-            <div id="duel-temp-bg" class="temp-bg">
-                <div id="duel-temp-text" class="temp-text text-light">Waiting opponent</div>
+        
+        <div class="game-wrapper">
+        <div class="game-container">
+            <div class="game-field">
+                <div id="duel-temp-bg" class="temp-bg">
+                    <div id="duel-temp-text" class="temp-text text-light">Waiting Opponent...</div>
+                </div>
+                <div class="ball bg-dark" id="ball"></div>
+                <div class="paddle left bg-danger" id="duel-left-paddle"></div>
+                <div class="paddle right bg-danger" id="duel-right-paddle"></div>
             </div>
-            <img id="duel-left-avatar" class="avatar left rounded-circle" src="${formatAvatar(this.me.avatar)}" alt="avatar">
-            <img id="duel-right-avatar" class="avatar right rounded-circle" src="404.jpeg" alt="avatar">
-            <div class="score">
-                <div id="duel-left-score">0</div>
-                <div id="duel-right-score">0</div>
-            </div>
-            <div class="ball bg-dark" id="duel-ball"></div>
-            <div class="paddle left bg-danger" id="duel-left-paddle"></div>
-            <div class="paddle right bg-danger" id="duel-right-paddle"></div>
         </div>
+        <img id=duel-left-avatar" class="avatar left rounded-circle" src="kanye.webp" alt="avatar">
+        <img id=duel-right-avatar" class="avatar right rounded-circle" src="404.jpeg" alt="avatar">
+        <div id="duel-left-score" class="score left">0</div>
+        <div id="duel-right-score" class="score right">0</div>
+    </div>
         `;
 
         this.leftAvatar = this.querySelector("#duel-left-avatar");
