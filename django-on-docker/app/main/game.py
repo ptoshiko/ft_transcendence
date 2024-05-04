@@ -24,7 +24,7 @@ class Paddle:
             self.y += 1
 
     def isInColision(self, ball_y):
-        if ball_y < (self.y + 1.25) and ball_y > (self.y - 1.25):
+        if ball_y < (self.y + 7.5) and ball_y > (self.y - 7.5):
             return True
         
         return False
@@ -43,8 +43,8 @@ class Ball:
     def update(self):
         self.x = self.x + (self.direction.x * self.velocity)
         self.y = self.y + (self.direction.y * self.velocity)
-        self.velocity = self.velocity + 0.00001
-        if self.y <= 0 or self.y >= 100:
+        self.velocity = self.velocity + 0.00005
+        if self.y <= 1.5 or self.y >= 98.5:
             self.direction.y *= -1
 
     def reset(self):
@@ -145,15 +145,15 @@ class Game:
         if self.last_time is not None:
             delta = tm - self.last_time
             self.ball.update()
-            if (self.ball.x <= 0 and self.left_paddle.isInColision(self.ball.y)) or (self.ball.x >= 100 and self.right_paddle.isInColision(self.ball.y)):
+            if (self.ball.x <= 3.5 and self.left_paddle.isInColision(self.ball.y)) or (self.ball.x >= 96.5 and self.right_paddle.isInColision(self.ball.y)):
                 self.ball.direction.x *= -1
-            elif (self.ball.x <= 0 and not self.left_paddle.isInColision(self.ball.y)):
+            elif (self.ball.x <= 3.5 and not self.left_paddle.isInColision(self.ball.y)):
                 self.right_paddle.add_score()
                 if self.right_paddle.score >= 1:
                     self.won()
                 else:
                     self.reset()
-            elif (self.ball.x >= 100 and not self.right_paddle.isInColision(self.ball.y)):
+            elif (self.ball.x >= 96.5 and not self.right_paddle.isInColision(self.ball.y)):
                 self.left_paddle.add_score()
                 if self.left_paddle.score >= 1:
                     self.won()
