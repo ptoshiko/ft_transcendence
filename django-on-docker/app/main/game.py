@@ -156,7 +156,8 @@ class Game:
                 }
             ))
             await asyncio.sleep(0.02)
-        game_manager.remove_by_game_id(self.game_id)
+        remove_by_game_id_async = sync_to_async(game_manager.remove_by_game_id)
+        await remove_by_game_id_async(self.game_id)
         
     async def update_game(self, tm):
         if self.last_time is not None:
@@ -211,10 +212,9 @@ class GameManager:
         self.games = []  # Initialize an empty list to store games
         
     def create_game(self, game_id, player1_id, player2_id):
-        sync_to_async(change_game_status_in_progress)(game_id)
+        change_game_status_in_progress(game_id)
         game = Game(game_id, player1_id, player2_id)
         self.games.append(game)
-        # asyncio.create_task(game.start_game())
         return game
 
     def get_game_by_id(self, game_id):
@@ -236,7 +236,7 @@ class GameManager:
         return None
 
     def remove_by_game_id(self, remove_game_id):
-        sync_to_async(change_game_status_finished)(remove_game_id)
+        change_game_status_finished(remove_game_id)
         for game in self.games:
             if game.game_id == remove_game_id:
                 self.games.remove(game)

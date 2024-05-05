@@ -138,7 +138,9 @@ class ChatConsumer(AsyncWebsocketConsumer):
         #    is_created = game_manager.get_game_by_users(game.player1_id, game.player2_id)
            if is_created:
                return 
-           game = game_manager.create_game(game_id, game.player1_id, game.player2_id)
+           create_game_async = sync_to_async(game_manager.create_game)
+           game = await create_game_async(game_id, game.player1_id, game.player2_id)
+        #    game = game_manager.create_game(game_id, game.player1_id, game.player2_id)
            asyncio.create_task(game.start_game())
 
 
