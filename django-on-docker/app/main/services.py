@@ -144,10 +144,10 @@ def create_message_gameid_type(game_id, player1, player2):
 def change_game_status_in_progress(game_id):
     game = PairGame.objects.get(game_id=game_id)
     game.status = PairGame.IN_PROGRESS
-    game.save
+    game.save()
 
 def change_game_status_finished(game_id):
     game = PairGame.objects.get(game_id=game_id)
     game.status = PairGame.FINISHED
-    game.save
+    game.save()
 
