@@ -15,6 +15,7 @@ class Direction:
 class Paddle:
     def __init__(self, player_id):
         self.player_id = player_id
+        self.score = 0
         self.reset()
 
     async def up(self):
@@ -40,7 +41,6 @@ class Paddle:
     
     def reset(self):
         self.y = 50.0
-        self.score = 0
 
 class Ball:
     def __init__(self):
