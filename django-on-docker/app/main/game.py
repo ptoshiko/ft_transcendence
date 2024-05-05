@@ -43,15 +43,30 @@ class Ball:
         self.reset()
 
     def update(self):
-        if self.y > 1.5 and self.y < 98.5:
+        if self.y - self.velocity > 1.5 and self.y + self.velocity < 98.5:
             self.y = self.y + (self.direction.y * self.velocity)
-        if self.x > 1.5 and self.y < 98.5:
+            print("games.py 48: ball_y = ", self.y)
+        else:
+            if self.direction > 0:
+                self.y = 98.5
+                print("games.py 52: ball_y = ", self.y)
+            else:
+                self.y = 1.5
+                print("games.py 55: ball_y = ", self.y)
+        if self.x - self.velocity > 1.5 and self.x + self.velocity < 98.5:
             self.x = self.x + (self.direction.x * self.velocity)
-        
+        else:
+            if self.direction > 0:
+                self.x = 98.5
+            else:
+                self.x = 1.5
+
         if self.y <= 1.5:
             self.y = 1.5
+            print("games.py 66: ball_y = ", self.y)
         if self.y >= 98.5:
             self.y = 98.5
+            print("games.py 69: ball_y = ", self.y)
         if self.x <= 1.5:
             self.x = 1.5
         if self.x >= 98.5:
@@ -74,13 +89,6 @@ class Ball:
             heading = random.uniform(0, 2 * math.pi)
             self.direction.x = math.cos(heading)
             self.direction.y = math.sin(heading)
-
-    def update(self):
-        self.x = self.x + (self.direction.x * self.velocity)
-        self.y = self.y + (self.direction.y * self.velocity)
-        self.velocity += 0.0001
-        if self.y <= 0 or self.y >= 100:
-            self.direction.y *= -1
 
 class Game:
     def __init__(self, game_id, player1_id, player2_id):
