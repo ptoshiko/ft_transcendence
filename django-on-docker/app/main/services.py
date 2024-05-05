@@ -115,7 +115,23 @@ def get_last_chat_users(user):
             ).order_by('-date_added').values_list('sender', 'receiver').distinct()[:10]
     return last_chat_users
     
+def check_game_by_users_not_finished(player1_id, player2_id):
+    try:
+        # Retrieve a single PairGame object with the specified player IDs and not finished status
+        game = PairGame.objects.filter(
+            (models.Q(player1_id=player1_id) & models.Q(player2_id=player2_id)) |
+            (models.Q(player1_id=player2_id) & models.Q(player2_id=player1_id)),
+        ).exclude(
+            status=PairGame.FINISHED
+        ).get()
+        return game
+    except PairGame.DoesNotExist:
+        # If no matching game is found, return None or handle the case accordingly
+        return None
+
+
 def create_game_record(player1_id, player2_id):
+    # create a new game ID if there is no old game ID with status not FINISHED
     game = PairGame.objects.create(player1_id = player1_id, player2_id = player2_id)
     return game
 
@@ -124,3 +140,14 @@ def create_message_text_type(content, sender, receiver):
 
 def create_message_gameid_type(game_id, player1, player2):
     ChatMessage.objects.create(content=game_id, sender=player1, receiver=player2, content_type = ChatMessage.GAMEID)
+
+def change_game_status_in_progress(game_id):
+    game = PairGame.objects.get(game_id=game_id)
+    game.status = PairGame.IN_PROGRESS
+    game.save
+
+def change_game_status_finished(game_id):
+    game = PairGame.objects.get(game_id=game_id)
+    game.status = PairGame.FINISHED
+    game.save
+

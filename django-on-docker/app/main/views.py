@@ -488,7 +488,11 @@ class CreateGameView(CheckIdMixin, views.APIView):
         if player2 is None:
             return Response({"error": "Player2 does not exist"}, status=status.HTTP_404_NOT_FOUND)
 
-        game = create_game_record(player1_id, player2_id)
+        # create a new game ID if there is no old game ID with status not FINISHED
+        game = check_game_by_users_not_finished(player1_id, player2_id)
+        if game is None:
+            game = create_game_record(player1_id, player2_id)
+
         game_id = game.game_id
         create_message_gameid_type(game_id, player1, player2)
 
