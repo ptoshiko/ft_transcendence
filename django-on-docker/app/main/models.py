@@ -107,6 +107,8 @@ class PairGame(models.Model):
     date_created = models.DateTimeField(_("date_created"), auto_now_add=True)
     status = models.IntegerField(choices = STATUS_CHOICES, default = CREATED)
 
+    player1_score = models.IntegerField(default=0)
+    player2_score = models.IntegerField(default=0)
 
     def save(self, *args, **kwargs):
         if not self.game_id:
