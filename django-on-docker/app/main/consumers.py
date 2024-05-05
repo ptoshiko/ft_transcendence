@@ -134,12 +134,12 @@ class ChatConsumer(AsyncWebsocketConsumer):
             return
 
         if success & game.is_present_1 == True & game.is_present_2 == True:
-           is_created = game_manager.get_game_by_users(game.player1_id, game.player2_id)
+           is_created = game_manager.get_game_by_id(game_id)
+        #    is_created = game_manager.get_game_by_users(game.player1_id, game.player2_id)
            if is_created:
                return 
            game = game_manager.create_game(game_id, game.player1_id, game.player2_id)
            asyncio.create_task(game.start_game())
-        #    await game.start_game()
 
 
     async def send_game_error(self, error):

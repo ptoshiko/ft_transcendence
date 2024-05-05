@@ -2,8 +2,9 @@ import asyncio
 import random
 import math
 from channels.layers import get_channel_layer
-from asgiref.sync import async_to_sync
+from asgiref.sync import sync_to_async
 import time
+from .services import change_game_status_in_progress, change_game_status_finished
 
 WINNING_SCORE = 6
 
@@ -124,7 +125,6 @@ class Game:
         self.start = time.time()
 
         while (self.not_finished):
-            
             tm = time.time()-self.start
             await self.update_game(tm)
             channel_layer = get_channel_layer()
@@ -156,7 +156,8 @@ class Game:
                 }
             ))
             await asyncio.sleep(0.02)
-    
+        game_manager.remove_by_game_id(self.game_id)
+        
     async def update_game(self, tm):
         if self.last_time is not None:
             delta = tm - self.last_time
@@ -210,6 +211,7 @@ class GameManager:
         self.games = []  # Initialize an empty list to store games
         
     def create_game(self, game_id, player1_id, player2_id):
+        sync_to_async(change_game_status_in_progress)(game_id)
         game = Game(game_id, player1_id, player2_id)
         self.games.append(game)
         # asyncio.create_task(game.start_game())
@@ -232,6 +234,13 @@ class GameManager:
             if ((self.games[i].left_paddle.player_id == user1_id and self.games[i].right_paddle.player_id == user2_id)) or ((self.games[i].left_paddle.player_id == user2_id and self.games[i].right_paddle.player_id == user1_id)):
                 return self.games[i]
         return None
+
+    def remove_by_game_id(self, remove_game_id):
+        sync_to_async(change_game_status_finished)(remove_game_id)
+        for game in self.games:
+            if game.game_id == remove_game_id:
+                self.games.remove(game)
+
         
 
 game_manager = GameManager()

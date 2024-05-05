@@ -90,14 +90,14 @@ class BlockUser(models.Model):
         ]
 
 class PairGame(models.Model):
-    # CREATED = 0
-    # STARTED = 1
-    # FINISHED = 2
-    # STATUS_CHOICES = (
-    #     (CREATED, 'Created'),
-    #     (STARTED, 'Started'),
-    #     (FINISHED, 'Finished'),
-    # )
+    CREATED = 0
+    IN_PROGRESS = 1
+    FINISHED = 2
+    STATUS_CHOICES = (
+        (CREATED, 'Created'),
+        (IN_PROGRESS, 'In progress'),
+        (FINISHED, 'Finished'),
+    )
 
     player1 = models.ForeignKey(AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='player1')
     player2 = models.ForeignKey(AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='player2')
@@ -105,7 +105,7 @@ class PairGame(models.Model):
     is_present_2 = models.BooleanField(default=False)
     game_id =  models.CharField(max_length=32, unique=True)
     date_created = models.DateTimeField(_("date_created"), auto_now_add=True)
-    # status = models.IntegerField(choices = STATUS_CHOICES, default = CREATED)
+    status = models.IntegerField(choices = STATUS_CHOICES, default = CREATED)
 
 
     def save(self, *args, **kwargs):
