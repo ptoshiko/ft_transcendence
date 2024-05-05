@@ -5,6 +5,8 @@ from channels.layers import get_channel_layer
 from asgiref.sync import async_to_sync
 import time
 
+WINNING_SCORE = 6
+
 class Direction:
     def __init__(self):
         self.x = 0
@@ -165,14 +167,14 @@ class Game:
             # check if ball goes beyond the left paddle and touches the wall
             elif (self.ball.x <= 1.5 and not self.left_paddle.isInColision(self.ball.y)):
                 self.right_paddle.add_score()
-                if self.right_paddle.score >= 1:
+                if self.right_paddle.score >= WINNING_SCORE:
                     self.won()
                 else:
                     self.reset()
             # check if ball goes beyond the right paddle and touches the wall
             elif (self.ball.x >= 98.5 and not self.right_paddle.isInColision(self.ball.y)):
                 self.left_paddle.add_score()
-                if self.left_paddle.score >= 1:
+                if self.left_paddle.score >= WINNING_SCORE:
                     self.won()
                 else:
                     self.reset()
