@@ -29,33 +29,52 @@ export default class extends HTMLElement {
         this.render();
 
         if (this.game.player1 === this.me.id) {
+            this.am_left = true
             this.opponent = await getUserByID(this.game.player2);
-        } else {
-            this.opponent = await getUserByID(this.game.player1);
-        }
-
-        if (this.game.player1 === this.me.id) {
             this.leftAvatar.src = formatAvatar(this.me.avatar);
             this.rightAvatar.src = formatAvatar(this.opponent.avatar);
         } else {
+            this.am_right = true
+            this.opponent = await getUserByID(this.game.player1);
             this.leftAvatar.src = formatAvatar(this.opponent.avatar);
             this.rightAvatar.src = formatAvatar(this.me.avatar);
+        }
+
+        if (this.game.won_id && this.game.won_id === this.me.id) {
+            this.setWonPageAttributes(this.game.player1_score, this.game.player2_score);
+        } else if (this.game.won_id && this.game.won_id !== this.me.id) {
+            this.setLostPageAttributes(this.game.player1_score, this.game.player2_score);
         }
 
         joinGame(this.gameID);
 
         window.addEventListener('keyup', (e) => {
             if (e.key === `ArrowUp`) {
-                duelUpKey()
+                this.isUpPressed = false
+                // duelUpKey()
             } else if (e.key === `ArrowDown`) {
-                duelDownKey()
+                this.isDownPressed = false
+                // duelDownKey()
             }
         })
+
+        window.addEventListener('keydown', (e) => {
+            if (e.key === `ArrowUp`) {
+                this.isUpPressed = true
+            } else if (e.key === `ArrowDown`) {
+                this.isDownPressed = true
+            }
+        })
+
+        this.setIntervalID = setInterval(this.getMovePaddleHandler(), 10)
 
         document.title = "Game";
     }
 
     disconnectedCallback() {
+        if (this.setIntervalID) {
+            clearInterval(this.setIntervalID)
+        }
         // send to backend 'quit game'
     }
 
@@ -100,27 +119,35 @@ export default class extends HTMLElement {
        `
     }
 
+    setWonPageAttributes(leftScore, rightScore) {
+        this.tempText.style.display = 'block';
+        this.tempBg.style.display = 'flex';
+        this.tempText.innerHTML = "You Won 🎉"
+        this.leftScore.innerHTML = leftScore
+        this.rightScore.innerHTML = rightScore
+    }
+
+    setLostPageAttributes(leftScore, rightScore) {
+        this.tempText.style.display = 'block';
+        this.tempBg.style.display = 'flex';
+        this.tempText.innerHTML = "You Lost 💀"
+        this.leftScore.innerHTML = leftScore
+        this.rightScore.innerHTML = rightScore
+    }
+
     getGameStateEventHandler() {
         return (e) => {
             if (!this.tempText) {
                 this.render()
             }
 
-            if (e.detail.is_left_won) {
-                this.tempText.style.display = 'block';
-                this.tempBg.style.display = 'flex';
-                this.tempText.innerHTML = "You Won 🎉"
-                this.leftScore.innerHTML = e.detail.left_score
-                this.rightScore.innerHTML = e.detail.right_score
+            if ((e.detail.is_left_won && this.am_left) || (e.detail.is_right_won && this.am_right)) {
+                this.setWonPageAttributes(e.detail.left_score, e.detail.right_score);
                 return;
             }
 
-            if (e.detail.is_right_won) {
-                this.tempText.style.display = 'block';
-                this.tempBg.style.display = 'flex';
-                this.tempText.innerHTML = "You Lost 💀"
-                this.leftScore.innerHTML = e.detail.left_score
-                this.rightScore.innerHTML = e.detail.right_score
+            if ((e.detail.is_right_won && this.am_left) || (e.detail.is_left_won && this.am_right)) {
+                this.setLostPageAttributes(e.detail.left_score, e.detail.right_score);
                 return;
             }
 
@@ -151,5 +178,16 @@ export default class extends HTMLElement {
             }
             this.tempText.innerHTML = e.detail.tick;
         };
+    }
+
+    getMovePaddleHandler() {
+        return () => {
+            if (this.isUpPressed) {
+                duelUpKey()
+            }
+            if (this.isDownPressed) {
+                duelDownKey()
+            }
+        }
     }
 }

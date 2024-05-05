@@ -62,6 +62,10 @@ export default class extends HTMLElement {
             </div>
         `;
 
+        this.querySelector("#msg-redirect-to-friend-btn").addEventListener('click', (e)=>{
+            navigateTo(`/profiles/${displayName}`);
+        });
+
         this.querySelector("#to-me-msg-play-btn").addEventListener('click', this.getGameLinkHandler(gameID))
     }
 
