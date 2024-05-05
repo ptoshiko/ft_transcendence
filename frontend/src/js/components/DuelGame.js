@@ -110,6 +110,8 @@ export default class extends HTMLElement {
                 this.tempText.style.display = 'block';
                 this.tempBg.style.display = 'flex';
                 this.tempText.innerHTML = "You Won 🎉"
+                this.leftScore.innerHTML = e.detail.left_score
+                this.rightScore.innerHTML = e.detail.right_score
                 return;
             }
 
@@ -117,6 +119,8 @@ export default class extends HTMLElement {
                 this.tempText.style.display = 'block';
                 this.tempBg.style.display = 'flex';
                 this.tempText.innerHTML = "You Lost 💀"
+                this.leftScore.innerHTML = e.detail.left_score
+                this.rightScore.innerHTML = e.detail.right_score
                 return;
             }
 
