@@ -85,8 +85,6 @@ class Game:
     def __init__(self, game_id, player1_id, player2_id):
         self.game_id = game_id
         self.ball = Ball()
-        self.player1_score = 0
-        self.player2_score = 0
         self.current_tick = 3
         self.not_finished = True
         self.last_time = None
@@ -157,7 +155,7 @@ class Game:
             ))
             await asyncio.sleep(0.02)
         remove_by_game_id_async = sync_to_async(game_manager.remove_by_game_id)
-        await remove_by_game_id_async(self.game_id, self.player1_score, self.player2_score)
+        await remove_by_game_id_async(self.game_id, self.left_paddle.score, self.right_paddle.score)
         
     async def update_game(self, tm):
         if self.last_time is not None:
