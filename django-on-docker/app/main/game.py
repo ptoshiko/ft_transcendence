@@ -45,11 +45,14 @@ class Ball:
     def update(self):
         if self.y - self.velocity > 1.5 and self.y + self.velocity < 98.5:
             self.y = self.y + (self.direction.y * self.velocity)
+            print("games.py 48: ball_y = ", self.y)
         else:
             if self.direction > 0:
                 self.y = 98.5
+                print("games.py 52: ball_y = ", self.y)
             else:
                 self.y = 1.5
+                print("games.py 55: ball_y = ", self.y)
         if self.x - self.velocity > 1.5 and self.x + self.velocity < 98.5:
             self.x = self.x + (self.direction.x * self.velocity)
         else:
@@ -60,8 +63,10 @@ class Ball:
         
         if self.y <= 1.5:
             self.y = 1.5
+            print("games.py 66: ball_y = ", self.y)
         if self.y >= 98.5:
             self.y = 98.5
+            print("games.py 69: ball_y = ", self.y)
         if self.x <= 1.5:
             self.x = 1.5
         if self.x >= 98.5:
@@ -165,7 +170,9 @@ class Game:
     async def update_game(self, tm):
         if self.last_time is not None:
             delta = tm - self.last_time
+            print("173 ball.y= ", self.ball.y )
             self.ball.update()
+            print("175 ball.y= ", self.ball.y )
             # check if ball touches a paddle
             if (self.ball.x <= 3.5 and self.left_paddle.isInColision(self.ball.y)) or (self.ball.x >= 96.5 and self.right_paddle.isInColision(self.ball.y)):
                 self.ball.direction.x *= -1
