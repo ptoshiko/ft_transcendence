@@ -4,7 +4,7 @@ import math
 from channels.layers import get_channel_layer
 from asgiref.sync import sync_to_async
 import time
-from .services import change_game_status_in_progress, change_game_status_finished
+from .services import change_game_status_in_progress, finish_game_db
 
 WINNING_SCORE = 6
 
@@ -157,7 +157,7 @@ class Game:
             ))
             await asyncio.sleep(0.02)
         remove_by_game_id_async = sync_to_async(game_manager.remove_by_game_id)
-        await remove_by_game_id_async(self.game_id)
+        await remove_by_game_id_async(self.game_id, self.player1_score, self.player2_score)
         
     async def update_game(self, tm):
         if self.last_time is not None:
@@ -235,8 +235,9 @@ class GameManager:
                 return self.games[i]
         return None
 
-    def remove_by_game_id(self, remove_game_id):
-        change_game_status_finished(remove_game_id)
+    def remove_by_game_id(self, remove_game_id, player1_score, player2_score):
+        finish_game_db(remove_game_id, player1_score, player2_score)
+        # change_game_status_finished(remove_game_id)
         for game in self.games:
             if game.game_id == remove_game_id:
                 self.games.remove(game)

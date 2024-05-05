@@ -133,6 +133,9 @@ class ChatConsumer(AsyncWebsocketConsumer):
             await self.send_not_allowed()
             return
 
+        if game.status == PairGame.FINISHED:
+            return
+
         if success & game.is_present_1 == True & game.is_present_2 == True:
            is_created = game_manager.get_game_by_id(game_id)
         #    is_created = game_manager.get_game_by_users(game.player1_id, game.player2_id)

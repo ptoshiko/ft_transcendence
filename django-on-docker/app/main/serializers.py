@@ -134,6 +134,19 @@ class BlockUserSerializer(serializers.ModelSerializer):
         fields = '__all__' 
 
 class PairGameSerializer(serializers.ModelSerializer):
+
+    won_id = serializers.SerializerMethodField()
+
     class Meta:
         model = PairGame
-        fields = ['player1', 'player2', 'game_id']
+        fields = ['player1', 'player2', 'game_id', 'player1_score', 'player2_score', 'won_id']
+
+    def get_won_id(self, obj):
+       if obj.status != PairGame.FINISHED:
+            return None
+       if obj.player1_score > obj.player2_score:
+            return obj.player1_id
+       elif obj.player2_score > obj.player1_score:
+            return obj.player2_id
+       else:
+            return None

@@ -146,8 +146,16 @@ def change_game_status_in_progress(game_id):
     game.status = PairGame.IN_PROGRESS
     game.save()
 
-def change_game_status_finished(game_id):
+# def change_game_status_finished(game_id):
+#     game = PairGame.objects.get(game_id=game_id)
+#     game.status = PairGame.FINISHED
+#     game.save()
+
+
+def finish_game_db(game_id, player1_score, player2_score):
+
     game = PairGame.objects.get(game_id=game_id)
     game.status = PairGame.FINISHED
+    game.player1_score = player1_score
+    game.player2_score = player2_score
     game.save()
-
