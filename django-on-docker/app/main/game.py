@@ -16,15 +16,17 @@ class Paddle:
         self.reset()
 
     async def up(self):
-        if self.y > 8.5:
+        if self.y >= 8.5:
             self.y -= 1
         if self.y <= 7.5:
             self.y = 7.5
+
     async def down(self):
-        if self.y < 91.5:
+        if self.y <= 91.5:
             self.y += 1
         if self.y >= 92.5:
             self.y = 92.5
+            
     def isInColision(self, ball_y):
         if ball_y < (self.y + 7.5) and ball_y > (self.y - 7.5):
             return True
@@ -58,7 +60,7 @@ class Ball:
         if self.x >= 98.5:
             self.x = 98.5
 
-        self.velocity = self.velocity + 0.00005
+        self.velocity = self.velocity + 0.0005
 
         if self.velocity > 3.5:
             self.velocity = 3.5
@@ -70,7 +72,7 @@ class Ball:
         self.x = 50.0
         self.y = 50.0
         self.direction = Direction()
-        self.velocity = 0.025
+        self.velocity = 0.05
         while (abs(self.direction.x) <= 0.2 or abs(self.direction.y) >= 0.9):
             heading = random.uniform(0, 2 * math.pi)
             self.direction.x = math.cos(heading)
