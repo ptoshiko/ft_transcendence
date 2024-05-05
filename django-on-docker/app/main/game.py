@@ -170,9 +170,7 @@ class Game:
     async def update_game(self, tm):
         if self.last_time is not None:
             delta = tm - self.last_time
-            print("173 ball.y= ", self.ball.y )
             self.ball.update()
-            print("175 ball.y= ", self.ball.y )
             # check if ball touches a paddle
             if (self.ball.x <= 3.5 and self.left_paddle.isInColision(self.ball.y)) or (self.ball.x >= 96.5 and self.right_paddle.isInColision(self.ball.y)):
                 self.ball.direction.x *= -1
