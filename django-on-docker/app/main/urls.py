@@ -24,14 +24,12 @@ urlpatterns = [
 
 	path('api/userdetail/<int:pk>/', views.CuestomUserAPIDetailView.as_view()), # to delete a user
 
-	path('api/user/getstats/', views.UserGetStatsView.as_view()),
+	path('api/user/getstats/<int:user_id>/', views.UserGetStatsView.as_view()),
 	path('api/user/upload_avatar/', views.AvatarUploadView.as_view()),
 
 	path('api/match/gethistory/', views.UserMatchHistoryView.as_view()),
-	path('api/match/create/', views.MatchCreateView.as_view()),
-	
+
 	path('api/game/create/', views.CreateGameView.as_view()),
-	# path('api/game/join/', views.JoinGameView.as_view()),
 	path('api/game/getinfo/<str:game_id>/', views.GetGameInfoView.as_view()),
 
 	path('api/token/', TokenObtainPairView.as_view(), name='token_obtain_pair'), # get token pair: required pair email and password 
@@ -47,14 +45,20 @@ urlpatterns = [
 	path('api/blockuser/', views.BlockUserView.as_view(), name='block_user'),
 	path('api/unblockuser/', views.UnblockUserView.as_view(), name='unblock_user'),
 
-	# path('api/chat/getmessages/', views.GetMessagesView.as_view(), name='get_messages'),
 	path('api/chat/getmessages/<str:display_name>/', views.GetMessagesByDisplayNameView.as_view()),
 	path('api/chat/getlast/', views.GetLastChatsView.as_view(), name='get_lastchats'),
 
 	path('api/setup-2fa/', views.SetupTwoFactorAuthView.as_view(), name='setup_2fa'),
 	path('api/confirm-2fa/', views.ConfirmTwoFactorAuthView.as_view(), name='confirm_2fa'),
 
-	path('api/search/<str:string>/', views.UserSearchView.as_view(), name='user_search')
+	path('api/search/<str:string>/', views.UserSearchView.as_view(), name='user_search'),
+
+	path('api/tournament/propose/', views.ProposeTournament.as_view()),
+	path('api/tournament/accept/', views.AcceptTournamentInvitation.as_view()),
+	path('api/tournament/decline/', views.DeclineTournamentInvitation.as_view()),
+	path('api/tournament/my/', views.GetMyTournaments.as_view()),
+	path('api/tournament/<str:tournament_id>/', views.GetTournamentById.as_view()),
+
 ]
 
 

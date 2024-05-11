@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import CustomUser, Friendship, ChatMessage, MatchHistory, BlockUser, PairGame
+from .models import CustomUser, Friendship, ChatMessage, BlockUser, PairGame, Tournament
 
 from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
@@ -95,34 +95,6 @@ class ChatMessageSerializer(serializers.ModelSerializer):
         fields = ['sender', 'receiver', 'content', 'date_added', 'content_type']
 
 
-class MatchHistorySerializer(serializers.ModelSerializer):
-    class Meta:
-        model = MatchHistory
-        fields = ['player1', 'player2', 'player1_result', 'player2_result', 'player1_score', 'player2_score','match_date']
-
-
-class MatchCreateSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = MatchHistory
-        fields = ['player1', 'player2', 'player1_result', 'player2_result', 'player1_score', 'player2_score']
-
-    def validate(self, data):
-        player1_result = data.get('player1_result')
-        player2_result = data.get('player2_result')
-        player1_score = data.get('player1_score')
-        player2_score = data.get('player2_score')
-
-        if player1_result not in [0, 1] or player2_result not in [0, 1]:
-            raise serializers.ValidationError("Result must be either 0 or 1")
-
-        if player1_result == 1 and player2_result == 1:
-            raise serializers.ValidationError("Both results cannot equal 1")
-        
-        if player1_score not in range(12) or player2_score  not in range(12):
-            raise serializers.ValidationError("Score result must be in  between 0 and 11")
-
-        return data
-
 class AvatarUploadSerializer(serializers.ModelSerializer):
     class Meta:
         model = CustomUser
@@ -139,7 +111,7 @@ class PairGameSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = PairGame
-        fields = ['player1', 'player2', 'game_id', 'player1_score', 'player2_score', 'won_id']
+        fields = ['player1', 'player2', 'game_id', 'player1_score', 'player2_score', 'won_id', 'date_created']
 
     def get_won_id(self, obj):
        if obj.status != PairGame.FINISHED:
@@ -150,3 +122,13 @@ class PairGameSerializer(serializers.ModelSerializer):
             return obj.player2_id
        else:
             return None
+       
+class TournamentSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Tournament
+        fields = ['created_at', 'status', 'tournament_id']
+
+class TournamentDetailedSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Tournament
+        fields = ['participants', 'created_at', 'status', 'participant_points', 'tournament_id']

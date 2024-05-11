@@ -1,6 +1,6 @@
 from django.core.exceptions import ValidationError
 import pyotp
-from .models import UserTwoFactorAuthData, Friendship, ChatMessage, BlockUser, MatchHistory, PairGame
+from .models import UserTwoFactorAuthData, Friendship, ChatMessage, BlockUser, PairGame, Tournament
 from django.db import models
 
 
@@ -36,6 +36,13 @@ def check_if_exists_game(game_id):
         obj = PairGame.objects.get(game_id=game_id)
         return obj
     except PairGame.DoesNotExist:
+        return None
+
+def check_if_exists_tt(tournament_id):
+    try:
+        obj = Tournament.objects.get(tournament_id=tournament_id)
+        return obj
+    except Tournament.DoesNotExist:
         return None
 
 def get_friendships_db(user):
@@ -94,19 +101,33 @@ def get_blocked_user_ids(user):
 def create_blocking_record(blocked_by_id, blocked_user_id):
     BlockUser.objects.create(blocked_by_id=blocked_by_id, blocked_user_id=blocked_user_id)
 
-def get_match_history(user_id):
-    match_history = MatchHistory.objects.filter(models.Q(player1=user_id) | models.Q(player2=user_id)).order_by('-match_date')
+def get_match_history(user):
+
+    match_history = PairGame.objects.filter(
+            (models.Q(player1=user) | models.Q(player2=user)) &
+            (models.Q(status=PairGame.FINISHED))
+        ).order_by('-date_created')
+
     return match_history
 
 def get_wins(user):
-    wins = MatchHistory.objects.filter(player1=user, player1_result=1).count() + \
-               MatchHistory.objects.filter(player2=user, player2_result=1).count()
+    wins = PairGame.objects.filter(
+        models.Q(player1=user, player1_score__gt=models.F('player2_score')) |
+        models.Q(player2=user, player2_score__gt=models.F('player1_score')),
+        status=PairGame.FINISHED
+    ).count()
     return wins
 
+
+
 def get_loses(user):
-    losses = MatchHistory.objects.filter(player1=user, player1_result=0).count() + \
-            MatchHistory.objects.filter(player2=user, player2_result=0).count()
+    losses = PairGame.objects.filter(
+        models.Q(player1=user, player1_score__lt=models.F('player2_score')) |
+        models.Q(player2=user, player2_score__lt=models.F('player1_score')),
+        status=PairGame.FINISHED
+    ).count()
     return losses
+
 
 def get_last_chat_users(user): 
 
@@ -141,16 +162,13 @@ def create_message_text_type(content, sender, receiver):
 def create_message_gameid_type(game_id, player1, player2):
     ChatMessage.objects.create(content=game_id, sender=player1, receiver=player2, content_type = ChatMessage.GAMEID)
 
+def create_message_ttid_type(tournament_id, tt_creator, participant):
+    ChatMessage.objects.create(content=tournament_id, sender=tt_creator, receiver=participant, content_type= ChatMessage.TTID)
+
 def change_game_status_in_progress(game_id):
     game = PairGame.objects.get(game_id=game_id)
     game.status = PairGame.IN_PROGRESS
     game.save()
-
-# def change_game_status_finished(game_id):
-#     game = PairGame.objects.get(game_id=game_id)
-#     game.status = PairGame.FINISHED
-#     game.save()
-
 
 def finish_game_db(game_id, player1_score, player2_score):
 
@@ -159,3 +177,29 @@ def finish_game_db(game_id, player1_score, player2_score):
     game.player1_score = player1_score
     game.player2_score = player2_score
     game.save()
+
+
+def create_tournament(users):
+    tournament = Tournament.objects.create()
+    tournament.participants.add(*users)
+    tournament.generate_schedule()
+    return tournament
+
+def accept_tt_invitation(tournament, user_id):
+    tournament.invitation_status[user_id] = 1
+    tournament.save()
+
+def decline_tt_invitation(tournament, user_id):
+    tournament.invitation_status[user_id] = 0
+    tournament.status = Tournament.CANCELED
+    tournament.save()
+
+def change_tt_messages(tournament_id):
+    messages = ChatMessage.objects.filter(content=tournament_id)
+    for message in messages:
+        message.extra_details = "TT_CANCELED"
+        message.save()
+
+def get_tournamnets(user):
+    tournaments = Tournament.objects.filter(participants=user)
+    return tournaments

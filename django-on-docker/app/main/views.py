@@ -1,4 +1,4 @@
-from .models import CustomUser, Friendship, ChatMessage, BlockUser, MatchHistory
+from .models import CustomUser, Friendship, ChatMessage, BlockUser
 from django.db import models
 from rest_framework.response import Response
 from . import serializers
@@ -399,53 +399,19 @@ class ConfirmTwoFactorAuthView(views.APIView):
 
 class UserMatchHistoryView(views.APIView):
     def get(self, request):
-        user_id = request.user.id
-        match_history = get_match_history(user_id)
-        serializer = serializers.MatchHistorySerializer(match_history, many=True)
+        user = request.user
+        match_history = get_match_history(user)
+        serializer = serializers.PairGameSerializer(match_history, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
-
-class MatchCreateView(views.APIView):
-    def post(self, request):
-        if not request.data:
-            return Response({'error': EMPTY}, status=status.HTTP_400_BAD_REQUEST)
-
-        player1_id = request.data.get('player1_id')
-        player2_id = request.data.get('player2_id')
-        player1_result = request.data.get('player1_result')
-        player2_result = request.data.get('player2_result')
-        player1_score = request.data.get('player1_score')
-        player2_score = request.data.get('player2_score')
-
-        player1 = check_if_exists_by_id(CustomUser, player1_id)
-        if player1 is None:
-            return Response({"error": "Player1 does not exist"}, status=status.HTTP_404_NOT_FOUND)
-
-        player2 = check_if_exists_by_id(CustomUser, player2_id)
-        if player2 is None:
-            return Response({"error": "Player2 does not exist"}, status=status.HTTP_404_NOT_FOUND)
-
-        match_data = {
-            'player1': player1.id,
-            'player2': player2.id,
-            'player1_result': player1_result,
-            'player2_result': player2_result,
-            'player1_score': player1_score,
-            'player2_score': player2_score
-        }
-
-        serializer = serializers.MatchCreateSerializer(data=match_data)
-        if serializer.is_valid():
-            serializer.save()
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
 class UserGetStatsView(views.APIView):
-    def get(self, request):
-        user = request.user
+    def get(self, request, user_id):
+        user = check_if_exists_by_id(CustomUser, user_id)
+        if user is None:
+            return Response({"error": NO_USER}, status=status.HTTP_404_NOT_FOUND)
         wins = get_wins(user)
         losses = get_loses(user)
-
         stats = {
             'wins': wins,
             'losses': losses
@@ -523,37 +489,6 @@ class CreateGameView(CheckIdMixin, views.APIView):
 
         return Response({'success': True}, status=status.HTTP_200_OK)
 
-# class JoinGameView(CheckGameIdMixin, views.APIView):
-#     def put(self, request):
-#         if not request.data:
-#             return Response({'error': EMPTY}, status=status.HTTP_400_BAD_REQUEST)
-        
-#         game_id = request.data.get('game_id')
-
-#         error_response = self.check_game_id(game_id, 'game_id')
-#         if error_response:
-#             return error_response
-
-#         game = check_if_exists_game(game_id)
-#         if game is None:
-#             return Response({"error": NO_GAME}, status=status.HTTP_404_NOT_FOUND)
-        
-#         user_id = request.user.id
-
-
-#         if str(user_id) == str(game.player1_id):
-#             game.is_present_1 = True
-#         elif str(user_id) == str(game.player2_id):
-#             game.is_present_2 = True
-#         else:
-#             return Response({"error": NOT_ALLOWED_GAME}, status=status.HTTP_405_METHOD_NOT_ALLOWED)
-#         game.save()
-
-#         # if game.is_present_1 == True & game.is_present_2 == True:
-#         #    game = game_manager.create_game(game_id, game.player1_id, game.player2_id)
-#         #    game.start_game()
-#         return Response({'success': True}, status=status.HTTP_200_OK)
-
 
 class GetGameInfoView(views.APIView):
     def get(self, request, game_id):
@@ -562,18 +497,130 @@ class GetGameInfoView(views.APIView):
             return Response({"error": NO_GAME}, status=status.HTTP_404_NOT_FOUND)
         serializer = serializers.PairGameSerializer(game)
         return Response(serializer.data)
+
+
+class ProposeTournament(views.APIView):
+    def post(self, request):
+        if not request.data:
+            return Response({'error': EMPTY}, status=status.HTTP_400_BAD_REQUEST)
+        user_ids = request.data.get('user_ids', [])
+        if not user_ids:
+            return Response({'error': 'No user IDs provided'}, status=status.HTTP_400_BAD_REQUEST)
+
+        users = CustomUser.objects.filter(pk__in=user_ids)
+        if len(users) != len(user_ids):
+            return Response({'error': 'Invalid user IDs provided'}, status=status.HTTP_400_BAD_REQUEST)
+
+        creator = request.user
+        participants = list(users) + [creator]
+        tournament = create_tournament(participants)
+
+        creator_id = creator.id
+        accept_tt_invitation(tournament, creator_id)
+
+        tournament_id = tournament.tournament_id
+        for user in users:
+            create_message_ttid_type(tournament_id, creator, user)
+
+        content_type = ChatMessage.TTID
         
+        
+        channel_layer = get_channel_layer()
+
+        for user_id in user_ids:
+            async_to_sync(channel_layer.group_send)(
+                f"{user_id}",
+                {
+                    'type': 'tournament.link', 
+                    'creator_id': creator_id,
+                    'participant_id': user_id,
+                    'tournament_id': tournament_id,
+                    'content_type': content_type
+                }
+            )
+        
+        for user_id in user_ids:
+            async_to_sync(channel_layer.group_send)(
+                f"{creator_id}",
+                {
+                    'type': 'tournament.link', 
+                    'creator_id': creator_id,
+                    'participant_id': user_id,
+                    'tournament_id': tournament_id,
+                    'content_type': content_type
+                }
+            )
+        return Response({'message': 'Tournament proposed successfully', 'tournament_id': tournament_id}, status=status.HTTP_201_CREATED)
+
+class AcceptTournamentInvitation(CheckTournamentIdMixin, views.APIView):
+    def put(self, request):
+        if not request.data:
+            return Response({'error': EMPTY}, status=status.HTTP_400_BAD_REQUEST)
+        
+        tournament_id = request.data.get('tournament_id')
+        error_response = self.check_tt_id(tournament_id, 'tournament_id')
+        if error_response:
+            return error_response
+
+        tournament = check_if_exists_tt(tournament_id)
+        if tournament is None:
+            return Response({"error": NO_TT}, status=status.HTTP_404_NOT_FOUND)
+
+        user_id = request.user.id
+        if user_id not in tournament.participants.values_list('id', flat=True):
+            return Response({"error": NOT_ALLOWED_TT}, status=status.HTTP_404_NOT_FOUND)  
+        
+        accept_tt_invitation(tournament, user_id)
+        return Response({'message': 'User accepted tournament invitation successfully'}, status=status.HTTP_200_OK)
+
+
+class DeclineTournamentInvitation(CheckTournamentIdMixin, views.APIView):
+    def put(self, request):
+        if not request.data:
+            return Response({'error': EMPTY}, status=status.HTTP_400_BAD_REQUEST)
+        
+        tournament_id = request.data.get('tournament_id')
+        error_response = self.check_tt_id(tournament_id, 'tournament_id')
+        if error_response:
+            return error_response
+        
+        tournament = check_if_exists_tt(tournament_id)
+        if tournament is None:
+            return Response({"error": NO_TT}, status=status.HTTP_404_NOT_FOUND)
+        
+        user_id = request.user.id
+        if user_id not in tournament.participants.values_list('id', flat=True):
+            return Response({"error": NOT_ALLOWED_TT}, status=status.HTTP_404_NOT_FOUND)
+    
+        decline_tt_invitation(tournament, user_id)
+        change_tt_messages(tournament_id)
+
+        return Response({'message': 'User declined tournament invitation and canceled tournamnet successfully'}, status=status.HTTP_200_OK)
+
+
+class GetMyTournaments(views.APIView):
+    def get(self, request):
+        user = request.user
+        tournaments = get_tournamnets(user)
+        print(tournaments)
+        serializer = serializers.TournamentSerializer(tournaments, many=True)
+        return Response(serializer.data)
+
+
+class GetTournamentById(views.APIView):
+    def get(self, request, tournament_id):
+        tournament = check_if_exists_tt(tournament_id)
+        if tournament is None:
+            return Response({"error": NO_TT}, status=status.HTTP_404_NOT_FOUND)
+        serializer = serializers.TournamentDetailedSerializer(tournament)
+        return Response(serializer.data)
+
 
 def login(request):
     return render(request, "chat/login.html")
 
 
 def room(request):
-    # messages = ChatMessage.objects.filter(
-    #     (models.Q(sender=request.user.id) | models.Q(sender__id=receiver_id)) &
-    #     (models.Q(receiver=request.user.id) | models.Q(receiver__id=receiver_id))
-    # ).order_by('-date_added')[:25]
-
     return render(request, "chat/room.html")
 
     
