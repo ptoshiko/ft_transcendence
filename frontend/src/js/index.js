@@ -8,9 +8,12 @@ import ChatFriend from "./components/ChatFriend.js";
 import ChatMessageToMe from "./components/ChatMessageToMe.js";
 import MyChatMessage from "./components/MyChatMessage.js";
 import {getMe} from "./service/users.js";
-import {redirectTo} from "./helpers.js";
+import {modalsToCloseList, redirectTo} from "./helpers.js";
 import {initSocket} from "./service/socket.js";
 import DuelGame from "./components/DuelGame.js";
+import Game from "./components/Game.js";
+import AddedToTournamentUser from "./components/AddedToTournamentUser.js";
+import UserSmallTournament from "./components/UserSmallTournament.js";
 
 customElements.define('tr-login', Login);
 customElements.define('tr-not-found', FourZeroFor);
@@ -18,10 +21,13 @@ customElements.define('tr-nav', NavBar);
 customElements.define('tr-profile', Profile);
 customElements.define('tr-chat', Chat);
 customElements.define('tr-user-small', UserSmall);
+customElements.define('tr-user-small-tournament', UserSmallTournament);
 customElements.define('tr-chat-msg-to-me', ChatMessageToMe);
 customElements.define('tr-chat-my-msg', MyChatMessage);
 customElements.define('tr-chat-friend', ChatFriend);
 customElements.define('tr-duel-game', DuelGame);
+customElements.define('tr-game', Game);
+customElements.define('tr-added-to-tournament', AddedToTournamentUser);
 
 const app = document.querySelector("#app");
 
@@ -45,10 +51,19 @@ function getParams(result, path) {
 export default async function router(firstMe) {
     let route = null;
     let result = null;
+    for (const toClose of modalsToCloseList) {
+        $(`#${toClose}`).modal('hide')
+    }
+
+    while (modalsToCloseList.length > 0) {
+        modalsToCloseList.pop();
+    }
+
     const routes = [
         { path: "/", component: "tr-profile"},
         { path: "/login", component: "tr-login"},
         { path: "/profiles/:username", component: "tr-profile"},
+        { path: "/game", component: "tr-game"},
         { path: "/chat", component: "tr-chat"},
         { path: "/chat/:username", component: "tr-chat"},
         { path: "/games/:game_id", component: "tr-duel-game"},

@@ -36,7 +36,7 @@ export default class extends HTMLElement {
 
     render() {
         this.innerHTML = `
-            <tr-nav></tr-nav>
+            <tr-nav current-active="chat"></tr-nav>
             <div id="chat-error-alert" style="position: absolute; z-index: 15; left: 0; right: 0; margin-left: auto; margin-right: auto; max-width: 500px" class="alert alert-danger collapse m-auto" role="alert"></div>
             <div class="container" >
                 <div class="row">

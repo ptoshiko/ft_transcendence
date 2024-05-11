@@ -1,4 +1,4 @@
-import {formatAvatar, navigateTo, redirectTo} from "../helpers.js";
+import {formatAvatar, modalsToCloseList, navigateTo, redirectTo} from "../helpers.js";
 import {
     getFriends,
     getMe,
@@ -49,12 +49,16 @@ export default class extends HTMLElement {
 
         this.renderSmallFriendsList();
 
+        modalsToCloseList.push("edit-info-modal")
+        modalsToCloseList.push("view-all-friends-modal")
+        modalsToCloseList.push("change-avatar-modal")
+
         document.title = "Profile";
     }
 
     render() {
         this.innerHTML = `
-            <tr-nav></tr-nav>
+            <tr-nav current-active="profile"></tr-nav>
             <div class="container">
             <!-- First Row -->
             <div class="row mt-3">
@@ -90,8 +94,10 @@ export default class extends HTMLElement {
                     <div class="card h-100">
                         <h5 class="card-header">Stats</h5>
                         <div class="card-body">
-                            <h5 class="card-title text-success">Wins: 5</h5>
-                            <h5 class="card-title text-danger">Loses: 6</h5>
+                            <div class="progress" style="height: 40px;">
+                                  <div id="win-bar" class="progress-bar bg-success" role="progressbar" style="width: 28.57%">4 Wins</div>
+                                  <div id="lose-bar" class="progress-bar bg-danger" role="progressbar" style="width: 71.42%">10 Loses</div>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -226,6 +232,10 @@ export default class extends HTMLElement {
         this.blockBtn = this.querySelector("#block_btn");
         this.unblockBtn = this.querySelector("#unblock_btn");
         this.profileSendMsgBtn = this.querySelector("#profile_send_msg_btn");
+
+        // Bars
+        this.winBar = this.querySelector("#win-bar");
+        this.loseBar = this.querySelector("#lose-bar");
 
         this.profileEditInfoBtn = this.querySelector("#profile-edit-info-btn");
         this.profileSmallFriendsList = this.querySelector("#profile-small-friends-list");

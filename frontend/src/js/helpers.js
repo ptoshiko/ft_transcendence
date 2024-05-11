@@ -2,6 +2,8 @@ import router from "./index.js"
 import {AVATAR_ADDRESS} from "./constants.js";
 import {closeSocket} from "./service/socket.js";
 
+export let modalsToCloseList = []
+
 export function navigateTo(url) {
     history.pushState(null, null, url)
     router()

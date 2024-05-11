@@ -90,3 +90,37 @@
     text-align: center;
     font-size: 12vh;
 }
+
+.tournament-invite-list {
+    background-color: lightgray;
+    border-radius: 25px;
+    overflow-x: scroll;
+    display: flex;
+    margin-bottom: 8px;
+    padding: 2px 0;
+    height: 60px;
+    align-items: center;
+}
+
+.tournament-invite-list > * {
+    width: 50px;
+    height: 50px;
+    margin-left: 12.5px;
+}
+
+.added-container {
+    position: relative;
+}
+
+.added-icon {
+    position: absolute;
+    right: -2%;
+    top: -15%;
+
+}
+
+.invite-avatar {
+    border-radius: 100%;
+    width: 50px;
+    height: 50px;
+}
