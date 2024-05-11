@@ -2,7 +2,7 @@ from django.contrib.auth.models import AbstractBaseUser, PermissionsMixin
 from django.db import models
 from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
-from .utils import validate_display_name
+from .utils import *
 from .managers import CustomUserManager
 import uuid
 
@@ -24,19 +24,6 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):
         return self.email
         
 AUTH_USER_MODEL = "main.CustomUser"
-
-class MatchHistory(models.Model):
-    player1 = models.ForeignKey(AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='matches_played')
-    player2 = models.ForeignKey(AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='matches_opponent')
-    player1_result = models.IntegerField(default=0)
-    player2_result = models.IntegerField(default=0)
-    player1_score = models.IntegerField(default=0)
-    player2_score = models.IntegerField(default=0)
-
-    match_date = models.DateTimeField(_("match date"), auto_now_add=True)
-
-    def __str__(self):
-        return f"{self.user.email} vs {self.opponent.email} - {self.result}"
 
 class Friendship(models.Model):
 
@@ -65,15 +52,18 @@ class ChatMessage(models.Model):
 
     TEXT = 1
     GAMEID = 2
+    TTID = 3
     CONTENT_TYPE = (
         (TEXT, 'Text'),
         (GAMEID, 'GameID'),
+        (TTID, 'TournamentID')
     )
     content_type = models.IntegerField(choices=CONTENT_TYPE, default = TEXT)
     content = models.TextField()
     sender = models.ForeignKey(AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='message_sender')
     receiver = models.ForeignKey(AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='message_receiver')
     date_added = models.DateTimeField(auto_now_add=True)
+    extra_details = models.TextField(default="")
 
     class Meta:
         ordering = ('date_added',)
@@ -117,22 +107,62 @@ class PairGame(models.Model):
         super().save(*args, **kwargs)
 
 
-class GameInvitation(models.Model):
-    sender = models.ForeignKey(AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='invitation_sender')
-    receiver = models.ForeignKey(AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='invitation_receiver')
-    is_active = models.BooleanField(default=True)
-    invitation_id = models.CharField(max_length=32, unique=True)
-    created_at = models.DateTimeField(auto_now_add=True)
+class Tournament(models.Model):
 
-    def is_valid(self):
-        time_difference = timezone.now() - self.created_at
-        return time_difference.total_seconds() <= 15 * 60
-    
+    CREATED = 0
+    IN_PROGRESS = 1
+    FINISHED = 2
+    CANCELED = 3
+    STATUS_CHOICES = (
+        (CREATED, 'Created'),
+        (IN_PROGRESS, 'In progress'),
+        (FINISHED, 'Finished'),
+        (CANCELED, 'Canceled')
+    )
+    participants = models.ManyToManyField(AUTH_USER_MODEL, related_name='tournaments')
+    created_at = models.DateTimeField(auto_now_add=True)
+    schedule = models.JSONField(null=True, blank=True) 
+    participant_points = models.JSONField(default=dict)
+    status = models.IntegerField(choices = STATUS_CHOICES, default = CREATED)
+    tournament_id =  models.CharField(max_length=32, unique=True, default=0)
+    invitation_status = models.JSONField(default=dict)
+
+    def __str__(self):
+        return f"Tournament {self.id}"
+
     def save(self, *args, **kwargs):
-        if not self.invitation_id:
-            self.invitation_id = str(uuid.uuid4().hex)[:32]  # Generate a unique ID
+        if not self.tournament_id:
+            self.tournament_id = str(uuid.uuid4().hex)[:32]  # Generate a unique ID
+
         super().save(*args, **kwargs)
 
+    def generate_schedule(self):
+        participant_ids = list(self.participants.values_list('id', flat=True))
+
+        schedule = []
+
+        for match in combinations(participant_ids, 2):
+            schedule.append(match)
+
+        self.schedule = schedule
+        self.save()
+
+    # def update_participant_points(self, participant_id, player_score, opponent_score):
+    #     # Calculate points based on game scores
+    #     if player_score > opponent_score:
+    #         points = 1
+    #     elif player_score < opponent_score:
+    #         points = 0
+    #     else:
+    #         points = 0.5
+
+    #     if participant_id in self.participant_points:
+    #         self.participant_points[participant_id] += points
+    #     else:
+    #         self.participant_points[participant_id] = points
+
+
+    
 
 # for 2FA
 from typing import Optional

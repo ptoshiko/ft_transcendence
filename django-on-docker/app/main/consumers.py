@@ -174,6 +174,22 @@ class ChatConsumer(AsyncWebsocketConsumer):
             }
         }))
 
+    async def tournament_link(self, event):
+        creator_id = event["creator_id"]
+        participant_id = event["participant_id"]
+        tournament_id = event["tournament_id"]
+        content_type = event["content_type"]
+
+        await self.send(text_data=json.dumps({
+            "event_type": "tournament_link",
+            "data":{
+                "content_type": content_type,
+                "sender": creator_id,
+                "receiver": participant_id,
+                "tournament_id": tournament_id
+            }
+        }))
+                    
 
 
     async def game_tick(self, event):
@@ -274,15 +290,6 @@ class ChatConsumer(AsyncWebsocketConsumer):
         custom_user.is_online = is_online
         custom_user.save()
 
-    # @database_sync_to_async
-    # def save_invitation(self, sender_id, receiver_id):
-    #     sender = CustomUser.objects.get(id=sender_id)
-    #     try:
-    #         receiver = CustomUser.objects.get(id=receiver_id)
-    #     except ObjectDoesNotExist:
-    #         raise ValueError("Receiver does not exist")
-    #     invitation = GameInvitation.objects.create(sender=sender, receiver=receiver)
-    #     return invitation
     
     @database_sync_to_async
     def check_if_exists(self, receiver_display_name):
