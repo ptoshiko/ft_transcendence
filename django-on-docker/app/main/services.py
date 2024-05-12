@@ -2,7 +2,7 @@ from django.core.exceptions import ValidationError
 import pyotp
 from .models import UserTwoFactorAuthData, Friendship, ChatMessage, BlockUser, PairGame, Tournament
 from django.db import models
-
+from .announcement import *
 
 def user_two_factor_auth_data_create(*, user) -> UserTwoFactorAuthData:
     if hasattr(user, 'two_factor_auth_data'):
@@ -144,16 +144,20 @@ def check_game_by_users_not_finished(player1_id, player2_id):
             (models.Q(player1_id=player2_id) & models.Q(player2_id=player1_id)),
         ).exclude(
             status=PairGame.FINISHED
+        ).exclude(
+            tournament__isnull=False
         ).get()
         return game
     except PairGame.DoesNotExist:
-        # If no matching game is found, return None or handle the case accordingly
         return None
 
 
 def create_game_record(player1_id, player2_id):
-    # create a new game ID if there is no old game ID with status not FINISHED
     game = PairGame.objects.create(player1_id = player1_id, player2_id = player2_id)
+    return game
+
+def create_tt_game_record(player1_id, player2_id, tournament):
+    game = PairGame.objects.create(player1_id = player1_id, player2_id = player2_id, tournament=tournament)
     return game
 
 def create_message_text_type(content, sender, receiver):
@@ -182,12 +186,32 @@ def finish_game_db(game_id, player1_score, player2_score):
 def create_tournament(users):
     tournament = Tournament.objects.create()
     tournament.participants.add(*users)
-    tournament.generate_schedule()
     return tournament
+
+
+def start_first_tt_game(tournament):
+    
+    game = create_tt_game_record(tournament.schedule[0][0], tournament.schedule[0][1], tournament)
+    create_message_gameid_type(game.game_id, game.player1, game.player2)
+
+    announce_game(game.player1.id, game.player2.id, game.game_id)
+
+    tournament.status = Tournament.IN_PROGRESS  
+    tournament.save()
+
+
 
 def accept_tt_invitation(tournament, user_id):
     tournament.invitation_status[user_id] = 1
     tournament.save()
+
+    num_participants = tournament.participants.count()
+    num_accepted = sum(1 for value in tournament.invitation_status.values() if value == 1)
+
+    if num_participants == num_accepted:
+        tournament.generate_schedule()
+        start_first_tt_game(tournament)
+        
 
 def decline_tt_invitation(tournament, user_id):
     tournament.invitation_status[user_id] = 0
@@ -201,5 +225,10 @@ def change_tt_messages(tournament_id):
         message.save()
 
 def get_tournamnets(user):
-    tournaments = Tournament.objects.filter(participants=user)
+    tournaments = Tournament.objects.filter(participants=user).order_by('-date_added')
     return tournaments
+
+
+def get_games_by_ttid(tournament):
+    games = PairGame.objects.filter(models.Q(tournament=tournament)).order_by('-date_created')
+    return games

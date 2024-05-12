@@ -11,6 +11,7 @@ from .views_utils import *
 from .error_messages import *
 from .services import *
 from .game import *
+from .announcement import *
 
 from collections import OrderedDict
 
@@ -53,7 +54,6 @@ class CuestomUserAPIDetailView(generics.RetrieveUpdateDestroyAPIView): #to delet
 
 
 ### FRIENDS ###
-
 ### returns not blocked friends
 class FriendsListView(views.APIView):
     def get(self, request):
@@ -454,7 +454,7 @@ class CreateGameView(CheckIdMixin, views.APIView):
         if player2 is None:
             return Response({"error": "Player2 does not exist"}, status=status.HTTP_404_NOT_FOUND)
 
-        # create a new game ID if there is no old game ID with status not FINISHED
+        # create a new game ID if there is no old game ID with status not FINISHED and not belong to 
         game = check_game_by_users_not_finished(player1_id, player2_id)
         if game is None:
             game = create_game_record(player1_id, player2_id)
@@ -462,30 +462,32 @@ class CreateGameView(CheckIdMixin, views.APIView):
         game_id = game.game_id
         create_message_gameid_type(game_id, player1, player2)
 
-        content_type = ChatMessage.GAMEID
-        
-        channel_layer = get_channel_layer()
-        async_to_sync(channel_layer.group_send)(
-            f"{player1_id}",
-            {
-                'type': 'game.link', 
-                'player1_id': player1_id,
-                'player2_id': player2_id,
-                'game_id': game_id,
-                'content_type': content_type
-            }
-        )
+        announce_game(player1_id, player2_id, game_id)
 
-        async_to_sync(channel_layer.group_send)(
-            f"{player2_id}",
-            {
-                'type': 'game.link', 
-                'player1_id': player1_id,
-                'player2_id': player2_id,
-                'game_id': game_id,
-                'content_type': content_type
-            }
-        )
+        # content_type = ChatMessage.GAMEID
+        
+        # channel_layer = get_channel_layer()
+        # async_to_sync(channel_layer.group_send)(
+        #     f"{player1_id}",
+        #     {
+        #         'type': 'game.link', 
+        #         'player1_id': player1_id,
+        #         'player2_id': player2_id,
+        #         'game_id': game_id,
+        #         'content_type': content_type
+        #     }
+        # )
+
+        # async_to_sync(channel_layer.group_send)(
+        #     f"{player2_id}",
+        #     {
+        #         'type': 'game.link', 
+        #         'player1_id': player1_id,
+        #         'player2_id': player2_id,
+        #         'game_id': game_id,
+        #         'content_type': content_type
+        #     }
+        # )
 
         return Response({'success': True}, status=status.HTTP_200_OK)
 
@@ -522,34 +524,34 @@ class ProposeTournament(views.APIView):
         for user in users:
             create_message_ttid_type(tournament_id, creator, user)
 
-        content_type = ChatMessage.TTID
-        
-        
-        channel_layer = get_channel_layer()
+        announce_tournament(user_ids, creator_id, tournament_id)
 
-        for user_id in user_ids:
-            async_to_sync(channel_layer.group_send)(
-                f"{user_id}",
-                {
-                    'type': 'tournament.link', 
-                    'creator_id': creator_id,
-                    'participant_id': user_id,
-                    'tournament_id': tournament_id,
-                    'content_type': content_type
-                }
-            )
+        # content_type = ChatMessage.TTID
+        # channel_layer = get_channel_layer()
+
+        # for user_id in user_ids:
+        #     async_to_sync(channel_layer.group_send)(
+        #         f"{user_id}",
+        #         {
+        #             'type': 'tournament.link', 
+        #             'creator_id': creator_id,
+        #             'participant_id': user_id,
+        #             'tournament_id': tournament_id,
+        #             'content_type': content_type
+        #         }
+        #     )
         
-        for user_id in user_ids:
-            async_to_sync(channel_layer.group_send)(
-                f"{creator_id}",
-                {
-                    'type': 'tournament.link', 
-                    'creator_id': creator_id,
-                    'participant_id': user_id,
-                    'tournament_id': tournament_id,
-                    'content_type': content_type
-                }
-            )
+        # for user_id in user_ids:
+        #     async_to_sync(channel_layer.group_send)(
+        #         f"{creator_id}",
+        #         {
+        #             'type': 'tournament.link', 
+        #             'creator_id': creator_id,
+        #             'participant_id': user_id,
+        #             'tournament_id': tournament_id,
+        #             'content_type': content_type
+        #         }
+        #     )
         return Response({'message': 'Tournament proposed successfully', 'tournament_id': tournament_id}, status=status.HTTP_201_CREATED)
 
 class AcceptTournamentInvitation(CheckTournamentIdMixin, views.APIView):
@@ -614,6 +616,17 @@ class GetTournamentById(views.APIView):
             return Response({"error": NO_TT}, status=status.HTTP_404_NOT_FOUND)
         serializer = serializers.TournamentDetailedSerializer(tournament)
         return Response(serializer.data)
+    
+class GetGamesByTTId(views.APIView):
+    def get(self, request, tournament_id):
+        tournament = check_if_exists_tt(tournament_id)
+        if tournament is None:
+            return Response({"error": NO_TT}, status=status.HTTP_404_NOT_FOUND)
+        
+        games = get_games_by_ttid(tournament)
+        serializer = serializers.PairGameSerializer(games, many=True)
+        return Response(serializer.data)        
+
 
 
 def login(request):

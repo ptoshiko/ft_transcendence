@@ -31,6 +31,7 @@ urlpatterns = [
 
 	path('api/game/create/', views.CreateGameView.as_view()),
 	path('api/game/getinfo/<str:game_id>/', views.GetGameInfoView.as_view()),
+	path('api/game/list/<str:tournament_id>/', views.GetGamesByTTId.as_view()),
 
 	path('api/token/', TokenObtainPairView.as_view(), name='token_obtain_pair'), # get token pair: required pair email and password 
     path('api/token/refresh/', TokenRefreshView.as_view(), name='token_refresh'), # get token pair: required refresh token; body example {"refresh": "..."}
