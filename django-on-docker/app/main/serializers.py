@@ -111,7 +111,6 @@ class PairGameSerializer(serializers.ModelSerializer):
 
     display_name_p1 = serializers.SerializerMethodField()
     display_name_p2 = serializers.SerializerMethodField()
-    
 
     class Meta:
         model = PairGame

@@ -225,7 +225,7 @@ def change_tt_messages(tournament_id):
         message.save()
 
 def get_tournamnets(user):
-    tournaments = Tournament.objects.filter(participants=user).order_by('-date_added')
+    tournaments = Tournament.objects.filter(participants=user).order_by('-created_at')
     return tournaments
 
 
