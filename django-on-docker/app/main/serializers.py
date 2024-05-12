@@ -109,9 +109,13 @@ class PairGameSerializer(serializers.ModelSerializer):
 
     won_id = serializers.SerializerMethodField()
 
+    display_name_p1 = serializers.SerializerMethodField()
+    display_name_p2 = serializers.SerializerMethodField()
+    
+
     class Meta:
         model = PairGame
-        fields = ['player1', 'player2', 'game_id', 'player1_score', 'player2_score', 'won_id', 'date_created']
+        fields = ['player1', 'player2', 'game_id', 'player1_score', 'player2_score', 'won_id', 'date_created', 'display_name_p1', 'display_name_p2']
 
     def get_won_id(self, obj):
        if obj.status != PairGame.FINISHED:
@@ -122,6 +126,13 @@ class PairGameSerializer(serializers.ModelSerializer):
             return obj.player2_id
        else:
             return None
+    
+    def get_display_name_p1(self, obj):
+        return obj.player1.display_name
+    
+    def  get_display_name_p2(self, obj):
+        return obj.player2.display_name
+    
        
 class TournamentSerializer(serializers.ModelSerializer):
     class Meta:

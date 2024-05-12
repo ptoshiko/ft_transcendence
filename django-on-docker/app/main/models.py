@@ -79,34 +79,6 @@ class BlockUser(models.Model):
             models.UniqueConstraint(fields=['blocked_by', 'blocked_user'], name='unique_bloking')
         ]
 
-class PairGame(models.Model):
-    CREATED = 0
-    IN_PROGRESS = 1
-    FINISHED = 2
-    STATUS_CHOICES = (
-        (CREATED, 'Created'),
-        (IN_PROGRESS, 'In progress'),
-        (FINISHED, 'Finished'),
-    )
-
-    player1 = models.ForeignKey(AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='player1')
-    player2 = models.ForeignKey(AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='player2')
-    is_present_1 = models.BooleanField(default=False)
-    is_present_2 = models.BooleanField(default=False)
-    game_id =  models.CharField(max_length=32, unique=True)
-    date_created = models.DateTimeField(_("date_created"), auto_now_add=True)
-    status = models.IntegerField(choices = STATUS_CHOICES, default = CREATED)
-
-    player1_score = models.IntegerField(default=0)
-    player2_score = models.IntegerField(default=0)
-
-    def save(self, *args, **kwargs):
-        if not self.game_id:
-            self.game_id = str(uuid.uuid4().hex)[:32]  # Generate a unique ID
-
-        super().save(*args, **kwargs)
-
-
 class Tournament(models.Model):
 
     CREATED = 0
@@ -160,6 +132,38 @@ class Tournament(models.Model):
     #         self.participant_points[participant_id] += points
     #     else:
     #         self.participant_points[participant_id] = points
+
+class PairGame(models.Model):
+    CREATED = 0
+    IN_PROGRESS = 1
+    FINISHED = 2
+    STATUS_CHOICES = (
+        (CREATED, 'Created'),
+        (IN_PROGRESS, 'In progress'),
+        (FINISHED, 'Finished'),
+    )
+
+    player1 = models.ForeignKey(AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='player1')
+    player2 = models.ForeignKey(AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='player2')
+    is_present_1 = models.BooleanField(default=False)
+    is_present_2 = models.BooleanField(default=False)
+    game_id =  models.CharField(max_length=32, unique=True)
+    date_created = models.DateTimeField(_("date_created"), auto_now_add=True)
+    status = models.IntegerField(choices = STATUS_CHOICES, default = CREATED)
+
+    player1_score = models.IntegerField(default=0)
+    player2_score = models.IntegerField(default=0)
+
+    tournament = models.ForeignKey(Tournament, on_delete=models.SET_NULL, null=True, blank=True)
+
+    def save(self, *args, **kwargs):
+        if not self.game_id:
+            self.game_id = str(uuid.uuid4().hex)[:32]  # Generate a unique ID
+
+        super().save(*args, **kwargs)
+
+
+
 
 
     
