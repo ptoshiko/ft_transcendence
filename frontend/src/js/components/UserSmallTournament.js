@@ -1,5 +1,3 @@
-import {navigateTo, redirectTo} from "../helpers.js";
-
 export default class extends HTMLElement {
     constructor() {
         super();

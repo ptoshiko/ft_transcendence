@@ -89,18 +89,6 @@ export default class extends HTMLElement {
             </div>
             <!-- Second Row -->
             <div class="row mt-3">
-                <!-- Stats -->
-                <div class="col-6">
-                    <div class="card h-100">
-                        <h5 class="card-header">Stats</h5>
-                        <div class="card-body">
-                            <div class="progress" style="height: 40px;">
-                                  <div id="win-bar" class="progress-bar bg-success" role="progressbar" style="width: 28.57%">4 Wins</div>
-                                  <div id="lose-bar" class="progress-bar bg-danger" role="progressbar" style="width: 71.42%">10 Loses</div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
                 <!-- Friends -->
                 <div class="col-6">
                     <div class="card h-100">
@@ -112,22 +100,6 @@ export default class extends HTMLElement {
                         </div>  
                     </div>
                  </div>
-            </div>
-    
-            <!-- Third row -->
-            <div class="row mt-3">
-                <!-- Matches -->
-                <div class="col-6">
-                    <div class="card">
-                        <h5 class="card-header">Match History</h5>
-                        <div class="card-body">
-                            <h5 class="card-sub-title bg-success text-white p-2">@ptoshiko - You won</h5>
-                            <h5 class="card-sub-title bg-danger text-white p-2">@smaar - You lost</h5>
-                            <h5 class="card-sub-title bg-danger text-white p-2">@dk2la - You lost</h5>
-                            <a href="#" class="btn btn-primary">View All</a>
-                        </div>
-                    </div>
-                </div>
             </div>
         </div>
 
@@ -232,10 +204,6 @@ export default class extends HTMLElement {
         this.blockBtn = this.querySelector("#block_btn");
         this.unblockBtn = this.querySelector("#unblock_btn");
         this.profileSendMsgBtn = this.querySelector("#profile_send_msg_btn");
-
-        // Bars
-        this.winBar = this.querySelector("#win-bar");
-        this.loseBar = this.querySelector("#lose-bar");
 
         this.profileEditInfoBtn = this.querySelector("#profile-edit-info-btn");
         this.profileSmallFriendsList = this.querySelector("#profile-small-friends-list");

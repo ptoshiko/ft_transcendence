@@ -33,6 +33,13 @@ function getSocket() {
                         }));
                     }
                     break;
+                case "tournament_link":
+                    if (chatComponent) {
+                        chatComponent.dispatchEvent(new CustomEvent("tournament-link", {
+                            detail: data.data
+                        }))
+                    }
+                    break;
                 case "join_game":
                     if (duelGameComponent) {
                         duelGameComponent.dispatchEvent(new CustomEvent("join_game", {

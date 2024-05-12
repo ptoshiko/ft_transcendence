@@ -14,6 +14,9 @@ import DuelGame from "./components/DuelGame.js";
 import Game from "./components/Game.js";
 import AddedToTournamentUser from "./components/AddedToTournamentUser.js";
 import UserSmallTournament from "./components/UserSmallTournament.js";
+import TournamentSmall from "./components/TournamentSmall.js";
+import MatchSmall from "./components/MatchSmall.js";
+import Tournament from "./components/Tournament.js";
 
 customElements.define('tr-login', Login);
 customElements.define('tr-not-found', FourZeroFor);
@@ -28,6 +31,9 @@ customElements.define('tr-chat-friend', ChatFriend);
 customElements.define('tr-duel-game', DuelGame);
 customElements.define('tr-game', Game);
 customElements.define('tr-added-to-tournament', AddedToTournamentUser);
+customElements.define('tr-tournament-small', TournamentSmall);
+customElements.define('tr-match-small', MatchSmall);
+customElements.define('tr-tournament', Tournament);
 
 const app = document.querySelector("#app");
 
@@ -67,6 +73,7 @@ export default async function router(firstMe) {
         { path: "/chat", component: "tr-chat"},
         { path: "/chat/:username", component: "tr-chat"},
         { path: "/games/:game_id", component: "tr-duel-game"},
+        { path: "/tournaments/:tournament_id", component: "tr-tournament"},
     ];
 
     for (const r of routes) {

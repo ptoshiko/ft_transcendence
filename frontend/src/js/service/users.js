@@ -1,6 +1,6 @@
 import {API_ADDRESS} from "../constants.js"
 import {withAuthorizationHeader, withJSONContent} from "../middleware.js";
-import {formatAvatar} from "../helpers.js";
+import {formatAvatar, quit} from "../helpers.js";
 
 const GET_USER_API = API_ADDRESS+"/getuser/";
 const GET_USER_BY_ID_API = API_ADDRESS+"/userdetail/";
