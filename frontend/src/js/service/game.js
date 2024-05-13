@@ -176,3 +176,53 @@ export async function getGamesByTournament(ttID) {
 
     return await resp.json();
 }
+
+export async function approveTournamentInvite(ttID) {
+    const accessToken = localStorage.getItem("access-token") || "";
+
+    let authHeader = {};
+    if (accessToken !== "") {
+        authHeader = withAuthorizationHeader({}, accessToken);
+    }
+
+    const req = {
+        "tournament_id": ttID,
+    }
+
+    const resp = await fetch(ACCEPT_TOURNAMENT_API, {
+        method: "PUT",
+        headers: withJSONContent(authHeader),
+        body: JSON.stringify(req)
+    });
+
+    if (!resp.ok) {
+        throw resp.status;
+    }
+
+    return await resp.json();
+}
+
+export async function declineTournamentInvite(ttID) {
+    const accessToken = localStorage.getItem("access-token") || "";
+
+    let authHeader = {};
+    if (accessToken !== "") {
+        authHeader = withAuthorizationHeader({}, accessToken);
+    }
+
+    const req = {
+        "tournament_id": ttID,
+    }
+
+    const resp = await fetch(DECLINE_TOURNAMENT_API, {
+        method: "PUT",
+        headers: withJSONContent(authHeader),
+        body: JSON.stringify(req)
+    });
+
+    if (!resp.ok) {
+        throw resp.status;
+    }
+
+    return await resp.json();
+}
