@@ -218,11 +218,26 @@ def decline_tt_invitation(tournament, user_id):
     tournament.status = Tournament.CANCELED
     tournament.save()
 
-def change_tt_messages(tournament_id):
-    messages = ChatMessage.objects.filter(content=tournament_id)
+def my_tt_message_accepted(tournament_id, user_id):
+    my_message = ChatMessage.objects.get(receiver=user_id, content=tournament_id)
+    my_message.extra_details = "TT_ACCEPTED"
+    my_message.save()
+
+def my_tt_message_declined_other_canceled(tournament_id, user_id):
+    my_message = ChatMessage.objects.get(receiver=user_id, content=tournament_id)
+    my_message.extra_details = "TT_DECLINED"
+    my_message.save() 
+    messages = ChatMessage.objects.filter(content=tournament_id).exclude(receiver=user_id)
     for message in messages:
         message.extra_details = "TT_CANCELED"
         message.save()
+
+
+# def change_tt_messages(tournament_id):
+#     messages = ChatMessage.objects.filter(content=tournament_id)
+#     for message in messages:
+#         message.extra_details = "TT_CANCELED"
+#         message.save()
 
 def get_tournamnets(user):
     tournaments = Tournament.objects.filter(participants=user).order_by('-created_at')
