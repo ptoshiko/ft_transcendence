@@ -65,6 +65,7 @@ class ChatMessage(models.Model):
     date_added = models.DateTimeField(auto_now_add=True)
     extra_details = models.TextField(default="")
 
+    
     class Meta:
         ordering = ('date_added',)
 
