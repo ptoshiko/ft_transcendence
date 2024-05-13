@@ -208,6 +208,9 @@ export default class extends HTMLElement {
 
         messageComponent.setAttribute('msg', message.content);
         messageComponent.setAttribute('msgType', message.content_type);
+        if (message.extra_details) {
+            messageComponent.setAttribute('extraDetails', message.extra_details)
+        }
 
         this.chatMessagesList.appendChild(messageComponent);
     }

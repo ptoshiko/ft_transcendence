@@ -11,11 +11,12 @@ export default class extends HTMLElement {
         const displayName = this.getAttribute('displayName');
         const msg = this.getAttribute('msg')
         const msgType = this.getAttribute('msgType');
+        const extraDetails = this.getAttribute('extraDetails');
 
-        this.render(avatar, displayName, msg, msgType);
+        this.render(avatar, displayName, msg, msgType, extraDetails);
     }
 
-    render(avatar, displayName, msg, msgType) {
+    render(avatar, displayName, msg, msgType, extraDetails) {
         console.log(msgType);
         switch (msgType) {
             case "1":
@@ -25,7 +26,7 @@ export default class extends HTMLElement {
                 this.renderGameLinkMsg(avatar, displayName, msg);
                 return;
             case "3":
-                this.renderTournamentInviteMsg(avatar, displayName, msg)
+                this.renderTournamentInviteMsg(avatar, displayName, msg, extraDetails)
                 return;
         }
     }
@@ -68,7 +69,7 @@ export default class extends HTMLElement {
         this.querySelector("#my-msg-play-btn").addEventListener('click', this.getGameLinkHandler(gameID));
     }
 
-    renderTournamentInviteMsg(avatar, displayName, ttID) {
+    renderTournamentInviteMsg(avatar, displayName, ttID, extraDetails) {
         this.innerHTML =  `
             <!-- My Message -->
             <div class="right d-flex ml-auto flex-row-reverse mt-1" style="max-width: 75%; column-gap: 10px;">
@@ -101,6 +102,23 @@ export default class extends HTMLElement {
         this.approveTTBtn.addEventListener('click', this.getApproveTTHandler(ttID))
         this.declineTTBtn.addEventListener('click', this.getDeclineTTHandler(ttID))
 
+        switch (extraDetails) {
+            case "TT_CANCELED":
+                this.approveTTBtn.style.display = 'none';
+                this.declineTTBtn.style.display = 'none';
+                this.canceledMsg.style.display = 'inline-block';
+                break;
+            case "TT_DECLINE":
+                this.approveTTBtn.style.display = 'none';
+                this.declineTTBtn.style.display = 'none';
+                this.declinedMsg.style.display = 'inline-block';
+                break;
+            case "TT_APPROVED":
+                this.approveTTBtn.style.display = 'none';
+                this.declineTTBtn.style.display = 'none';
+                this.approvedMsg.style.display = 'inline-block';
+                break;
+        }
 
     }
 
