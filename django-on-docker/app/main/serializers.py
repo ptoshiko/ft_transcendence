@@ -92,7 +92,7 @@ class UpdateSerializer(serializers.ModelSerializer):
 class ChatMessageSerializer(serializers.ModelSerializer):
     class Meta:
         model = ChatMessage
-        fields = ['sender', 'receiver', 'content', 'date_added', 'content_type']
+        fields = ['sender', 'receiver', 'content', 'date_added', 'content_type', 'extra_details']
 
 
 class AvatarUploadSerializer(serializers.ModelSerializer):
