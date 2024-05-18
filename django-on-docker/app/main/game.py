@@ -75,7 +75,7 @@ class Ball:
         self.x = 50.0
         self.y = 50.0
         self.direction = Direction()
-        self.velocity = 0.1
+        self.velocity = 0.5
         while (abs(self.direction.x) <= 0.2 or abs(self.direction.y) >= 0.9):
             heading = random.uniform(0, 2 * math.pi)
             self.direction.x = math.cos(heading)
