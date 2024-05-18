@@ -174,6 +174,29 @@ def change_game_status_in_progress(game_id):
     game.status = PairGame.IN_PROGRESS
     game.save()
 
+def tt_update_participants_points(game):
+    #     # Calculate points based on game scores
+    # game = PairGame.objects.get(game_id=game_id)
+
+    if game.player1_score > game.player2_score:
+        points_1 = 1
+        points_2 = 0
+    else:
+        points_1 = 0
+        points_2 = 1
+
+    if game.player1 in game.tournament.participant_points:
+        game.tournament.participant_points[game.player1] +=points_1
+    else:
+        game.tournament.participant_points[game.player1] = points_1
+
+    if game.player2 in game.tournament.participant_points:
+        game.tournament.participant_points[game.player2] +=points_2
+    else:
+        game.tournament.participant_points[game.player2] = points_2
+
+
+
 def finish_game_db(game_id, player1_score, player2_score):
 
     game = PairGame.objects.get(game_id=game_id)
@@ -181,6 +204,9 @@ def finish_game_db(game_id, player1_score, player2_score):
     game.player1_score = player1_score
     game.player2_score = player2_score
     game.save()
+    if game.tournament != 0:
+        tt_update_participants_points(game)
+
 
 
 def create_tournament(users):
@@ -219,6 +245,9 @@ def decline_tt_invitation(tournament, user_id):
     tournament.save()
 
 def my_tt_message_accepted(tournament_id, user_id):
+    print(user_id)
+    print(tournament_id)
+    # try and catch
     my_message = ChatMessage.objects.get(receiver=user_id, content=tournament_id)
     my_message.extra_details = "TT_ACCEPTED"
     my_message.save()
