@@ -574,7 +574,8 @@ class AcceptTournamentInvitation(CheckTournamentIdMixin, views.APIView):
         
         accept_tt_invitation(tournament, user_id)
         my_tt_message_accepted(tournament_id, user_id)
-        return Response({'message': 'User accepted tournament invitation successfully'}, status=status.HTTP_200_OK)
+
+        return Response({'tt_status': tournament.status, 'message': 'User accepted tournament invitation successfully'}, status=status.HTTP_200_OK)
 
 
 class DeclineTournamentInvitation(CheckTournamentIdMixin, views.APIView):
@@ -598,7 +599,7 @@ class DeclineTournamentInvitation(CheckTournamentIdMixin, views.APIView):
         decline_tt_invitation(tournament, user_id)
         my_tt_message_declined_other_canceled(tournament_id, user_id)
 
-        return Response({'message': 'User declined tournament invitation and canceled tournamnet successfully'}, status=status.HTTP_200_OK)
+        return Response({'tt_status': tournament.status, 'message': 'User declined tournament invitation and canceled tournamnet successfully'}, status=status.HTTP_200_OK)
 
 
 class GetMyTournaments(views.APIView):
