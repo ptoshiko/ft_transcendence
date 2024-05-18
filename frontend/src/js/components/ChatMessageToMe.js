@@ -62,6 +62,7 @@ export default class extends HTMLElement {
                 <!-- Text -->
                 <div class="bg-primary rounded p-2">
                     <h5 class="mb-1">${displayName}</h5>
+                    <div class="msg-text text-light">Let's play a duel<span style="font-size: 1.5rem;">🏓</span></div>
                     <a style="width: 120px"  id="to-me-msg-play-btn" href="" class="btn btn-danger">Play</a>
                 </div>
             </div>
@@ -85,23 +86,19 @@ export default class extends HTMLElement {
                 <!-- Text -->
                 <div class="bg-primary rounded p-2">
                     <h5 class="mb-1">${displayName}</h5>
-                    <div class="msg-text text-light">Join My Ping-Pong Tournament🏟️</div>
+                    <div class="msg-text text-light">Join My Ping-Pong Tournament <span style="font-size: 1.5rem;">🏟</span></div>
                     <a id="to-me-msg-approve-tt" style="width: 120px;" href="" class="btn btn-success">Approve</a>
                     <a id="to-me-msg-approved-tt" style="width: 120px; display: none;" href="" class="btn btn-success disabled">Approved</a>
                     <a id="to-me-msg-decline-tt" style="width: 120px;" href="" class="btn btn-danger">Decline</a>
-                    <a id="to-me-msg-declined-tt" style="width: 120px; display: none;" href="" class="btn btn-danger disabled">Declined</a>
-                    <a id="to-me-msg-canceled-tt" style="width: 120px; display: none;;" href="" class="btn btn-warning disabled">Canceled</a>
+                    <a id="to-me-msg-canceled-tt" style="width: 120px; display: none;;" href="" class="btn btn-warning disabled">Tournament Is Canceled</a>
                 </div>
             </div>
         `;
 
         this.approveTTBtn = this.querySelector("#to-me-msg-approve-tt")
-
-
         this.declineTTBtn = this.querySelector("#to-me-msg-decline-tt")
 
         this.approvedMsg = this.querySelector("#to-me-msg-approved-tt")
-        this.declinedMsg = this.querySelector("#to-me-msg-declined-tt")
         this.canceledMsg = this.querySelector("#to-me-msg-canceled-tt")
 
         this.approveTTBtn.addEventListener('click', this.getApproveTTHandler(ttID))
@@ -109,19 +106,10 @@ export default class extends HTMLElement {
 
         switch (extraDetails) {
             case "TT_CANCELED":
-                this.approveTTBtn.style.display = 'none';
-                this.declineTTBtn.style.display = 'none';
-                this.canceledMsg.style.display = 'inline-block';
-                break;
-            case "TT_DECLINE":
-                this.approveTTBtn.style.display = 'none';
-                this.declineTTBtn.style.display = 'none';
-                this.declinedMsg.style.display = 'inline-block';
-                break;
+                this.setCanceledTTState()
+                break
             case "TT_APPROVED":
-                this.approveTTBtn.style.display = 'none';
-                this.declineTTBtn.style.display = 'none';
-                this.approvedMsg.style.display = 'inline-block';
+                this.setApprovedTTState()
                 break;
         }
     }
@@ -136,10 +124,13 @@ export default class extends HTMLElement {
     getApproveTTHandler(ttID) {
         return async (e) => {
             e.preventDefault()
-            await approveTournamentInvite(ttID)
-            this.approveTTBtn.style.display = 'none';
-            this.declineTTBtn.style.display = 'none';
-            this.approvedMsg.style.display = 'inline-block';
+            const resp = await approveTournamentInvite(ttID)
+            if (resp.status === 3) {
+                this.setCanceledTTState()
+                return
+            }
+
+            this.setApprovedTTState()
         }
     }
 
@@ -147,9 +138,19 @@ export default class extends HTMLElement {
         return async (e) => {
             e.preventDefault()
             await declineTournamentInvite(ttID)
-            this.approveTTBtn.style.display = 'none';
-            this.declineTTBtn.style.display = 'none';
-            this.declinedMsg.style.display = 'inline-block';
+            this.setCanceledTTState()
         }
+    }
+
+    setCanceledTTState() {
+        this.approveTTBtn.style.display = 'none';
+        this.declineTTBtn.style.display = 'none';
+        this.canceledMsg.style.display = 'inline-block';
+    }
+
+    setApprovedTTState() {
+        this.approveTTBtn.style.display = 'none';
+        this.declineTTBtn.style.display = 'none';
+        this.approvedMsg.style.display = 'inline-block';
     }
 }

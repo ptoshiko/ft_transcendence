@@ -60,7 +60,7 @@ export default class extends HTMLElement {
                 <!-- Text -->
                 <div class="bg-primary rounded p-2">
                     <h5 class="mb-1">${displayName}</h5>
-                    <div class="msg-text text-light">Let's play a duel🏓</div>
+                    <div class="msg-text text-light">Let's play a duel<span style="font-size: 1.5rem;">🏓</span></div>
                     <a id="my-msg-play-btn" style="width: 120px" href="" class="btn btn-success">Play</a>
                 </div>
             </div>
@@ -80,45 +80,10 @@ export default class extends HTMLElement {
                 <!-- Text -->
                 <div class="bg-primary rounded p-2">
                     <h5 class="mb-1">${displayName}</h5>
-                    <div class="msg-text text-light">Join My Ping-Pong Tournament🏟️</div>
-                    <a id="my-msg-approve-tt" style="width: 120px;" href="" class="btn btn-success">Approve</a>
-                    <a id="my-msg-approved-tt" style="width: 120px; display: none;" href="" class="btn btn-success disabled">Approved</a>
-                    <a id="my-msg-decline-tt" style="width: 120px;" href="" class="btn btn-danger">Decline</a>
-                    <a id="my-msg-declined-tt" style="width: 120px; display: none;" href="" class="btn btn-danger disabled">Declined</a>
-                    <a id="my-msg-canceled-tt" style="width: 120px; display: none;;" href="" class="btn btn-warning disabled">Canceled</a>
+                    <div class="msg-text text-light">Join My Ping-Pong Tournament<span style="font-size: 1.5rem;">🏓</span></div>
                 </div>
             </div>
         `;
-
-        this.approveTTBtn = this.querySelector("#my-msg-approve-tt")
-
-
-        this.declineTTBtn = this.querySelector("#my-msg-decline-tt")
-
-        this.approvedMsg = this.querySelector("#my-msg-approved-tt")
-        this.declinedMsg = this.querySelector("#my-msg-declined-tt")
-        this.canceledMsg = this.querySelector("#my-msg-canceled-tt")
-
-        this.approveTTBtn.addEventListener('click', this.getApproveTTHandler(ttID))
-        this.declineTTBtn.addEventListener('click', this.getDeclineTTHandler(ttID))
-
-        switch (extraDetails) {
-            case "TT_CANCELED":
-                this.approveTTBtn.style.display = 'none';
-                this.declineTTBtn.style.display = 'none';
-                this.canceledMsg.style.display = 'inline-block';
-                break;
-            case "TT_DECLINE":
-                this.approveTTBtn.style.display = 'none';
-                this.declineTTBtn.style.display = 'none';
-                this.declinedMsg.style.display = 'inline-block';
-                break;
-            case "TT_APPROVED":
-                this.approveTTBtn.style.display = 'none';
-                this.declineTTBtn.style.display = 'none';
-                this.approvedMsg.style.display = 'inline-block';
-                break;
-        }
     }
 
     getGameLinkHandler(gameID) {
@@ -126,25 +91,5 @@ export default class extends HTMLElement {
             e.preventDefault()
             navigateTo(`/games/${gameID}`)
         };
-    }
-
-    getApproveTTHandler(ttID) {
-        return async (e) => {
-            e.preventDefault()
-            await approveTournamentInvite(ttID)
-            this.approveTTBtn.style.display = 'none';
-            this.declineTTBtn.style.display = 'none';
-            this.approvedMsg.style.display = 'inline-block';
-        }
-    }
-
-    getDeclineTTHandler(ttID) {
-        return async (e) => {
-            e.preventDefault()
-            await declineTournamentInvite(ttID)
-            this.approveTTBtn.style.display = 'none';
-            this.declineTTBtn.style.display = 'none';
-            this.declinedMsg.style.display = 'inline-block';
-        }
     }
 }
