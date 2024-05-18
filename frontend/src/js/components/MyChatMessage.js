@@ -119,7 +119,6 @@ export default class extends HTMLElement {
                 this.approvedMsg.style.display = 'inline-block';
                 break;
         }
-
     }
 
     getGameLinkHandler(gameID) {

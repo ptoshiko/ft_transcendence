@@ -290,7 +290,7 @@ export default class extends HTMLElement {
             this.smallTournamentsList.innerHTML = ``;
             this.viewAllTournamentsBtn.style.display = 'inline-block';
             console.log(this.smallTournamentsList.children.length)
-            for (let i = tournaments.length-1; i >= 0 && this.smallTournamentsList.children.length < 3;  i--) {
+            for (let i = 0; i < tournaments.length && this.smallTournamentsList.children.length < 3;  i++) {
                 const tournament = tournaments[i];
                 const ttComponent = document.createElement("tr-tournament-small")
                 ttComponent.setAttribute("id", tournament.tournament_id);
@@ -355,7 +355,7 @@ export default class extends HTMLElement {
             } else {
                 this.viewAllTournamentsBtn.style.display = 'inline-block';
                 this.bigTournamentsList.innerHTML = ``
-                for (let i = tournaments.length-1; i >= 0; i--) {
+                for (let i = 0; i < tournaments.length; i++) {
                     const tournament = tournaments[i];
                     const ttComponent = document.createElement("tr-tournament-small")
                     ttComponent.setAttribute("id", tournament.tournament_id);
