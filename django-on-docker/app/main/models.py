@@ -165,8 +165,6 @@ class PairGame(models.Model):
 
 
 
-
-
     
 
 # for 2FA

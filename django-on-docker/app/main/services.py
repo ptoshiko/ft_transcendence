@@ -174,9 +174,9 @@ def change_game_status_in_progress(game_id):
     game.status = PairGame.IN_PROGRESS
     game.save()
 
-def tt_update_participants_points(game):
+def tt_update_participants_points(game_id):
     #     # Calculate points based on game scores
-    # game = PairGame.objects.get(game_id=game_id)
+    game = PairGame.objects.get(game_id=game_id)
 
     if game.player1_score > game.player2_score:
         points_1 = 1
@@ -194,7 +194,7 @@ def tt_update_participants_points(game):
         game.tournament.participant_points[game.player2] +=points_2
     else:
         game.tournament.participant_points[game.player2] = points_2
-
+    game.save()
 
 
 def finish_game_db(game_id, player1_score, player2_score):
@@ -205,7 +205,7 @@ def finish_game_db(game_id, player1_score, player2_score):
     game.player2_score = player2_score
     game.save()
     if game.tournament != 0:
-        tt_update_participants_points(game)
+        tt_update_participants_points(game_id)
 
 
 

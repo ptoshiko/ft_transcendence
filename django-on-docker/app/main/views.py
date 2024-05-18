@@ -15,8 +15,8 @@ from .announcement import *
 
 from collections import OrderedDict
 
-from channels.layers import get_channel_layer
-from asgiref.sync import async_to_sync
+# from channels.layers import get_channel_layer
+# from asgiref.sync import async_to_sync
 
 class RegisterView(generics.CreateAPIView): 
     queryset = CustomUser.objects.all()
