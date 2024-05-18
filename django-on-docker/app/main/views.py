@@ -597,7 +597,7 @@ class DeclineTournamentInvitation(CheckTournamentIdMixin, views.APIView):
             return Response({"error": NOT_ALLOWED_TT}, status=status.HTTP_404_NOT_FOUND)
     
         decline_tt_invitation(tournament, user_id)
-        my_tt_message_declined_other_canceled(tournament_id, user_id)
+        tt_messages_canceled(tournament_id)
 
         return Response({'tt_status': tournament.status, 'message': 'User declined tournament invitation and canceled tournamnet successfully'}, status=status.HTTP_200_OK)
 
