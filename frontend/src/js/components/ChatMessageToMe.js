@@ -90,7 +90,7 @@ export default class extends HTMLElement {
                     <a id="to-me-msg-approve-tt" style="width: 120px;" href="" class="btn btn-success">Approve</a>
                     <a id="to-me-msg-approved-tt" style="width: 120px; display: none;" href="" class="btn btn-success disabled">Approved</a>
                     <a id="to-me-msg-decline-tt" style="width: 120px;" href="" class="btn btn-danger">Decline</a>
-                    <a id="to-me-msg-canceled-tt" style="width: 120px; display: none;;" href="" class="btn btn-warning disabled">Tournament Is Canceled</a>
+                    <a id="to-me-msg-canceled-tt" style="min-width: 120px; display: none;" href="" class="btn btn-warning disabled">Tournament Is Canceled</a>
                 </div>
             </div>
         `;
@@ -108,7 +108,7 @@ export default class extends HTMLElement {
             case "TT_CANCELED":
                 this.setCanceledTTState()
                 break
-            case "TT_APPROVED":
+            case "TT_ACCEPTED":
                 this.setApprovedTTState()
                 break;
         }
