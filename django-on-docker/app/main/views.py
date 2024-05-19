@@ -357,7 +357,8 @@ class SetupTwoFactorAuthView(views.APIView):
             context["qr_code"] = two_factor_auth_data.generate_qr_code(
                 name=user.email
             )
-
+            user.is_otp_required = True
+            user.save()
             return Response(context, status=status.HTTP_200_OK)
         except ValidationError as exc:
             return Response({"error": exc.messages}, status=status.HTTP_400_BAD_REQUEST)
@@ -464,31 +465,6 @@ class CreateGameView(CheckIdMixin, views.APIView):
 
         announce_game(player1_id, player2_id, game_id)
 
-        # content_type = ChatMessage.GAMEID
-        
-        # channel_layer = get_channel_layer()
-        # async_to_sync(channel_layer.group_send)(
-        #     f"{player1_id}",
-        #     {
-        #         'type': 'game.link', 
-        #         'player1_id': player1_id,
-        #         'player2_id': player2_id,
-        #         'game_id': game_id,
-        #         'content_type': content_type
-        #     }
-        # )
-
-        # async_to_sync(channel_layer.group_send)(
-        #     f"{player2_id}",
-        #     {
-        #         'type': 'game.link', 
-        #         'player1_id': player1_id,
-        #         'player2_id': player2_id,
-        #         'game_id': game_id,
-        #         'content_type': content_type
-        #     }
-        # )
-
         return Response({'success': True}, status=status.HTTP_200_OK)
 
 
@@ -526,32 +502,6 @@ class ProposeTournament(views.APIView):
 
         announce_tournament(user_ids, creator_id, tournament_id)
 
-        # content_type = ChatMessage.TTID
-        # channel_layer = get_channel_layer()
-
-        # for user_id in user_ids:
-        #     async_to_sync(channel_layer.group_send)(
-        #         f"{user_id}",
-        #         {
-        #             'type': 'tournament.link', 
-        #             'creator_id': creator_id,
-        #             'participant_id': user_id,
-        #             'tournament_id': tournament_id,
-        #             'content_type': content_type
-        #         }
-        #     )
-        
-        # for user_id in user_ids:
-        #     async_to_sync(channel_layer.group_send)(
-        #         f"{creator_id}",
-        #         {
-        #             'type': 'tournament.link', 
-        #             'creator_id': creator_id,
-        #             'participant_id': user_id,
-        #             'tournament_id': tournament_id,
-        #             'content_type': content_type
-        #         }
-        #     )
         return Response({'message': 'Tournament proposed successfully', 'tournament_id': tournament_id}, status=status.HTTP_201_CREATED)
 
 class AcceptTournamentInvitation(CheckTournamentIdMixin, views.APIView):
@@ -651,5 +601,28 @@ def login(request):
 
 def room(request):
     return render(request, "chat/room.html")
+
+
+from rest_framework_simplejwt.views import TokenObtainPairView
+
+class CustomTokenObtainPairView(TokenObtainPairView):
+    serializer_class = serializers.CustomTokenObtainPairSerializer
+
+
+from rest_framework_simplejwt.tokens import RefreshToken
+class OTPVerificationView(generics.GenericAPIView):
+    serializer_class = serializers.OTPVerificationSerializer
+
+    def post(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        
+        user = CustomUser.objects.get(email=serializer.validated_data['email'])
+        refresh = RefreshToken.for_user(user)
+        
+        return Response({
+            'refresh': str(refresh),
+            'access': str(refresh.access_token),
+        }, status=status.HTTP_200_OK)
 
     

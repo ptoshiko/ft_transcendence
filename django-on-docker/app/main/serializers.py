@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import CustomUser, Friendship, ChatMessage, BlockUser, PairGame, Tournament
+from .models import CustomUser, Friendship, ChatMessage, BlockUser, PairGame, Tournament, UserTwoFactorAuthData
 
 from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
@@ -142,3 +142,49 @@ class TournamentDetailedSerializer(serializers.ModelSerializer):
     class Meta:
         model = Tournament
         fields = ['participants', 'created_at', 'status', 'participant_points', 'tournament_id']
+
+
+from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
+class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
+    def validate(self, attrs):
+        data = super().validate(attrs)
+
+        # Add custom claim
+        user = self.user
+        if user.is_otp_required:
+            data['is_otp_required'] = True
+        else:
+            refresh = self.get_token(self.user)
+            data['refresh'] = str(refresh)
+            data['access'] = str(refresh.access_token)
+
+        return data
+
+import pyotp
+class OTPVerificationSerializer(serializers.Serializer):
+    email = serializers.EmailField()
+    otp_code = serializers.CharField()
+
+    def validate(self, data):
+        email = data.get('email')
+        otp_code = data.get('otp_code')
+        
+        try:
+            user = CustomUser.objects.get(email=email)
+        except CustomUser.DoesNotExist:
+            raise serializers.ValidationError('Invalid email address')
+
+        if not user.is_otp_required:
+            raise serializers.ValidationError('OTP verification is not required for this user')
+
+        try:
+            two_factor_auth_data = UserTwoFactorAuthData.objects.get(user=user)
+        except UserTwoFactorAuthData.DoesNotExist:
+            raise serializers.ValidationError('OTP secret not found for this user')
+
+        if not two_factor_auth_data.validate_otp(otp_code):
+            raise serializers.ValidationError('Invalid OTP code')
+
+
+        return data
+    
