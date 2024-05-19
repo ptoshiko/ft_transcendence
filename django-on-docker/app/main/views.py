@@ -335,7 +335,7 @@ class GetUserMe(views.APIView):
     def get(self, request):
         user_id = request.user.id
         user = CustomUser.objects.get(id=user_id)
-        serializer = serializers.CustomUserSerializer(user)
+        serializer = serializers.MeSerializer(user)
         return Response(serializer.data)
 
 
@@ -626,4 +626,16 @@ class OTPVerificationView(generics.GenericAPIView):
             'access': str(refresh.access_token),
         }, status=status.HTTP_200_OK)
 
-    
+class DisableTwoFactorAuthView(views.APIView):
+    def put(self, request):
+        user = request.user
+
+        user_2fa_data = check_2fa_data_exists(user)
+        if user_2fa_data is None:
+            return Response({'error': NO_2FA}, status=status.HTTP_400_BAD_REQUEST)
+        
+        user_2fa_data.delete()
+        user.is_otp_required = False
+        user.save()
+        return Response({'message': '2FA disabled successfully'}, status=status.HTTP_200_OK)
+

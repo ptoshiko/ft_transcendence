@@ -186,21 +186,17 @@ def tt_update_participants_points(player1, player1_score, player2, player2_score
         points_2 = 1
 
     tournament = Tournament.objects.get(tournament_id=tournament.tournament_id)
-    print("tt_id ", tournament.tournament_id)
 
     if str(player1.id) in tournament.participant_points:
         tournament.participant_points[str(player1.id)] += points_1
     else:
         tournament.participant_points[str(player1.id)] = points_1
-    print(" print(tournament.participant_points[str(player1.id)])", tournament.participant_points[str(player1.id)])
 
     if  str(player2.id) in tournament.participant_points:
         tournament.participant_points[str(player2.id)] += points_2
     else:
         tournament.participant_points[str(player2.id)] = points_2
-    print(" print(tournament.participant_points[str(player2.id)])", tournament.participant_points[str(player2.id)])
     
-
     tournament.current += 1
     if tournament.current == len(tournament.schedule):
         tournament.status = Tournament.FINISHED
@@ -321,3 +317,11 @@ def get_tt_winner(tournament):
     for participant_id, points in tournament.participant_points.items():
         if points == max_points:
             return participant_id
+        
+def check_2fa_data_exists(user):
+
+    try:
+        two_factor_auth_data = UserTwoFactorAuthData.objects.get(user=user)
+        return two_factor_auth_data
+    except UserTwoFactorAuthData.DoesNotExist:
+        return None
