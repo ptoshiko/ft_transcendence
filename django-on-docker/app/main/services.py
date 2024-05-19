@@ -214,6 +214,7 @@ def finish_game_db(game_id, player1_score, player2_score):
         # if game.tournament.participant_points
         tournament.current += 1
         tournament.save()
+        print("len(tournament.schedule" , len(tournament.schedule))
         if tournament.current == len(tournament.schedule):
             tournament.status = Tournament.FINISHED
             tournament.save()
