@@ -15,6 +15,7 @@ const DECLINE_TOURNAMENT_API = API_ADDRESS+"/tournament/decline/";
 const GET_GAMES_API = API_ADDRESS+"/match/gethistory/";
 const GET_GAMES_BY_TOURNAMENT_API = API_ADDRESS+"/game/list/"
 const GET_WINNER_BY_TOURNAMENT_API = API_ADDRESS+"/tournament/getwinner/"
+const GET_QR_CODE_API = API_ADDRESS+"/setup-2fa/"
 
 export async function createGame(opponentID) {
     const accessToken = localStorage.getItem("access-token") || "";
@@ -244,6 +245,23 @@ export async function getWinnerByTournament(tournamentID) {
             return null;
         }
     }
+
+
+    return await resp.json();
+}
+
+export async function getQR() {
+    const accessToken = localStorage.getItem("access-token") || "";
+
+    let authHeader = {};
+    if (accessToken !== "") {
+        authHeader = withAuthorizationHeader({}, accessToken);
+    }
+
+    const resp = await fetch(GET_QR_CODE_API, {
+        method: "POST",
+        headers: withJSONContent(authHeader),
+    });
 
 
     return await resp.json();
