@@ -175,28 +175,38 @@ def change_game_status_in_progress(game_id):
     game.save()
 
 
-def tt_update_participants_points(game_id):
+def tt_update_participants_points(player1, player1_score, player2, player2_score, tournament):
     #     # Calculate points based on game scores
-    game = PairGame.objects.get(game_id=game_id)
-    print(game.game_id)
-    if game.player1_score > game.player2_score:
+
+    if player1_score > player2_score:
         points_1 = 1
         points_2 = 0
     else:
         points_1 = 0
         points_2 = 1
 
-    if game.player1 in game.tournament.participant_points:
-        game.tournament.participant_points[game.player1_id] +=points_1
-    else:
-        game.tournament.participant_points[game.player1_id] = points_1
+    tournament = Tournament.objects.get(tournament_id=tournament.tournament_id)
+    print("tt_id ", tournament.tournament_id)
 
-    if game.player2 in game.tournament.participant_points:
-        game.tournament.participant_points[game.player2_id] +=points_2
+    if str(player1.id) in tournament.participant_points:
+        tournament.participant_points[str(player1.id)] += points_1
     else:
-        game.tournament.participant_points[game.player2_id] = points_2
-    game.tournament.save()
-    return game.tournament
+        tournament.participant_points[str(player1.id)] = points_1
+    print(" print(tournament.participant_points[str(player1.id)])", tournament.participant_points[str(player1.id)])
+
+    if  str(player2.id) in tournament.participant_points:
+        tournament.participant_points[str(player2.id)] += points_2
+    else:
+        tournament.participant_points[str(player2.id)] = points_2
+    print(" print(tournament.participant_points[str(player2.id)])", tournament.participant_points[str(player2.id)])
+    
+
+    tournament.current += 1
+    if tournament.current == len(tournament.schedule):
+        tournament.status = Tournament.FINISHED
+    tournament.save()
+
+    return tournament
 
 def finish_game_db(game_id, player1_score, player2_score):
 
@@ -205,22 +215,25 @@ def finish_game_db(game_id, player1_score, player2_score):
     game.player1_score = player1_score
     game.player2_score = player2_score
     game.save()
+
     if game.tournament != 0:
-        tournament = tt_update_participants_points(game_id)
+
+        tournament = tt_update_participants_points(game.player1, game.player1_score, game.player2, game.player2_score, game.tournament)
 
         # 0 1 2
         # 0 1 2 
         # 
         # if game.tournament.participant_points
-        tournament.current += 1
-        tournament.save()
-        print("len(tournament.schedule" , len(tournament.schedule))
-        if tournament.current == len(tournament.schedule):
-            tournament.status = Tournament.FINISHED
-            tournament.save()
+        # tournament.current += 1
+        # tournament.save()
+        # print("len(tournament.schedule" , len(tournament.schedule))
+        # if tournament.current == len(tournament.schedule):
+        #     tournament.status = Tournament.FINISHED
+        #     tournament.save()
+        if tournament.status == Tournament.FINISHED:
             return
     
-        start_tt_game(game.tournament, tournament.current)
+        start_tt_game(tournament, tournament.current)
 
 
 
@@ -288,6 +301,10 @@ def get_tournamnets(user):
     tournaments = Tournament.objects.filter(participants=user).order_by('-created_at')
     return tournaments
 
+# def get_tt_by_id(tournament_id):
+#     tournament = Tournament.objects.get(tournament_id=tournament_id)
+#     return tournament
+
 
 def get_games_by_ttid(tournament):
     games = PairGame.objects.filter(models.Q(tournament=tournament)).order_by('-date_created')
@@ -295,8 +312,10 @@ def get_games_by_ttid(tournament):
 
 def get_tt_winner(tournament):
 
+    if tournament.status != Tournament.FINISHED:
+        return None
     if not tournament.participant_points:
-            return None
+        return None
 
     max_points = max(tournament.participant_points.values())
     for participant_id, points in tournament.participant_points.items():
