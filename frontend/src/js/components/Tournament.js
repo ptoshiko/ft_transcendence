@@ -1,4 +1,4 @@
-import {getGamesByTournament} from "../service/game.js";
+import {getGamesByTournament, getWinnerByTournament} from "../service/game.js";
 
 export default class extends HTMLElement {
     constructor() {
@@ -15,7 +15,7 @@ export default class extends HTMLElement {
     render() {
         this.innerHTML = `
             <tr-nav></tr-nav>
-            <h1 class="text-center"> <span class="gradient-text">gene</span> IS A WINNER!🏆</h1>
+            <h1 id="winner-title" class="text-center" style="display: none;"> <span id="winner" class="gradient-text">gene</span> IS A WINNER!🏆</h1>
             <table class="table table-borderless">
               <thead>
                 <tr>
@@ -30,6 +30,8 @@ export default class extends HTMLElement {
         `;
 
         this.ttBody = this.querySelector("#tt-body")
+        this.winnerTitle = this.querySelector("#winner-title")
+        this.winner = this.querySelector("#winner")
     }
 
     async updateTableData() {
@@ -45,5 +47,13 @@ export default class extends HTMLElement {
                 </tr>
             `
         }
+
+        const resp = await getWinnerByTournament(this.tournamentID)
+        if (!resp) {
+            return;
+        }
+
+        this.winner.innerHTML = resp.winner;
+        this.winnerTitle.style.display = 'block';
     }
 }

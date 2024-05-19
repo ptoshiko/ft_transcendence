@@ -14,6 +14,7 @@ const ACCEPT_TOURNAMENT_API = API_ADDRESS+"/tournament/accept/";
 const DECLINE_TOURNAMENT_API = API_ADDRESS+"/tournament/decline/";
 const GET_GAMES_API = API_ADDRESS+"/match/gethistory/";
 const GET_GAMES_BY_TOURNAMENT_API = API_ADDRESS+"/game/list/"
+const GET_WINNER_BY_TOURNAMENT_API = API_ADDRESS+"/tournament/getwinner/"
 
 export async function createGame(opponentID) {
     const accessToken = localStorage.getItem("access-token") || "";
@@ -223,6 +224,27 @@ export async function declineTournamentInvite(ttID) {
     if (!resp.ok) {
         throw resp.status;
     }
+
+    return await resp.json();
+}
+
+export async function getWinnerByTournament(tournamentID) {
+    const accessToken = localStorage.getItem("access-token") || "";
+
+    let authHeader = {};
+    if (accessToken !== "") {
+        authHeader = withAuthorizationHeader({}, accessToken);
+    }
+
+    const resp = await fetch(GET_WINNER_BY_TOURNAMENT_API+tournamentID+'/', {
+        headers: withJSONContent(authHeader),
+    });
+    if (!resp.ok) {
+        if (resp.status === 404) {
+            return null;
+        }
+    }
+
 
     return await resp.json();
 }
