@@ -91,6 +91,12 @@ export default async function router(firstMe) {
     app.innerHTML=``;
     let component = document.createElement(route.component);
 
+    const me = await getMe()
+    if (!me && !firstMe) {
+        console.log('check')
+        component = document.createElement("tr-login")
+    }
+
     let params = getParams(result, route.path);
     if (params) {
         for (const [key, value] of Object.entries(params)) {

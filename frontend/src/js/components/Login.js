@@ -76,17 +76,21 @@ export default class extends HTMLElement {
                                 <label for="login-display-name" class="form-label">Display Name</label>
                                 <input type="text" class="form-control" id="login-display-name">
                             </div>
-                            <div class="mb-3">
+                            <div class="mb-3" id="email-container">
                                 <label for="login-email" class="form-label">Email address</label>
                                 <input type="email" class="form-control" id="login-email">
                             </div>
-                            <div class="mb-3">
+                            <div class="mb-3" id="password-container">
                                 <label for="login-password" class="form-label">Password</label>
                                 <input type="password" class="form-control" id="login-password">
                             </div>
                             <div style="display:none;" class="mb-3" id="password-repeat-container">
                                 <label for="login-password-repeat" class="form-label">Repeat Password</label>
                                 <input type="password" class="form-control" id="login-password-repeat">
+                            </div>
+                            <div style="display:none;" class="mb-3" id="otp-container">
+                                <label for="otp-input" class="form-label">OTP</label>
+                                <input type="password" class="form-control" id="otp-input">
                             </div>
                             <button type="submit" class="btn btn-primary" id="login-main-btn">Sign In</button>
                         </form>
@@ -97,11 +101,15 @@ export default class extends HTMLElement {
         `;
 
         this.email = this.querySelector("#login-email");
+        this.emailContainer = this.querySelector("#email-container")
         this.password = this.querySelector("#login-password");
+        this.passwordContainer = this.querySelector("#password-container")
         this.repeatPasswordContainer = this.querySelector("#password-repeat-container")
         this.displayNameInput = this.querySelector("#login-display-name");
         this.displayNameContainer = this.querySelector("#display-name-container");
         this.repeatPasswordInput = this.querySelector("#login-password-repeat");
+        this.otpInput = this.querySelector("#otp-input");
+        this.otpContainer = this.querySelector("#otp-container");
         this.signInBtn = this.querySelector("#login-sign-in");
         this.signUpBtn = this.querySelector("#login-sign-up");
         this.mainBtn = this.querySelector("#login-main-btn");
@@ -112,8 +120,52 @@ export default class extends HTMLElement {
     async onMainBtnClicked(e) {
         if (this.mainBtn.textContent == "Sign In") {
             this.handleSignIn();
-        } else {
+        } else if (this.mainBtn.textContent === "Sign Up"){
             this.handleSignUp();
+        } else if (this.mainBtn.textContent === "Send OTP") {
+            this.handleSendOTP();
+        }
+    }
+
+    async handleSendOTP() {
+        if (!this.checkOTPInputs()) {
+            return;
+        }
+
+        let req = JSON.stringify({
+            email: this.email.value,
+            otp_code: this.otpInput.value,
+        })
+
+        try {
+            let resp = await fetch("https://localhost:8081/api/token/verify-otp/", {
+                method: 'POST',
+                headers: withJSONContent(),
+                body: req,
+            })
+
+            if (!resp.ok) {
+                if (resp.status === 400) {
+                    this.showErr("Wrong OTP");
+                } else {
+                    this.showErr("There is some server error");
+                }
+                return;
+            }
+
+            this.removeErr();
+
+            const tokens = await resp.json();
+
+            localStorage.setItem('access-token', tokens.access);
+            localStorage.setItem('refresh-token', tokens.refresh);
+
+            const user = await getMe();
+
+            initSocket();
+            redirectTo(`/profiles/${user.display_name}`);
+        } catch(e) {
+            this.showErr("There is some server error");
         }
     }
 
@@ -135,7 +187,7 @@ export default class extends HTMLElement {
             })
         
             if (!resp.ok) {
-                if (resp.status == 401) {
+                if (resp.status === 401) {
                     this.showErr("Wrong password or email");
                 } else {
                     this.showErr("There is some server error");
@@ -147,6 +199,11 @@ export default class extends HTMLElement {
 
             const tokens = await resp.json();
 
+            if (tokens.is_otp_required) {
+                this.showOTPForm();
+                return;
+            }
+
             localStorage.setItem('access-token', tokens.access);
             localStorage.setItem('refresh-token', tokens.refresh);
 
@@ -157,6 +214,19 @@ export default class extends HTMLElement {
         } catch(e) {
             this.showErr("There is some server error");
         }
+    }
+
+    checkOTPInputs() {
+        if (this.otpInput.value !== ``) {
+            this.clearInputErr();
+            return true;
+        }
+
+        if (this.otpInput.value === ``) {
+            this.otpInput.classList.add("login-err-input");
+        }
+
+        return false;
     }
 
     checkSignInInputs() {
@@ -269,6 +339,7 @@ export default class extends HTMLElement {
         this.password.classList.remove("is-invalid");
         this.repeatPasswordInput.classList.remove("is-invalid");
         this.displayNameInput.classList.remove("is-invalid");
+        this.otpInput.classList.remove("is_invalid");
     }
 
     showInfo(text) {
@@ -287,5 +358,16 @@ export default class extends HTMLElement {
 
     removeErr() {
         this.err.style.display = "none";
+    }
+
+    showOTPForm() {
+        this.displayNameContainer.style.display = "none";
+        this.repeatPasswordContainer.style.display = "none";
+        this.emailContainer.style.display = "none";
+        this.passwordContainer.style.display = "none";
+        this.mainBtn.textContent = "Send OTP";
+        this.otpContainer.style.display = "block";
+        this.signInBtn.classList.remove("active");
+        this.signUpBtn.classList.remove("active");
     }
 }
