@@ -191,7 +191,7 @@ class UserTwoFactorAuthData(models.Model):
         totp = pyotp.TOTP(self.otp_secret)
         qr_uri = totp.provisioning_uri(
             name=name,
-            issuer_name='Styleguide Example Admin 2FA Demo'
+            issuer_name='Transcendence'
         )
 
         image_factory = qrcode.image.svg.SvgPathImage
@@ -201,7 +201,12 @@ class UserTwoFactorAuthData(models.Model):
         )
 
         # The result is going to be an HTML <svg> tag
-        return qr_code_image.to_string().decode('utf_8')
+        svg_str = qr_code_image.to_string().decode('utf-8')
+
+        # Remove escape characters (if there are any)
+        clean_svg_str = svg_str.replace('\\"', '"').replace("\\'", "'")
+        
+        return clean_svg_str
     
     def validate_otp(self, otp: str) -> bool:
         totp = pyotp.TOTP(self.otp_secret)
