@@ -174,6 +174,7 @@ def change_game_status_in_progress(game_id):
     game.status = PairGame.IN_PROGRESS
     game.save()
 
+
 def tt_update_participants_points(game_id):
     #     # Calculate points based on game scores
     game = PairGame.objects.get(game_id=game_id)
@@ -195,7 +196,7 @@ def tt_update_participants_points(game_id):
     else:
         game.tournament.participant_points[game.player2_id] = points_2
     game.tournament.save()
-
+    return game.tournament
 
 def finish_game_db(game_id, player1_score, player2_score):
 
@@ -205,7 +206,20 @@ def finish_game_db(game_id, player1_score, player2_score):
     game.player2_score = player2_score
     game.save()
     if game.tournament != 0:
-        tt_update_participants_points(game_id)
+        tournament = tt_update_participants_points(game_id)
+
+        # 0 1 2
+        # 0 1 2 
+        # 
+        # if game.tournament.participant_points
+        tournament.current += 1
+        tournament.save()
+        if tournament.current == len(tournament.schedule):
+            tournament.status = Tournament.FINISHED
+            tournament.save()
+            return
+    
+        start_tt_game(game.tournament, tournament.current)
 
 
 
@@ -216,9 +230,9 @@ def create_tournament(users):
     return tournament
 
 
-def start_first_tt_game(tournament):
-    
-    game = create_tt_game_record(tournament.schedule[0][0], tournament.schedule[0][1], tournament)
+def start_tt_game(tournament, num):
+    print ("num= ", num)
+    game = create_tt_game_record(tournament.schedule[num][0], tournament.schedule[num][1], tournament)
     create_message_gameid_type(game.game_id, game.player1, game.player2)
 
     announce_game(game.player1.id, game.player2.id, game.game_id)
@@ -237,7 +251,7 @@ def accept_tt_invitation(tournament, user_id):
 
     if num_participants == num_accepted:
         tournament.generate_schedule()
-        start_first_tt_game(tournament)
+        start_tt_game(tournament, tournament.current)
         
 
 def decline_tt_invitation(tournament, user_id):
@@ -277,3 +291,13 @@ def get_tournamnets(user):
 def get_games_by_ttid(tournament):
     games = PairGame.objects.filter(models.Q(tournament=tournament)).order_by('-date_created')
     return games
+
+def get_tt_winner(tournament):
+
+    if not tournament.participant_points:
+            return None
+
+    max_points = max(tournament.participant_points.values())
+    for participant_id, points in tournament.participant_points.items():
+        if points == max_points:
+            return participant_id
