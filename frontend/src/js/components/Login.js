@@ -1,4 +1,4 @@
-import {redirectTo} from "../helpers.js";
+import {navigateTo, redirectTo} from "../helpers.js";
 import { withJSONContent } from "../middleware.js";
 import { getMe } from "../service/users.js";
 import router from "../index.js";
@@ -10,11 +10,9 @@ export default class extends HTMLElement {
     }
 
     async connectedCallback() {
-        const firstMe = this.getAttribute('first-me');
-        if (firstMe) {
-            const me = JSON.parse(firstMe)
-            history.pushState(null, null,`/profiles/${me.display_name}`);
-            router(me);
+        const me = await getMe()
+        if (me) {
+            redirectTo(`/profiles/${me.display_name}`)
             return;
         }
 
@@ -28,8 +26,11 @@ export default class extends HTMLElement {
 
         this.signInBtn.addEventListener("click", (e)=>{
             e.preventDefault();
+            this.emailContainer.style.display = "block";
+            this.passwordContainer.style.display = "block";
             this.displayNameContainer.style.display = "none";
             this.repeatPasswordContainer.style.display = "none";
+            this.otpContainer.style.display = "none";
             this.mainBtn.textContent = "Sign In";
             this.signInBtn.classList.add("active");
             this.signUpBtn.classList.remove("active");
@@ -40,6 +41,9 @@ export default class extends HTMLElement {
             e.preventDefault();
             this.displayNameContainer.style.display = "block";
             this.repeatPasswordContainer.style.display = "block";
+            this.emailContainer.style.display = "block";
+            this.passwordContainer.style.display = "block";
+            this.otpContainer.style.display = "none";
             this.mainBtn.textContent = "Sign Up";
             this.signInBtn.classList.remove("active");
             this.signUpBtn.classList.add("active");

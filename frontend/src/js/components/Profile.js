@@ -16,18 +16,19 @@ export default class extends HTMLElement {
     }
     
     async connectedCallback() {
+        this.me = await getMe()
+        if (!this.me) {
+            redirectTo("/login")
+            return
+        }
+
         const username = this.getAttribute("username");
-        const firstMe = this.getAttribute("first-me");
         if (username) {
             this.user = await getUserByDisplayName(username);
             if (!this.user) {
                 this.innerHTML = `<tr-not-found><tr-not-found>`
                 return;
             }
-        } else {
-            this.user = JSON.parse(firstMe);
-            this.user = await getUserByDisplayName(this.user.display_name);
-            history.pushState(null, null, `/profiles/${this.user.display_name}`)
         }
 
         this.render(this.user.display_name, this.user.email);
@@ -39,6 +40,8 @@ export default class extends HTMLElement {
         if (this.user.is_me > 0) {
             this.avatarEditIcon.style.display = "inline-block";
             this.profileEditInfoBtn.style.display = "inline-block";
+            this.settingsBlock.style.display = 'block';
+            this.otpSwitch.checked = !!this.me.is_otp_required;
         } else {
             this.initStatusBadge();
             if (this.user.is_online) {
@@ -53,6 +56,7 @@ export default class extends HTMLElement {
         modalsToCloseList.push("edit-info-modal")
         modalsToCloseList.push("view-all-friends-modal")
         modalsToCloseList.push("change-avatar-modal")
+        modalsToCloseList.push("set-qr-modal")
 
         this.otpSwitch.addEventListener('click', this.getOTPHandler())
         document.title = "Profile";
@@ -103,7 +107,7 @@ export default class extends HTMLElement {
                     </div>
                  </div>
                  <!-- Settings -->
-                <div class="col-6">
+                <div id="settings-block" class="col-6" style="display: none;">
                     <div class="card h-100">
                         <h5 class="card-header">Settings</h5>
                         <div id="profile-settings" class="list-group list-group-flush"></div>  
@@ -246,6 +250,7 @@ export default class extends HTMLElement {
         // Settings
         this.otpSwitch = this.querySelector("#otp-switch");
         this.qrCode = this.querySelector("#qr-code");
+        this.settingsBlock = this.querySelector("#settings-block")
 
         // Status and Action Buttons
         this.profileSmallOnOffStatus = this.querySelector("#profile-small-on-off-status");

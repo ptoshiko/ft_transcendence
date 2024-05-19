@@ -54,7 +54,7 @@ function getParams(result, path) {
     }));
 }
 
-export default async function router(firstMe) {
+export default async function router() {
     let route = null;
     let result = null;
     for (const toClose of modalsToCloseList) {
@@ -92,9 +92,9 @@ export default async function router(firstMe) {
     let component = document.createElement(route.component);
 
     const me = await getMe()
-    if (!me && !firstMe) {
-        console.log('check')
+    if (!me) {
         component = document.createElement("tr-login")
+        history.pushState(null, null, "/login");
     }
 
     let params = getParams(result, route.path);
@@ -104,9 +104,6 @@ export default async function router(firstMe) {
         }
     }
 
-    if (firstMe) {
-        component.setAttribute('first-me', JSON.stringify(firstMe));
-    }
 
     app.appendChild(component);
 }
@@ -116,11 +113,9 @@ window.addEventListener('popstate', router)
 document.addEventListener("DOMContentLoaded",async () => {
     const me = await getMe();
     if (!me) {
-        // location.replace("/login");
-        // router();
         redirectTo("/login");
     } else {
         initSocket();
-        router(me);
+        router();
     }
 })

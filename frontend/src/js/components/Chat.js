@@ -10,6 +10,12 @@ export default class extends HTMLElement {
     }
 
     async connectedCallback() {
+        const me = await getMe()
+        if (!me) {
+            redirectTo("/login")
+            return
+        }
+
         const username = this.getAttribute('username');
         let user = null;
         if (username !== null) {

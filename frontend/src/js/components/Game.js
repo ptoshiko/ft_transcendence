@@ -1,5 +1,5 @@
 import {getMe, getUserByID, searchUsers} from "../service/users.js";
-import {modalsToCloseList} from "../helpers.js";
+import {modalsToCloseList, redirectTo} from "../helpers.js";
 import {getMyGames, getMyTournaments, getStatsByID, proposeTournament} from "../service/game.js";
 
 export default class extends HTMLElement {
@@ -7,7 +7,13 @@ export default class extends HTMLElement {
         super();
     }
 
-    connectedCallback() {
+   async connectedCallback() {
+        const me = await getMe()
+        if (!me) {
+            redirectTo("/login")
+            return
+        }
+
         this.render();
         this.idsToInvite = new Set();
         this.searchInput.addEventListener('input', this.getSearchInputHandler())

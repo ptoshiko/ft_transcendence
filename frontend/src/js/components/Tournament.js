@@ -1,11 +1,19 @@
 import {getGamesByTournament, getWinnerByTournament} from "../service/game.js";
+import {getMe} from "../service/users.js";
+import {redirectTo} from "../helpers.js";
 
 export default class extends HTMLElement {
     constructor() {
         super();
     }
 
-    connectedCallback() {
+    async connectedCallback() {
+        const me = await getMe()
+        if (!me) {
+            redirectTo("/login")
+            return
+        }
+
         this.tournamentID = this.getAttribute("tournament_id")
         this.render();
         this.updateTableData()
