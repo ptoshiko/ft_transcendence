@@ -59,6 +59,7 @@ urlpatterns = [
 	path('api/tournament/decline/', views.DeclineTournamentInvitation.as_view()),
 	path('api/tournament/my/', views.GetMyTournaments.as_view()),
 	path('api/tournament/<str:tournament_id>/', views.GetTournamentById.as_view()),
+	path('api/tournament/getwinner/<str:tournament_id>/', views.GetTournamentWinnerByTTId.as_view())
 
 ]
 

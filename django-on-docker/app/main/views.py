@@ -629,7 +629,21 @@ class GetGamesByTTId(views.APIView):
         serializer = serializers.PairGameSerializer(games, many=True)
         return Response(serializer.data)        
 
+class GetTournamentWinnerByTTId(views.APIView):
+    def get(self, request, tournament_id):
+        tournament = check_if_exists_tt(tournament_id)
+        if tournament is None:
+            return Response({"error": NO_TT}, status=status.HTTP_404_NOT_FOUND)
+        
+        winner_id = get_tt_winner(tournament)
+        if winner_id is None:
+            return Response({"error": NO_WINNER}, status=status.HTTP_404_NOT_FOUND)
+        
+        winner = check_if_exists_by_id(CustomUser, winner_id)
+        if winner_id is None:
+            return Response({"error": NO_USER}, status=status.HTTP_404_NOT_FOUND)
 
+        return Response({'winner':  winner.display_name}, status=status.HTTP_200_OK)
 
 def login(request):
     return render(request, "chat/login.html")
