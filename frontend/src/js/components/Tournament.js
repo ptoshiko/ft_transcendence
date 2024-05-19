@@ -15,6 +15,7 @@ export default class extends HTMLElement {
     render() {
         this.innerHTML = `
             <tr-nav></tr-nav>
+            <h1 class="text-center"> <span class="gradient-text">gene</span> IS A WINNER!🏆</h1>
             <table class="table table-borderless">
               <thead>
                 <tr>
