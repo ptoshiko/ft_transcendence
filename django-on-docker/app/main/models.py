@@ -14,6 +14,7 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):
     display_name = models.CharField(_("display name"), unique=True, validators=[validate_display_name])
     avatar = models.ImageField(_("avatar"), upload_to='avatars/', blank=True, null=True, default='default-avatar.jpg')
     is_online = models.BooleanField(default=False)
+    is_otp_required = models.BooleanField(default=False)
 
     USERNAME_FIELD = "email"
     REQUIRED_FIELDS = []
