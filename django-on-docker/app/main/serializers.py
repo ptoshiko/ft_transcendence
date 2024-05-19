@@ -15,6 +15,15 @@ class CustomUserSerializer(serializers.ModelSerializer):
             'password': {'write_only': True}
         }
 
+class MeSerializer(serializers.ModelSerializer):
+    class Meta(object):
+        model = CustomUser
+        fields = ['id', 'display_name', 'password', 'email', 'avatar', 'is_online', 'is_otp_required']
+        
+        extra_kwargs = {
+            'password': {'write_only': True}
+        }
+
 class ByDisplayNameSerializer(serializers.ModelSerializer):
     is_me = serializers.SerializerMethodField()
     class Meta(object):

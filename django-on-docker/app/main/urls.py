@@ -53,6 +53,7 @@ urlpatterns = [
 	path('api/chat/getlast/', views.GetLastChatsView.as_view(), name='get_lastchats'),
 
 	path('api/setup-2fa/', views.SetupTwoFactorAuthView.as_view(), name='setup_2fa'),
+	path('api/disable-2fa/', views.DisableTwoFactorAuthView.as_view(), name='disable_2fa'),
 	path('api/confirm-2fa/', views.ConfirmTwoFactorAuthView.as_view(), name='confirm_2fa'),
 
 	path('api/search/<str:string>/', views.UserSearchView.as_view(), name='user_search'),
