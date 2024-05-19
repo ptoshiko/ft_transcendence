@@ -611,6 +611,7 @@ class CustomTokenObtainPairView(TokenObtainPairView):
 
 from rest_framework_simplejwt.tokens import RefreshToken
 class OTPVerificationView(generics.GenericAPIView):
+    permission_classes = [AllowAny]
     serializer_class = serializers.OTPVerificationSerializer
 
     def post(self, request, *args, **kwargs):
