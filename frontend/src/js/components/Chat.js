@@ -10,6 +10,12 @@ export default class extends HTMLElement {
     }
 
     async connectedCallback() {
+        const me = await getMe()
+        if (!me) {
+            redirectTo("/login")
+            return
+        }
+
         const username = this.getAttribute('username');
         let user = null;
         if (username !== null) {
@@ -25,6 +31,7 @@ export default class extends HTMLElement {
 
         this.addEventListener("chat-message", this.getChatMessageHandler());
         this.addEventListener("game-link", this.getChatMessageHandler());
+        this.addEventListener('block-notification', this.getBlockNotificationHandler())
 
         this.chatMessageInput.addEventListener('input', this.getMessageInputHandler());
 
@@ -135,6 +142,23 @@ export default class extends HTMLElement {
         };
     }
 
+    getBlockNotificationHandler() {
+        return (e) => {
+            if (e.detail.block_msg) {
+                this.chatErrorAlert.innerHTML = e.detail.block_msg;
+
+                $("#chat-error-alert").show();
+                setTimeout(()=>{
+                    $("#chat-error-alert").hide();
+                    this.chatErrorAlert.innerHTML = ``;
+                }, 5000);
+
+
+                return;
+            }
+        }
+    }
+
     getChatMessageHandler() {
         return (e) => {
             if (e.detail.error) {
@@ -164,6 +188,7 @@ export default class extends HTMLElement {
             e.preventDefault();
             sendMessage(this.currentActiveSpeaker.display_name, this.chatMessageInput.value);
             this.chatMessageInput.value = ``;
+            this.chatSendMsgBtn.setAttribute('disabled', '');
         };
     }
 

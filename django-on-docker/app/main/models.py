@@ -23,7 +23,7 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):
 
     def __str__(self):
         return self.email
-        
+
 AUTH_USER_MODEL = "main.CustomUser"
 
 class Friendship(models.Model):

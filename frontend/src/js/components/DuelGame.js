@@ -1,6 +1,6 @@
 import {getGameByID} from "../service/game.js";
 import {getMe, getUserByID} from "../service/users.js";
-import {formatAvatar} from "../helpers.js";
+import {formatAvatar, redirectTo} from "../helpers.js";
 import {duelDownKey, duelUpKey, joinGame} from "../service/socket.js";
 
 export default class extends HTMLElement {
@@ -9,6 +9,12 @@ export default class extends HTMLElement {
     }
 
     async connectedCallback() {
+        const me = await getMe()
+        if (!me) {
+            redirectTo("/login")
+            return
+        }
+
         this.addEventListener('join_game', this.getJoinGameEventHandler())
         this.addEventListener('game_tick', this.getGameTickEventHandler())
         this.addEventListener('game_state', this.getGameStateEventHandler())

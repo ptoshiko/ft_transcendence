@@ -8,6 +8,7 @@ import {
     unblockUser,
     sendFriendRequest, blockUser, approveFriendRequest, getFriendsOfUser, removeFriend
 } from "../service/users.js";
+import {cancelOTP, getQR} from "../service/game.js";
 
 export default class extends HTMLElement {
     constructor() {
@@ -15,18 +16,19 @@ export default class extends HTMLElement {
     }
     
     async connectedCallback() {
+        this.me = await getMe()
+        if (!this.me) {
+            redirectTo("/login")
+            return
+        }
+
         const username = this.getAttribute("username");
-        const firstMe = this.getAttribute("first-me");
         if (username) {
             this.user = await getUserByDisplayName(username);
             if (!this.user) {
                 this.innerHTML = `<tr-not-found><tr-not-found>`
                 return;
             }
-        } else {
-            this.user = JSON.parse(firstMe);
-            this.user = await getUserByDisplayName(this.user.display_name);
-            history.pushState(null, null, `/profiles/${this.user.display_name}`)
         }
 
         this.render(this.user.display_name, this.user.email);
@@ -38,6 +40,8 @@ export default class extends HTMLElement {
         if (this.user.is_me > 0) {
             this.avatarEditIcon.style.display = "inline-block";
             this.profileEditInfoBtn.style.display = "inline-block";
+            this.settingsBlock.style.display = 'block';
+            this.otpSwitch.checked = !!this.me.is_otp_required;
         } else {
             this.initStatusBadge();
             if (this.user.is_online) {
@@ -52,7 +56,9 @@ export default class extends HTMLElement {
         modalsToCloseList.push("edit-info-modal")
         modalsToCloseList.push("view-all-friends-modal")
         modalsToCloseList.push("change-avatar-modal")
+        modalsToCloseList.push("set-qr-modal")
 
+        this.otpSwitch.addEventListener('click', this.getOTPHandler())
         document.title = "Profile";
     }
 
@@ -97,6 +103,19 @@ export default class extends HTMLElement {
                         <div class="card-body">
                             <h2 id="no-friends-title" style="display: none">You don't have friends yet 😭</h2>
                             <a id="profile-view-all-friends-btn" style="display: none" href="#" class="btn btn-primary" data-toggle="modal" data-target="#view-all-friends-modal">View All</a>
+                        </div>  
+                    </div>
+                 </div>
+                 <!-- Settings -->
+                <div id="settings-block" class="col-6" style="display: none;">
+                    <div class="card h-100">
+                        <h5 class="card-header">Settings</h5>
+                        <div id="profile-settings" class="list-group list-group-flush"></div>  
+                        <div class="card-body">
+                            <div class="custom-control custom-switch">
+                              <input type="checkbox" class="custom-control-input" id="otp-switch">
+                              <label class="custom-control-label" for="otp-switch">Turn On 2FA <i class="fa-solid fa-qrcode"></i></label>
+                            </div>
                         </div>  
                     </div>
                  </div>
@@ -189,11 +208,49 @@ export default class extends HTMLElement {
             </div>
         </div>
     </div>
+    
+        <!-- Modal To Set 2FA-->
+        <div class="modal fade" id="set-qr-modal" tabindex="-1" role="dialog" aria-labelledby="cset-qr-modal" aria-hidden="true">
+<!--        <div id="profile-wrong-avatar-format-alert" class="alert alert-danger collapse" role="alert">-->
+<!--            We accept only <b>JPEG</b> fomat for avatars-->
+<!--        </div>-->
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Setting 2FA</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <div>
+                        <div id="qr-code" class="mb-4 d-flex justify-content-center">
+                        </div>
+                        <div class="d-flex justify-content-center">
+<!--                            <div data-mdb-button-init data-mdb-ripple-init class="btn btn-primary btn-rounded">-->
+<!--                                <label class="form-label text-white m-1" for="otp-input">Choose file</label>-->
+<!--                                <input type="file" class="form-control d-none" id="otp-input"/>-->
+<!--                            </div>-->
+                        </div>
+                    </div>                
+                </div>
+                <div class="modal-footer">
+                    <button id="accept-qr-btn" style="display: none;" type="button" class="btn btn-success" data-dismiss="modal">Change</button>
+                    <button type="button" class="btn btn-danger" data-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
         `;
 
         // Avatar
         this.avatar = this.querySelector("#profile-avatar");
         this.avatarEditIcon = this.querySelector("#profile-image-edit-icon");
+
+        // Settings
+        this.otpSwitch = this.querySelector("#otp-switch");
+        this.qrCode = this.querySelector("#qr-code");
+        this.settingsBlock = this.querySelector("#settings-block")
 
         // Status and Action Buttons
         this.profileSmallOnOffStatus = this.querySelector("#profile-small-on-off-status");
@@ -476,5 +533,20 @@ export default class extends HTMLElement {
                 this.profileEditInfoBtn.setAttribute('disabled', "");
             });
         });
+    }
+
+    getOTPHandler() {
+        return async (e) => {
+            console.log(this.otpSwitch.checked)
+            if (!this.otpSwitch.checked) {
+                await cancelOTP()
+                return;
+            }
+
+            $('#set-qr-modal').modal('show');
+            const resp = await getQR();
+
+            this.qrCode.innerHTML = resp.qr_code
+        };
     }
 }
