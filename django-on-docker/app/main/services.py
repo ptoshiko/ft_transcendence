@@ -5,10 +5,18 @@ from django.db import models
 from .announcement import *
 
 def user_two_factor_auth_data_create(*, user) -> UserTwoFactorAuthData:
-    if hasattr(user, 'two_factor_auth_data'):
-        raise ValidationError(
-            'Can not have more than one 2FA related data.'
-        )
+    
+    try:
+        two_factor_auth_data = UserTwoFactorAuthData.objects.get(user=user)
+
+        if two_factor_auth_data.is_setup_expired():
+            two_factor_auth_data.delete()
+        else:
+            raise ValidationError(
+                'Cannot have more than one 2FA related data. Complete or delete the existing setup first.'
+            )
+    except UserTwoFactorAuthData.DoesNotExist:
+        pass
 
     two_factor_auth_data = UserTwoFactorAuthData.objects.create(
         user=user,

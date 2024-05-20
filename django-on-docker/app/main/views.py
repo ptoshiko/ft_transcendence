@@ -341,6 +341,7 @@ from django.core.exceptions import ValidationError
 from django.views.generic import TemplateView 
 from .services import user_two_factor_auth_data_create       
 
+from django.utils import timezone
 class SetupTwoFactorAuthView(views.APIView):
     def post(self, request):
         user = request.user
@@ -354,45 +355,80 @@ class SetupTwoFactorAuthView(views.APIView):
             context["qr_code"] = two_factor_auth_data.generate_qr_code(
                 name=user.email
             )
-            user.is_otp_required = True
+            two_factor_auth_data.setup_initiated_at = timezone.now()
+            two_factor_auth_data.setup_complete = False
+            two_factor_auth_data.save()
+
+            user.is_otp_required = False
             user.save()
             return Response(context, status=status.HTTP_200_OK)
         except ValidationError as exc:
             return Response({"error": exc.messages}, status=status.HTTP_400_BAD_REQUEST)
 
 
-from django import forms
-from django.urls import reverse_lazy
+# from django import forms
 from .models import UserTwoFactorAuthData
 
-class ConfirmTwoFactorAuthView(views.APIView):
-    success_url = reverse_lazy("admin:index")
-    class Form(forms.Form):
-        otp = forms.CharField(required=True)
+# class ConfirmTwoFactorAuthView(views.APIView):
 
-        def clean_otp(self):
-            self.two_factor_auth_data = UserTwoFactorAuthData.objects.filter(
-                user=self.user
-            ).first()
+#     class Form(forms.Form):
+#         otp = forms.CharField(required=True)
 
-            if self.two_factor_auth_data is None:
-                raise ValidationError('2FA not set up.')
+#         def clean_otp(self):
+#             self.two_factor_auth_data = UserTwoFactorAuthData.objects.filter(
+#                 user=self.user
+#             ).first()
 
-            otp = self.cleaned_data.get('otp')
+#             if self.two_factor_auth_data is None:
+#                 raise ValidationError('2FA not set up.')
 
-            if not self.two_factor_auth_data.validate_otp(otp):
-                raise ValidationError('Invalid 2FA code.')
+#             otp = self.cleaned_data.get('otp')
 
-            return otp
+#             if not self.two_factor_auth_data.validate_otp(otp):
+#                 raise ValidationError('Invalid 2FA code.')
+
+#             return otp
+
+#     def post(self, request, *args, **kwargs):
+#         form = self.Form(request.data)
+#         form.user = request.user
+
+#         if form.is_valid():
+#             return Response({'success': True}, status=status.HTTP_200_OK)
+#         else:
+#             return Response({'errors': form.errors}, status=status.HTTP_400_BAD_REQUEST)
+
+class ConfirmTwoFactorAuthView(generics.GenericAPIView):
+    serializer_class = serializers.OTPConfirmSerializer
 
     def post(self, request, *args, **kwargs):
-        form = self.Form(request.data)
-        form.user = request.user
+        user = request.user
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        
+        otp_code = serializer.validated_data['otp_code']
+        
+        try:
+            two_factor_auth_data = UserTwoFactorAuthData.objects.get(user=user)
+            
+            # Check if the setup has expired
+            if two_factor_auth_data.is_setup_expired():
+                return Response({"error": "2FA setup has expired. Please restart the setup process."}, status=status.HTTP_400_BAD_REQUEST)
+            
+            # Validate the OTP
+            if two_factor_auth_data.validate_otp(otp_code):
 
-        if form.is_valid():
-            return Response({'success': True}, status=status.HTTP_200_OK)
-        else:
-            return Response({'errors': form.errors}, status=status.HTTP_400_BAD_REQUEST)
+                two_factor_auth_data.setup_complete = True
+                two_factor_auth_data.save()
+
+                user.is_otp_required = True
+                user.save()
+                return Response({"success": "OTP verified successfully. 2FA setup complete."}, status=status.HTTP_200_OK)
+            else:
+                return Response({"error": "Invalid OTP code."}, status=status.HTTP_400_BAD_REQUEST)
+        
+        except UserTwoFactorAuthData.DoesNotExist:
+            return Response({"error": "2FA setup data not found."}, status=status.HTTP_400_BAD_REQUEST)
 
 
 class UserMatchHistoryView(views.APIView):

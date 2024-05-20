@@ -178,6 +178,7 @@ from django.conf import settings
 import pyotp
 import qrcode
 import qrcode.image.svg
+from datetime import timedelta
 
 class UserTwoFactorAuthData(models.Model):
     user = models.OneToOneField(
@@ -187,6 +188,8 @@ class UserTwoFactorAuthData(models.Model):
     )
 
     otp_secret = models.CharField(max_length=255)
+    setup_initiated_at = models.DateTimeField(null=True, blank=True)
+    setup_complete = models.BooleanField(default=False)
 
     def generate_qr_code(self, name: Optional[str] = None) -> str:
         totp = pyotp.TOTP(self.otp_secret)
@@ -213,3 +216,8 @@ class UserTwoFactorAuthData(models.Model):
         totp = pyotp.TOTP(self.otp_secret)
 
         return totp.verify(otp)
+
+    def is_setup_expired(self) -> bool:
+        if self.setup_initiated_at and not self.setup_complete:
+            return timezone.now() > self.setup_initiated_at + timedelta(minutes=10)
+        return False

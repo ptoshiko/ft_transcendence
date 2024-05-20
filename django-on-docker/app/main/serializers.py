@@ -170,6 +170,9 @@ class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
         return data
 
 import pyotp
+
+
+
 class OTPVerificationSerializer(serializers.Serializer):
     email = serializers.EmailField()
     otp_code = serializers.CharField()
@@ -196,4 +199,28 @@ class OTPVerificationSerializer(serializers.Serializer):
 
 
         return data
-    
+
+
+class OTPConfirmSerializer(serializers.Serializer):
+    email = serializers.EmailField()
+    otp_code = serializers.CharField()
+
+    def validate(self, data):
+        email = data.get('email')
+        otp_code = data.get('otp_code')
+        
+        try:
+            user = CustomUser.objects.get(email=email)
+        except CustomUser.DoesNotExist:
+            raise serializers.ValidationError('Invalid email address')
+
+        try:
+            two_factor_auth_data = UserTwoFactorAuthData.objects.get(user=user)
+        except UserTwoFactorAuthData.DoesNotExist:
+            raise serializers.ValidationError('OTP secret not found for this user')
+
+        if not two_factor_auth_data.validate_otp(otp_code):
+            raise serializers.ValidationError('Invalid OTP code')
+
+
+        return data
