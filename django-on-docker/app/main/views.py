@@ -15,9 +15,6 @@ from .announcement import *
 
 from collections import OrderedDict
 
-# from channels.layers import get_channel_layer
-# from asgiref.sync import async_to_sync
-
 class RegisterView(generics.CreateAPIView): 
     queryset = CustomUser.objects.all()
     permission_classes = [AllowAny]
@@ -431,7 +428,9 @@ class AvatarUploadView(views.APIView):
 
 class UserSearchView(views.APIView):
     def get(self, request, string):
-        users = CustomUser.objects.filter(display_name__startswith=string).exclude(id=request.user.id)
+
+        blockedby_ids = get_blockedby_ids(request.user)
+        users = CustomUser.objects.filter(display_name__startswith=string).exclude(id=request.user.id).exclude(id__in=blockedby_ids)
         serializer = serializers.CustomUserSerializer(users, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
@@ -454,6 +453,10 @@ class CreateGameView(CheckIdMixin, views.APIView):
         player2 = check_if_exists_by_id(CustomUser, player2_id)
         if player2 is None:
             return Response({"error": "Player2 does not exist"}, status=status.HTTP_404_NOT_FOUND)
+
+        if check_is_blocked(player2_id, player1_id):
+            notify_blocked(player2.display_name, player1_id)
+            return Response({'error': "Player1 is blocked by Player2"}, status=status.HTTP_400_BAD_REQUEST)
 
         # create a new game ID if there is no old game ID with status not FINISHED and not belong to 
         game = check_game_by_users_not_finished(player1_id, player2_id)
@@ -488,6 +491,12 @@ class ProposeTournament(views.APIView):
         users = CustomUser.objects.filter(pk__in=user_ids)
         if len(users) != len(user_ids):
             return Response({'error': 'Invalid user IDs provided'}, status=status.HTTP_400_BAD_REQUEST)
+
+        blockedby_ids = get_blockedby_ids(request.user)
+
+        is_blockedby = check_is_blockedby(user_ids, blockedby_ids)
+        if is_blockedby:
+            return Response({'error': "Creator is blocked by one of users"}, status=status.HTTP_400_BAD_REQUEST)
 
         creator = request.user
         participants = list(users) + [creator]

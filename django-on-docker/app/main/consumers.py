@@ -203,6 +203,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
             }
         }))
 
+
     async def game_state(self, event):
         ball_x = event["ball_x"]
         ball_y = event["ball_y"]
@@ -224,6 +225,16 @@ class ChatConsumer(AsyncWebsocketConsumer):
                 'right_score': right_score,
                 'is_left_won': is_left_won,
                 'is_right_won': is_right_won,
+            }
+        }))
+
+    async def block_notification(self, event):
+        block_msg = event["block_msg"]
+        
+        await self.send(text_data=json.dumps({
+            "event_type": "block_notification",
+            "data": {
+                "block_msg": block_msg
             }
         }))
 
