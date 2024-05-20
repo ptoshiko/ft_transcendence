@@ -12,9 +12,10 @@ def user_two_factor_auth_data_create(*, user) -> UserTwoFactorAuthData:
         if two_factor_auth_data.is_setup_expired():
             two_factor_auth_data.delete()
         else:
-            raise ValidationError(
-                'Cannot have more than one 2FA related data. Complete or delete the existing setup first.'
-            )
+            return two_factor_auth_data
+            # raise ValidationError(
+            #     'Cannot have more than one 2FA related data. Complete or delete the existing setup first.'
+            # )
     except UserTwoFactorAuthData.DoesNotExist:
         pass
 
