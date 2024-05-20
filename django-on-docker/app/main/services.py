@@ -93,10 +93,23 @@ def check_is_blocked(blocked_by_id, blocked_user_id):
         return blocking_relationship
     except BlockUser.DoesNotExist:
         return None
+    
+def check_is_blockedby(user_ids, blockedby_ids):
+    blocked_set = set(blockedby_ids)
+    
+    # Check if any user ID is in the blocked set
+    for user_id in user_ids:
+        if user_id in blocked_set:
+            return True
+    return False
 
 def get_blocked_user_ids(user):
     blocked_user_ids = BlockUser.objects.filter(blocked_by=user).values_list('blocked_user_id', flat=True)
     return blocked_user_ids
+
+def get_blockedby_ids(user):
+    blocked_by_ids = BlockUser.objects.filter(blocked_user=user).values_list('blocked_by_id', flat=True)
+    return blocked_by_ids
 
 def create_blocking_record(blocked_by_id, blocked_user_id):
     BlockUser.objects.create(blocked_by_id=blocked_by_id, blocked_user_id=blocked_user_id)

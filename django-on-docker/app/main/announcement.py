@@ -56,4 +56,14 @@ def announce_tournament(user_ids, creator_id, tournament_id):
 				'content_type': ChatMessage.TTID
 			}
 		)
-    
+
+def notify_blocked(blocked_by_display_name, user_id):
+
+	channel_layer = get_channel_layer()
+	async_to_sync(channel_layer.group_send)(
+		f"{user_id}",
+            {
+                'type': 'block_notification', 
+                'block_msg': f"You have been blocked by user {blocked_by_display_name}."
+            }
+        )
