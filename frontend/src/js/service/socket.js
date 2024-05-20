@@ -61,6 +61,13 @@ function getSocket() {
                         }));
                     }
                     break;
+                case "block_notification":
+                    if (chatComponent) {
+                        chatComponent.dispatchEvent(new CustomEvent("block-notification", {
+                            detail: data.data
+                        }));
+                    }
+                    break;
             }
         };
 
