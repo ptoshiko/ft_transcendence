@@ -8,7 +8,7 @@ import {
     unblockUser,
     sendFriendRequest, blockUser, approveFriendRequest, getFriendsOfUser, removeFriend
 } from "../service/users.js";
-import {getQR} from "../service/game.js";
+import {cancelOTP, getQR} from "../service/game.js";
 
 export default class extends HTMLElement {
     constructor() {
@@ -227,10 +227,10 @@ export default class extends HTMLElement {
                         <div id="qr-code" class="mb-4 d-flex justify-content-center">
                         </div>
                         <div class="d-flex justify-content-center">
-                            <div data-mdb-button-init data-mdb-ripple-init class="btn btn-primary btn-rounded">
-                                <label class="form-label text-white m-1" for="otp-input">Choose file</label>
-                                <input type="file" class="form-control d-none" id="otp-input"/>
-                            </div>
+<!--                            <div data-mdb-button-init data-mdb-ripple-init class="btn btn-primary btn-rounded">-->
+<!--                                <label class="form-label text-white m-1" for="otp-input">Choose file</label>-->
+<!--                                <input type="file" class="form-control d-none" id="otp-input"/>-->
+<!--                            </div>-->
                         </div>
                     </div>                
                 </div>
@@ -537,8 +537,9 @@ export default class extends HTMLElement {
 
     getOTPHandler() {
         return async (e) => {
+            console.log(this.otpSwitch.checked)
             if (!this.otpSwitch.checked) {
-                // send cancellation of otp
+                await cancelOTP()
                 return;
             }
 

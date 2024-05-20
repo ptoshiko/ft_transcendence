@@ -16,6 +16,7 @@ const GET_GAMES_API = API_ADDRESS+"/match/gethistory/";
 const GET_GAMES_BY_TOURNAMENT_API = API_ADDRESS+"/game/list/"
 const GET_WINNER_BY_TOURNAMENT_API = API_ADDRESS+"/tournament/getwinner/"
 const GET_QR_CODE_API = API_ADDRESS+"/setup-2fa/"
+const CANCEL_OTP_API = API_ADDRESS+"/disable-2fa/"
 
 export async function createGame(opponentID) {
     const accessToken = localStorage.getItem("access-token") || "";
@@ -263,6 +264,26 @@ export async function getQR() {
         headers: withJSONContent(authHeader),
     });
 
+
+    return await resp.json();
+}
+
+export async function cancelOTP() {
+    const accessToken = localStorage.getItem("access-token") || "";
+
+    let authHeader = {};
+    if (accessToken !== "") {
+        authHeader = withAuthorizationHeader({}, accessToken);
+    }
+
+    const resp = await fetch(CANCEL_OTP_API, {
+        method: "PUT",
+        headers: withJSONContent(authHeader),
+    });
+
+    if (!resp.ok) {
+        throw resp.status;
+    }
 
     return await resp.json();
 }
