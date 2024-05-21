@@ -81,7 +81,7 @@ export default class extends HTMLElement {
             <div class="left d-flex mr-auto mt-1" style="max-width: 75%; column-gap: 10px;">
                 <!-- Avatar -->
                 <div class="">
-                    <img class="rounded-circle" width="50" height="50" src="${avatar}">
+                     <a id="msg-redirect-to-friend-btn" href=""> <img class="rounded-circle" width="50" height="50" src="${avatar}"> </a>
                 </div>
                 <!-- Text -->
                 <div class="bg-primary rounded p-2">
@@ -94,6 +94,10 @@ export default class extends HTMLElement {
                 </div>
             </div>
         `;
+
+        this.querySelector("#msg-redirect-to-friend-btn").addEventListener('click', (e)=>{
+            navigateTo(`/profiles/${displayName}`);
+        });
 
         this.approveTTBtn = this.querySelector("#to-me-msg-approve-tt")
         this.declineTTBtn = this.querySelector("#to-me-msg-decline-tt")

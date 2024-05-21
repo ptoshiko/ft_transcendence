@@ -8,7 +8,7 @@ import {
     unblockUser,
     sendFriendRequest, blockUser, approveFriendRequest, getFriendsOfUser, removeFriend
 } from "../service/users.js";
-import {cancelOTP, getQR} from "../service/game.js";
+import {cancelOTP, confirmOTPCode, getQR} from "../service/game.js";
 
 export default class extends HTMLElement {
     constructor() {
@@ -42,6 +42,22 @@ export default class extends HTMLElement {
             this.profileEditInfoBtn.style.display = "inline-block";
             this.settingsBlock.style.display = 'block';
             this.otpSwitch.checked = !!this.me.is_otp_required;
+            this.firstOTPInput.addEventListener('input', (e) => {
+                if (this.firstOTPInput.value.length > 0) {
+                    this.confirmQRBtn.removeAttribute('disabled');
+                } else {
+                    this.confirmQRBtn.setAttribute('disabled', "");
+                }
+            })
+
+            this.confirmQRBtn.addEventListener('click', this.getConfirmQRHandler())
+            $('#set-qr-modal').on('hide.bs.modal',async (e) => {
+                this.me = await getMe()
+                this.otpSwitch.checked = !!this.me.is_otp_required;
+                this.firstOTPInput.value = ``;
+                $("#wrong-otp-alert").hide();
+            });
+
         } else {
             this.initStatusBadge();
             if (this.user.is_online) {
@@ -211,9 +227,9 @@ export default class extends HTMLElement {
     
         <!-- Modal To Set 2FA-->
         <div class="modal fade" id="set-qr-modal" tabindex="-1" role="dialog" aria-labelledby="cset-qr-modal" aria-hidden="true">
-<!--        <div id="profile-wrong-avatar-format-alert" class="alert alert-danger collapse" role="alert">-->
-<!--            We accept only <b>JPEG</b> fomat for avatars-->
-<!--        </div>-->
+        <div id="wrong-otp-alert" class="alert alert-danger collapse" role="alert">
+            Invalid OTP
+        </div>
         <div class="modal-dialog" role="document">
             <div class="modal-content">
                 <div class="modal-header">
@@ -224,18 +240,14 @@ export default class extends HTMLElement {
                 </div>
                 <div class="modal-body">
                     <div>
-                        <div id="qr-code" class="mb-4 d-flex justify-content-center">
-                        </div>
+                        <div id="qr-code" class="mb-4 d-flex justify-content-center"></div>
                         <div class="d-flex justify-content-center">
-<!--                            <div data-mdb-button-init data-mdb-ripple-init class="btn btn-primary btn-rounded">-->
-<!--                                <label class="form-label text-white m-1" for="otp-input">Choose file</label>-->
-<!--                                <input type="file" class="form-control d-none" id="otp-input"/>-->
-<!--                            </div>-->
+                            <input type="password" class="form-control" id="first-otp-input" placeholder="Enter OTP From Google Authenticator">
                         </div>
                     </div>                
                 </div>
                 <div class="modal-footer">
-                    <button id="accept-qr-btn" style="display: none;" type="button" class="btn btn-success" data-dismiss="modal">Change</button>
+                    <button id="confirm-qr-btn" type="button" class="btn btn-success" disabled>Confirm</button>
                     <button type="button" class="btn btn-danger" data-dismiss="modal">Close</button>
                 </div>
             </div>
@@ -251,6 +263,8 @@ export default class extends HTMLElement {
         this.otpSwitch = this.querySelector("#otp-switch");
         this.qrCode = this.querySelector("#qr-code");
         this.settingsBlock = this.querySelector("#settings-block")
+        this.confirmQRBtn = this.querySelector("#confirm-qr-btn")
+        this.firstOTPInput = this.querySelector("#first-otp-input")
 
         // Status and Action Buttons
         this.profileSmallOnOffStatus = this.querySelector("#profile-small-on-off-status");
@@ -537,7 +551,6 @@ export default class extends HTMLElement {
 
     getOTPHandler() {
         return async (e) => {
-            console.log(this.otpSwitch.checked)
             if (!this.otpSwitch.checked) {
                 await cancelOTP()
                 return;
@@ -547,6 +560,21 @@ export default class extends HTMLElement {
             const resp = await getQR();
 
             this.qrCode.innerHTML = resp.qr_code
+        };
+    }
+
+    getConfirmQRHandler() {
+        return async (e) => {
+            e.preventDefault();
+            $("#wrong-otp-alert").hide();
+            const resp = await confirmOTPCode(this.firstOTPInput.value, this.me.email);
+            if (!resp) {
+                $("#wrong-otp-alert").show();
+                setTimeout(()=>{$("#wrong-otp-alert").hide()}, 5000);
+                return;
+            }
+
+            $('#set-qr-modal').modal('hide');
         };
     }
 }

@@ -174,12 +174,11 @@ export default class extends HTMLElement {
                 return;
             }
 
+            this.initFriendsAndChat(this.currentActiveSpeaker);
+
             if (e.detail.sender === this.currentActiveSpeaker.id || e.detail.receiver === this.currentActiveSpeaker.id) {
                 this.drawMessage(e.detail, this.currentMe, this.currentActiveSpeaker);
             }
-
-
-            this.initFriendsAndChat(this.currentActiveSpeaker);
         };
     }
 
@@ -194,7 +193,7 @@ export default class extends HTMLElement {
 
     getMessageInputHandler() {
         return (e) => {
-            if (e.target.value.length > 0 && this.currentActiveSpeaker) {
+            if (e.target.value.trim().length > 0 && this.currentActiveSpeaker) {
                 this.chatSendMsgBtn.removeAttribute('disabled');
             } else {
                 this.chatSendMsgBtn.setAttribute('disabled', '');

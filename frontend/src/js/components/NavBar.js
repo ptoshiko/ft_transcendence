@@ -92,14 +92,12 @@ export default class extends HTMLElement {
         this.searchInput.addEventListener('input', e => {
             this.searchResultsList.innerHTML = ``;
 
-            searchUsers(this.searchInput.value).then(users=> {
+            let result = "";
+            searchUsers(this.searchInput.value).then(users => {
                 for (let i = 0; i < users.length && i < 3; i++) {
-                    const friendElement = document.createElement("tr-user-small");
-                    friendElement.setAttribute("avatar", users[i].avatar);
-                    friendElement.setAttribute("display-name", users[i].display_name);
-                    friendElement.setAttribute("is-online", users[i].is_online);
-                    this.searchResultsList.appendChild(friendElement);
+                    result += `<tr-user-small avatar="${users[i].avatar}" display-name="${users[i].display_name}" is-online="${users[i].is_online}"></tr-user-small>`
                 }
+                this.searchResultsList.innerHTML = result;
             })
         })
     }
