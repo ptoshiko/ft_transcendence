@@ -160,7 +160,6 @@ def get_last_chat_users(user):
     
 def check_game_by_users_not_finished(player1_id, player2_id):
     try:
-        # Retrieve a single PairGame object with the specified player IDs and not finished status
         game = PairGame.objects.filter(
             (models.Q(player1_id=player1_id) & models.Q(player2_id=player2_id)) |
             (models.Q(player1_id=player2_id) & models.Q(player2_id=player1_id)),
@@ -198,7 +197,7 @@ def change_game_status_in_progress(game_id):
 
 
 def tt_update_participants_points(player1, player1_score, player2, player2_score, tournament):
-    #     # Calculate points based on game scores
+    #   Calculate points based on game scores
 
     if player1_score > player2_score:
         points_1 = 1
@@ -233,27 +232,15 @@ def finish_game_db(game_id, player1_score, player2_score):
     game.player1_score = player1_score
     game.player2_score = player2_score
     game.save()
-
-    if game.tournament != 0:
+  
+    if game.tournament is not None:
 
         tournament = tt_update_participants_points(game.player1, game.player1_score, game.player2, game.player2_score, game.tournament)
 
-        # 0 1 2
-        # 0 1 2 
-        # 
-        # if game.tournament.participant_points
-        # tournament.current += 1
-        # tournament.save()
-        # print("len(tournament.schedule" , len(tournament.schedule))
-        # if tournament.current == len(tournament.schedule):
-        #     tournament.status = Tournament.FINISHED
-        #     tournament.save()
         if tournament.status == Tournament.FINISHED:
             return
     
         start_tt_game(tournament, tournament.current)
-
-
 
 
 def create_tournament(users):

@@ -103,10 +103,22 @@ class ChatMessageSerializer(serializers.ModelSerializer):
         fields = ['sender', 'receiver', 'content', 'date_added', 'content_type', 'extra_details']
 
 
+import os
 class AvatarUploadSerializer(serializers.ModelSerializer):
     class Meta:
         model = CustomUser
         fields = ['avatar']
+
+    def save(self, *args, **kwargs):
+        user = self.instance
+
+        # Delete the old avatar if it exists and is not the default one
+        if user.avatar and user.avatar.url != 'default-avatar.jpg':
+            old_avatar_path = user.avatar.path
+            if os.path.exists(old_avatar_path):
+                os.remove(old_avatar_path)
+
+        return super().save(*args, **kwargs)
 
 class BlockUserSerializer(serializers.ModelSerializer):
     class Meta:
