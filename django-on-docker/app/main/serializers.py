@@ -1,7 +1,6 @@
 from rest_framework import serializers
 from .models import CustomUser, Friendship, ChatMessage, BlockUser, PairGame, Tournament, UserTwoFactorAuthData
 
-from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 from django.contrib.auth.password_validation import validate_password
 from django.core.exceptions import ValidationError
@@ -168,9 +167,6 @@ class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
             data['access'] = str(refresh.access_token)
 
         return data
-
-import pyotp
-
 
 
 class OTPVerificationSerializer(serializers.Serializer):
