@@ -412,10 +412,6 @@ export default class extends HTMLElement {
                 friendElement.setAttribute("avatar", friend.avatar);
                 friendElement.setAttribute("display-name", friend.display_name);
                 friendElement.setAttribute("is-online", friend.is_online);
-                friendElement.addEventListener('click', e =>{
-                    $('#view-all-friends-modal').modal('hide');
-                    navigateTo(`/profiles/${friend.display_name}`);
-                })
                 this.profileBigFriendsList.appendChild(friendElement);
             }
         })
