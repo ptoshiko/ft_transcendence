@@ -257,9 +257,9 @@ class ChatConsumer(AsyncWebsocketConsumer):
         game = game_manager.get_game_by_user_id(user_id)
         if game is None:
             return
-        # print("up key and game is found start")
+
         await game.up_paddle_by_user_id(user_id)
-        # print("up key and game is found end")
+
 
     async def handle_down_key(self):
         user_id = self.sender.id

@@ -49,15 +49,15 @@ class Ball:
 
     def update(self):
         self.y = self.y + (self.direction.y * self.velocity)
-        print("games.py 47: ball_y = ", self.y)
+        # print("games.py 47: ball_y = ", self.y)
         self.x = self.x + (self.direction.x * self.velocity)
 
         if self.y <= 1.5:
             self.y = 1.5
-            print("games.py 52: ball_y = ", self.y)
+            # print("games.py 52: ball_y = ", self.y)
         if self.y >= 98.5:
             self.y = 98.5
-            print("games.py 55: ball_y = ", self.y)
+            # print("games.py 55: ball_y = ", self.y)
         if self.x <= 1.5:
             self.x = 1.5
         if self.x >= 98.5:
