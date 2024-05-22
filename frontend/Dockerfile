@@ -19,4 +19,6 @@ COPY index.html .
 
 COPY style.css .
 
+COPY ./images ./images
+
 COPY ./src ./src
