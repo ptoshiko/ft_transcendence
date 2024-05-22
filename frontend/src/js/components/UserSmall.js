@@ -1,4 +1,5 @@
-import {navigateTo, redirectTo} from "../helpers.js";
+import {navigateTo} from "../helpers.js";
+import {BACKEND_PORT, HOSTNAME} from "../constants.js";
 
 export default class extends HTMLElement {
     constructor() {
@@ -11,8 +12,7 @@ export default class extends HTMLElement {
         const isOnline = this.getAttribute("is-online");
 
 
-        avatar = "https://localhost:8081"+avatar
-        console.log(avatar)
+        avatar = `https://${HOSTNAME}:${BACKEND_PORT}`+avatar
         this.render(avatar, displayName);
 
         this.addEventListener('click', e => {

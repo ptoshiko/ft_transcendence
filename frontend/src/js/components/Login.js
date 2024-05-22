@@ -3,6 +3,7 @@ import { withJSONContent } from "../middleware.js";
 import { getMe } from "../service/users.js";
 import router from "../index.js";
 import {initSocket} from "../service/socket.js";
+import {BACKEND_PORT, HOSTNAME} from "../constants.js";
 
 export default class extends HTMLElement {
     constructor() {
@@ -142,7 +143,7 @@ export default class extends HTMLElement {
         })
 
         try {
-            let resp = await fetch("https://localhost:8081/api/token/verify-otp/", {
+            let resp = await fetch(`https://${HOSTNAME}:${BACKEND_PORT}/api/token/verify-otp/`, {
                 method: 'POST',
                 headers: withJSONContent(),
                 body: req,
@@ -184,7 +185,7 @@ export default class extends HTMLElement {
         })
 
         try {
-            let resp = await fetch("https://localhost:8081/api/token/", {
+            let resp = await fetch(`https://${HOSTNAME}:${BACKEND_PORT}/api/token/`, {
                 method: 'POST',
                 headers: withJSONContent(),
                 body: req,
@@ -298,7 +299,7 @@ export default class extends HTMLElement {
         })
 
         try {
-            let resp = await fetch("https://localhost:8081/api/register/", {
+            let resp = await fetch(`https://${HOSTNAME}:${BACKEND_PORT}/api/register/`, {
                 method: 'POST',
                 headers: withJSONContent(),
                 body: req,
@@ -317,7 +318,6 @@ export default class extends HTMLElement {
             this.signInBtn.classList.add("active");
             this.signUpBtn.classList.remove("active");
         } catch(e) {
-            console.log(e);
             this.err.textContent = "There is some server error";
         }
     }

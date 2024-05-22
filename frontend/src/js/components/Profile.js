@@ -29,6 +29,9 @@ export default class extends HTMLElement {
                 this.innerHTML = `<tr-not-found><tr-not-found>`
                 return;
             }
+        } else {
+            navigateTo(`/profiles/${this.me.display_name}`)
+            return
         }
 
         this.render(this.user.display_name, this.user.email);
@@ -412,10 +415,6 @@ export default class extends HTMLElement {
                 friendElement.setAttribute("avatar", friend.avatar);
                 friendElement.setAttribute("display-name", friend.display_name);
                 friendElement.setAttribute("is-online", friend.is_online);
-                friendElement.addEventListener('click', e =>{
-                    $('#view-all-friends-modal').modal('hide');
-                    navigateTo(`/profiles/${friend.display_name}`);
-                })
                 this.profileBigFriendsList.appendChild(friendElement);
             }
         })
@@ -532,7 +531,6 @@ export default class extends HTMLElement {
                 $(`#edit-info-modal`).modal('hide');
                 redirectTo(`/profiles/${updatedFields.display_name}`);
             }).catch(errors=>{
-                console.log(errors);
                 if (errors['email'] && errors.email.length > 0) {
                     this.profileInvalidEmailFeedback.textContent = errors.email[0];
                     this.profileEditEmailInput.classList.add("is-invalid");

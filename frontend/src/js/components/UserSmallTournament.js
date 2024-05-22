@@ -1,3 +1,5 @@
+import {BACKEND_PORT, HOSTNAME} from "../constants.js";
+
 export default class extends HTMLElement {
     constructor() {
         super();
@@ -9,8 +11,7 @@ export default class extends HTMLElement {
         const isOnline = this.getAttribute("is-online");
 
 
-        avatar = "https://localhost:8081"+avatar
-        console.log(avatar)
+        avatar = `https://${HOSTNAME}:${BACKEND_PORT}`+avatar
         this.render(avatar, displayName);
 
         if (isOnline==="true") {

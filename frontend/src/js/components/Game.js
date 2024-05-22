@@ -23,7 +23,6 @@ export default class extends HTMLElement {
            this.searchResultsList.innerHTML = ``;
            this.toInviteList.innerHTML = ``;
            this.idsToInvite.clear();
-           console.log('check')
            await this.updatePageInfo()
         })
 
@@ -298,7 +297,6 @@ export default class extends HTMLElement {
             this.noTournamentsTitle.style.display = 'none';
             this.smallTournamentsList.innerHTML = ``;
             this.viewAllTournamentsBtn.style.display = 'inline-block';
-            console.log(this.smallTournamentsList.children.length)
             for (let i = 0; i < tournaments.length && this.smallTournamentsList.children.length < 3;  i++) {
                 const tournament = tournaments[i];
                 const ttComponent = document.createElement("tr-tournament-small")

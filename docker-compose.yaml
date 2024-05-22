@@ -3,11 +3,8 @@ version: '3.8'
 services:
   front:
     build: frontend
-    volumes:
-      # FIXME: stop adding files other than actual src code
-      - ./frontend/:/app 
     ports:
-      - 443:443
+      - 2710:2710
 
   backend:
     build: ./django-on-docker/app
@@ -34,8 +31,6 @@ services:
   
   redis:
     image: redis:latest
-    ports:
-      - 6379:6379
     volumes:
       - redis_data:/data
 
