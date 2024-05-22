@@ -122,19 +122,6 @@ class Tournament(models.Model):
         self.schedule = schedule
         self.save()
 
-    # def update_participant_points(self, participant_id, player_score, opponent_score):
-    #     # Calculate points based on game scores
-    #     if player_score > opponent_score:
-    #         points = 1
-    #     elif player_score < opponent_score:
-    #         points = 0
-    #     else:
-    #         points = 0.5
-
-    #     if participant_id in self.participant_points:
-    #         self.participant_points[participant_id] += points
-    #     else:
-    #         self.participant_points[participant_id] = points
 
 class PairGame(models.Model):
     CREATED = 0

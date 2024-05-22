@@ -456,6 +456,7 @@ class AvatarUploadView(views.APIView):
     def post(self, request):
         if not request.data:
             return Response({'error': EMPTY}, status=status.HTTP_400_BAD_REQUEST)
+
         serializer = serializers.AvatarUploadSerializer(request.user, data=request.data, partial=True)
         if serializer.is_valid():
             serializer.save()

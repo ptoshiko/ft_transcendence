@@ -7,12 +7,6 @@ from .services import *
 import asyncio
 from .game import *
 
-        # async def print_test(to_finish: list[bool]):
-        #     if to_finish[0]:
-        #         return
-        #     print(123)
-        # asyncio.create_task(print_test(global_shared_state))
-
 class ChatConsumer(AsyncWebsocketConsumer):
     async def connect(self):
 
@@ -263,9 +257,9 @@ class ChatConsumer(AsyncWebsocketConsumer):
         game = game_manager.get_game_by_user_id(user_id)
         if game is None:
             return
-        print("up key and game is found start")
+        # print("up key and game is found start")
         await game.up_paddle_by_user_id(user_id)
-        print("up key and game is found end")
+        # print("up key and game is found end")
 
     async def handle_down_key(self):
         user_id = self.sender.id
