@@ -29,6 +29,9 @@ export default class extends HTMLElement {
                 this.innerHTML = `<tr-not-found><tr-not-found>`
                 return;
             }
+        } else {
+            navigateTo(`/profiles/${this.me.display_name}`)
+            return
         }
 
         this.render(this.user.display_name, this.user.email);
