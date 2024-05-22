@@ -17,7 +17,6 @@ export default class extends HTMLElement {
     }
 
     render(avatar, displayName, msg, msgType, extraDetails) {
-        console.log(msgType);
         switch (msgType) {
             case "1":
                 this.renderTextMsg(avatar, displayName, msg);
@@ -32,7 +31,6 @@ export default class extends HTMLElement {
     }
 
     renderTextMsg(avatar, displayName, msg) {
-        console.log(msg);
         this.innerHTML =  `
             <!-- My Message -->
             <div class="right d-flex ml-auto flex-row-reverse mt-1" style="max-width: 75%; column-gap: 10px;">

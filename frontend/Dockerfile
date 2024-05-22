@@ -17,4 +17,6 @@ WORKDIR /app
 
 COPY index.html .
 
+COPY style.css .
+
 COPY ./src ./src

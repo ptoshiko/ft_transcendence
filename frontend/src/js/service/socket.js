@@ -1,3 +1,5 @@
+import {BACKEND_PORT, HOSTNAME} from "../constants.js";
+
 let socket;
 let selfClose = false;
 
@@ -12,7 +14,7 @@ function getSocket() {
             return;
         }
 
-        socket = new WebSocket(`wss://localhost:8081/wss/chat/?token=${accessToken}`);
+        socket = new WebSocket(`wss://${HOSTNAME}:${BACKEND_PORT}/wss/chat/?token=${accessToken}`);
 
         socket.onmessage = (e) => {
             const data = JSON.parse(e.data);

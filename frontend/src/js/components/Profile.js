@@ -532,7 +532,6 @@ export default class extends HTMLElement {
                 $(`#edit-info-modal`).modal('hide');
                 redirectTo(`/profiles/${updatedFields.display_name}`);
             }).catch(errors=>{
-                console.log(errors);
                 if (errors['email'] && errors.email.length > 0) {
                     this.profileInvalidEmailFeedback.textContent = errors.email[0];
                     this.profileEditEmailInput.classList.add("is-invalid");
