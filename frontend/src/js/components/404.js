@@ -19,14 +19,9 @@ export default class extends HTMLElement {
 
     render() {
        this.innerHTML = `
-            <section class="not-found-container">
-                <div class="not-found-content">
-                    <h1> Не Нашла </h1>
-                    <div class="not-found-img">
-                        <img src="/images/404.jpeg" alt="not found">
-                    </div>
-                </div>
-            </section>
+           <div class="d-flex justify-content-center align-items-center">
+            <img style="height: 100vh;" src="/images/404.jpg" alt="not found">
+           </div>
         `;
     }
 }
