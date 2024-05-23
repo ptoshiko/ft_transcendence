@@ -602,7 +602,7 @@ class GetMyTournaments(views.APIView):
     def get(self, request):
         user = request.user
         tournaments = get_tournamnets(user)
-        print(tournaments)
+        # print(tournaments)
         serializer = serializers.TournamentSerializer(tournaments, many=True)
         return Response(serializer.data)
 

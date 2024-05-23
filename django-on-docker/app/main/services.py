@@ -250,7 +250,7 @@ def create_tournament(users):
 
 
 def start_tt_game(tournament, num):
-    print ("num= ", num)
+    # print ("num= ", num)
     game = create_tt_game_record(tournament.schedule[num][0], tournament.schedule[num][1], tournament)
     create_message_gameid_type(game.game_id, game.player1, game.player2)
 
@@ -279,8 +279,8 @@ def decline_tt_invitation(tournament, user_id):
     tournament.save()
 
 def my_tt_message_accepted(tournament_id, user_id):
-    print(user_id)
-    print(tournament_id)
+    # print(user_id)
+    # print(tournament_id)
     # try and catch
     my_message = ChatMessage.objects.get(receiver=user_id, content=tournament_id)
     my_message.extra_details = "TT_ACCEPTED"
