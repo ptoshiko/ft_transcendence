@@ -284,6 +284,7 @@ export default class extends HTMLElement {
                 const user = await getUserByID(enemyID)
 
                 matchElement.setAttribute('avatar', user.avatar);
+                matchElement.setAttribute("date_created", match.date_created);
 
                 this.smallMatchesList.appendChild(matchElement)
             }
@@ -342,6 +343,7 @@ export default class extends HTMLElement {
                     const user = await getUserByID(enemyID)
 
                     matchElement.setAttribute('avatar', user.avatar);
+                    matchElement.setAttribute("date_created", match.date_created);
 
                     this.bigMatchesList.appendChild(matchElement)
                 }
