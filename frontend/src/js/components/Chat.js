@@ -95,7 +95,9 @@ export default class extends HTMLElement {
                 this.currentActiveSpeaker = friend;
                 this.chatMessageInput.removeAttribute('disabled');
                 this.chatGameLinkBtn.classList.remove('disabled');
-                this.chatMessageInput.value = ``;
+                if (this.currentActiveSpeaker && this.currentActiveSpeaker.id !== friend.id) {
+                    this.chatMessageInput.value = ``;
+                }
                 this.currentActiveFriendComponent = friendComponent;
             }
 
@@ -123,7 +125,7 @@ export default class extends HTMLElement {
             e.preventDefault();
 
             history.replaceState(null, null, `/chat/${props.friend.display_name}`)
-            if (this.currentActiveFriendComponent) {
+            if (this.currentActiveFriendComponent && this.currentActiveSpeaker && this.currentActiveSpeaker.id!==props.friend.id) {
                 this.currentActiveFriendComponent.setAttribute("is_active", "false");
                 const upToDateList = await getChatFriendsList()
                 if (!upToDateList.find((f) => f.id === this.currentActiveSpeaker.id)) {
