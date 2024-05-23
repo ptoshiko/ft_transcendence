@@ -109,16 +109,16 @@ class AvatarUploadSerializer(serializers.ModelSerializer):
         model = CustomUser
         fields = ['avatar']
 
-    def save(self, *args, **kwargs):
-        user = self.instance
+    # def save(self, *args, **kwargs):
+    #     user = self.instance
 
-        # Delete the old avatar if it exists and is not the default one
-        if user.avatar and user.avatar.url != 'default-avatar.jpg':
-            old_avatar_path = user.avatar.path
-            if os.path.exists(old_avatar_path):
-                os.remove(old_avatar_path)
+    #     # Delete the old avatar if it exists and is not the default one
+    #     if user.avatar and user.avatar.url != 'default-avatar.jpg':
+    #         old_avatar_path = user.avatar.path
+    #         if os.path.exists(old_avatar_path):
+    #             os.remove(old_avatar_path)
 
-        return super().save(*args, **kwargs)
+    #     return super().save(*args, **kwargs)
 
 class BlockUserSerializer(serializers.ModelSerializer):
     class Meta:
